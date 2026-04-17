@@ -1,0 +1,22 @@
+{
+  "name": "Nutri Proud",
+  "short_name": "NutriProud",
+  "description": "Seu Diário de Saúde Gamificado",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/hero.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/hero.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
