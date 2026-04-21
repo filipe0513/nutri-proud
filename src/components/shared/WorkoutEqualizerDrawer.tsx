@@ -51,12 +51,12 @@ export function WorkoutEqualizerDrawer() {
         </Card>
       </DrawerTrigger>
       
-      <DrawerContent className="!bg-glass-light-4 backdrop-blur-xl rounded-t-[40px] px-6 pb-12 shadow-xl border-white/50">
+      <DrawerContent className="!bg-red-50/95 backdrop-blur-2xl border-t border-red-200 text-red-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
         <DrawerHeader className="px-0">
-          <DrawerTitle className="text-title-2 text-neutral-500">
+          <DrawerTitle className="text-title-2 text-red-950">
             Como foi o treino?
           </DrawerTitle>
-          <p className="text-body-1 text-neutral-500/80 mt-2">Desvio em relação ao seu plano normal.</p>
+          <p className="text-body-1 text-red-900/80 mt-2">Desvio em relação ao seu plano normal.</p>
         </DrawerHeader>
 
         <div className="flex flex-col mt-4 space-y-6">
@@ -67,7 +67,7 @@ export function WorkoutEqualizerDrawer() {
 
           <DrawerClose asChild>
             <Button 
-              className="h-14 rounded-2xl bg-brand-500 text-white w-full text-button-1"
+              className="h-14 rounded-2xl bg-red-500 hover:bg-red-600 text-white border-transparent w-full text-button-1 shadow-md"
               onClick={handleSave}
             >
               Confirmar

@@ -72,13 +72,13 @@ export function MealEqualizerDrawer() {
         </Card>
       </DrawerTrigger>
       
-      <DrawerContent className="!bg-glass-light-4 backdrop-blur-xl rounded-t-[40px] px-6 pb-12 shadow-xl border-white/50">
+      <DrawerContent className="!bg-green-50/95 backdrop-blur-2xl border-t border-green-200 text-green-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
         <DrawerHeader className="px-0">
-          <DrawerTitle className="text-title-2 text-neutral-500">
+          <DrawerTitle className="text-title-2 text-green-950">
             {!selectedMeal ? 'Adicionar Refeição 🥗' : `Como foi o ${MEALS.find(m => m.id === selectedMeal)?.label}?`}
           </DrawerTitle>
           {selectedMeal && (
-            <p className="text-body-1 text-neutral-500/80 mt-2">Desvio em relação ao seu plano normal.</p>
+            <p className="text-body-1 text-green-900/80 mt-2">Desvio em relação ao seu plano normal.</p>
           )}
         </DrawerHeader>
 
@@ -89,7 +89,7 @@ export function MealEqualizerDrawer() {
                 <Button 
                   key={meal.id}
                   variant="outline" 
-                  className="h-16 rounded-2xl border border-white/40 bg-glass-light-2 backdrop-blur-sm hover:border-brand-500 hover:bg-glass-light-3 text-neutral-500 flex flex-col items-center justify-center"
+                  className="h-16 rounded-2xl border border-green-200 bg-white/50 backdrop-blur-sm hover:border-green-500 hover:bg-white/80 text-green-950 flex flex-col items-center justify-center"
                   onClick={() => setSelectedMeal(meal.id)}
                 >
                   <span className="text-button-1">{meal.label}</span>
@@ -109,14 +109,14 @@ export function MealEqualizerDrawer() {
             <div className="flex space-x-3">
               <Button 
                 variant="outline"
-                className="h-14 rounded-2xl border border-white/40 bg-glass-light-2 backdrop-blur-sm text-neutral-500 hover:bg-glass-light-3 flex-1 text-button-1"
+                className="h-14 rounded-2xl border border-green-200 bg-white/50 backdrop-blur-sm text-green-900 hover:bg-white/80 flex-1 text-button-1 shadow-sm"
                 onClick={() => setSelectedMeal(null)}
               >
                 Voltar
               </Button>
               <DrawerClose asChild>
                 <Button 
-                  className="h-14 rounded-2xl bg-brand-500 text-white flex-1 text-button-1"
+                  className="h-14 rounded-2xl bg-green-500 hover:bg-green-600 text-white border-transparent flex-1 text-button-1 shadow-md"
                   onClick={handleSave}
                 >
                   Confirmar

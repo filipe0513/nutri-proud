@@ -28,5 +28,9 @@ export interface ActivityLog {
     quantity_ml?: number;
     factors?: any;
     notes?: string;
+    duration_hours?: number;
+    awoke_times?: number;
+    quality_feeling?: 'cansado' | 'normal' | 'revigorado' | null;
+    state?: string;
   };
 }

@@ -15,9 +15,8 @@ export function VerticalEqualizer({ label, value, min, max, step = 1, onChange }
   // Determine color based on value
   const colorClass = useMemo(() => {
     const mid = (min + max) / 2;
-    if (value === mid) return 'bg-notify-success-glass backdrop-blur-md';
-    if (value > mid) return 'bg-notify-error-glass backdrop-blur-md';
-    return 'bg-purple-500/20 backdrop-blur-md';
+    if (value === mid) return 'bg-notify-success';
+    return 'bg-notify-error';
   }, [value, min, max]);
 
   const percentage = ((value - min) / (max - min)) * 100;
@@ -38,7 +37,7 @@ export function VerticalEqualizer({ label, value, min, max, step = 1, onChange }
         />
         
         {/* Visual Track */}
-        <div className="absolute inset-0 bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-full overflow-hidden flex flex-col justify-end shadow-inner">
+        <div className="absolute inset-0 bg-neutral-200 border border-white/40 rounded-full overflow-hidden flex flex-col justify-end shadow-inner">
           <div 
             className={`w-full transition-colors duration-300 ease-out ${colorClass}`}
             style={{ height: `${percentage}%`, transitionProperty: 'height, background-color' }}
@@ -47,8 +46,14 @@ export function VerticalEqualizer({ label, value, min, max, step = 1, onChange }
 
         {/* Center Line Indicator (if it crosses 0) */}
         {min < 0 && max > 0 && (
-          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-neutral-300/50 -translate-y-1/2 pointer-events-none" />
+          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-neutral-300 -translate-y-1/2 pointer-events-none" />
         )}
+
+        {/* Visible Thumb */}
+        <div 
+          className="absolute left-1/2 -translate-x-1/2 w-8 h-8 rounded-full border-4 border-white bg-orange-500 shadow-lg pointer-events-none transition-all duration-100 z-20"
+          style={{ bottom: `calc(${percentage}% - 16px)` }}
+        />
       </div>
 
       {/* Labels */}

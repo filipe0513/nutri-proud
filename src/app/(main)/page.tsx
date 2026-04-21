@@ -18,9 +18,11 @@ import {
   StickyNote
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ActionCardWithDrawer } from '@/components/shared/ActionCardWithDrawer';
 import { MealEqualizerDrawer } from '@/components/shared/MealEqualizerDrawer';
 import { WorkoutEqualizerDrawer } from '@/components/shared/WorkoutEqualizerDrawer';
+import { BottomSheet_Water } from '@/components/shared/BottomSheet_Water';
+import { BottomSheet_Sleep } from '@/components/shared/BottomSheet_Sleep';
+import { BottomSheet_Poop } from '@/components/shared/BottomSheet_Poop';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -74,56 +76,11 @@ export default function DashboardPage() {
         <h2 className="text-title-2 text-neutral-500 px-1">Ações Rápidas</h2>
         
         <div className="grid grid-cols-2 gap-4">
-          <ActionCardWithDrawer
-            category="water"
-            icon={Droplets}
-            iconColorClass="text-blue-500"
-            iconBgClass="bg-blue-50"
-            title="Água"
-            drawerTitle="Quanto você bebeu?"
-            options={[
-              { label: "250ml (Copo)", value: 250, primaryValue: 100 },
-              { label: "500ml (Garrafa)", value: 500, primaryValue: 100 },
-              { label: "1L (Jarra)", value: 1000, primaryValue: 100 },
-              { label: "Outro", value: "custom", primaryValue: 100, suffix: "ml" },
-            ]}
-            onLogDetails={(v) => ({ quantity_ml: v })}
-          />
-
+          <BottomSheet_Water />
           <MealEqualizerDrawer />
-
           <WorkoutEqualizerDrawer />
-
-          <ActionCardWithDrawer
-            category="sleep"
-            icon={Moon}
-            iconColorClass="text-indigo-500"
-            iconBgClass="bg-indigo-50"
-            title="Sono"
-            drawerTitle="Como foi seu sono?"
-            options={[
-              { label: "Mais de 8h", value: ">8h", primaryValue: 100 },
-              { label: "6 a 8h", value: "6-8h", primaryValue: 80 },
-              { label: "Menos de 6h", value: "<6h", primaryValue: 40 },
-              { label: "Outro", value: "custom", primaryValue: 100, suffix: "h" },
-            ]}
-            onLogDetails={(v) => ({ duration: v })}
-          />
-
-          <ActionCardWithDrawer
-            category="poop"
-            icon={Smile}
-            iconColorClass="text-green-500"
-            iconBgClass="bg-green-50"
-            title="Intestino"
-            drawerTitle="Como funcionou hoje?"
-            options={[
-              { label: "Tudo Certo", value: "normal", primaryValue: 100 },
-              { label: "Prisão de Ventre", value: "constipation", primaryValue: 50 },
-              { label: "Diarreia", value: "diarrhea", primaryValue: 50 },
-            ]}
-            onLogDetails={(v) => ({ state: v })}
-          />
+          <BottomSheet_Sleep />
+          <BottomSheet_Poop />
 
           <Drawer>
             <DrawerTrigger asChild>
@@ -136,7 +93,7 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             </DrawerTrigger>
-            <DrawerContent className="!bg-glass-light-4 backdrop-blur-xl rounded-t-[40px] px-6 pb-12 shadow-xl border-white/50">
+            <DrawerContent className="!bg-white/95 backdrop-blur-2xl border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
               <DrawerHeader className="px-0">
                 <DrawerTitle className="text-title-2 text-neutral-500">Adicionar Nota</DrawerTitle>
               </DrawerHeader>

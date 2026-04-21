@@ -78,7 +78,7 @@ export function ActionCardWithDrawer({
           </CardContent>
         </Card>
       </DrawerTrigger>
-      <DrawerContent className="!bg-glass-light-4 backdrop-blur-xl rounded-t-[40px] px-6 pb-12 shadow-xl border-white/50">
+      <DrawerContent className="!bg-white/95 backdrop-blur-2xl border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
         <DrawerHeader className="px-0">
           <DrawerTitle className="text-title-2 text-neutral-500">
             {customStep ? `Digitar quantidade (${customStep.suffix || ''})` : drawerTitle}

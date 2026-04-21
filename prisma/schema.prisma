@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  profile   Json     // { weight_kg, height_cm, gender, main_goal, body_fat_percentage }
+  targets   Json     // { water_ml_per_day, meals_per_day, sleep_hours_per_night, weekly_workouts }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  logs      DailyLog[]
+}
+
+model DailyLog {
+  id           String   @id @default(uuid())
+  createdAt    DateTime @default(now())
+  eventTime    DateTime
+  category     String   // "water", "sleep", "poop", "food", "workout", "note"
+  primaryValue Int
+  details      Json     // JSONB field
+  
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
