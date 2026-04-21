@@ -134,3 +134,34 @@ Agente, ao ler este arquivo, siga ESTRITAMENTE a ordem abaixo. Confirme a conclu
 - Use `camelCase` para variáveis e funções TypeScript.
 - Use `PascalCase` para componentes React.
 - Mantenha os componentes o mais modulares possível (componentize os Stories e Cards).
+
+## 📂 Arquitetura da Camada de Dados (Store/State)
+Adotamos uma separação estrita de responsabilidades (Separation of Concerns) dentro da pasta `src/store/` com 3 arquivos principais:
+
+1. **`types.ts`**: Contém todas as interfaces TypeScript (ex: `UserProfile`, `ActivityLog`). Espelha o formato do banco de dados.
+2. **`api.ts`**: É a Camada de Serviços. Apenas este arquivo conversa com o "Mundo Exterior" (Endpoints, LocalStorage, APIs reais). Todas as funções aqui devem ser `async` para preparar o projeto para uma API real no futuro.
+3. **`store.ts`**: Hook global do Zustand (`useAppStore`). Ele importa e executa as funções do `api.ts`, processa regras de negócio pesadas, e então usa o `set()` para atualizar a reatividade dos componentes React.
+
+**Regra de Componentes:** Componentes React (`pages` e `ui`) devem ser estúpidos. Eles não calculam metas, não formatam JSON de banco de dados e não chamam APIs. Eles apenas capturam o input do usuário e despacham a ação para a `store.ts`.
+
+## 🎨 Design System, Tipografia e Glassmorphism (Regras Estritas)
+
+Para manter a consistência visual inspirada na Apple/Nubank, é PROIBIDO usar tamanhos de fonte ou opacidades arbitrárias do Tailwind em novos componentes. Use exclusivamente os tokens do `tailwind.config.ts`.
+
+**1. Tipografia Padrão:**
+- Títulos: `text-title-1`, `text-title-2`, `text-title-3`
+- Corpo: `text-body-1`, `text-body-2`
+- Apoio: `text-caption-1`, `text-caption-2`
+- Interação: `text-button-1`, `text-input-1`
+
+**2. Paleta Base e Status:**
+- Fundo da Página (Body): `bg-neutral-100` ou `bg-bg-light`.
+- Textos: `text-neutral-500` (Principal), `text-neutral-400` (Apoio).
+- Círculos de Progresso/Gamificação: `text-notify-success`, `text-notify-warning`, `text-notify-error`.
+
+**3. Regras de Glassmorphism (Componentes Sobrepostos):**
+O efeito Glass exige a cor do tema somada a uma classe de blur (`backdrop-blur-sm`, `md` ou `lg`) e, opcionalmente, uma borda semitransparente.
+- **Cards Normais:** `bg-glass-light-1 backdrop-blur-sm border border-white/40`
+- **Bottom Navigation (Menu):** `bg-glass-light-2 backdrop-blur-md`
+- **Drawers / Modais:** `bg-glass-light-3 backdrop-blur-lg`
+- **Toasts:** Devem usar as cores `*-glass` de notificação. Ex: `bg-notify-info-glass backdrop-blur-md border border-notify-info`.
