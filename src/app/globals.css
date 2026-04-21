@@ -46,6 +46,49 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Brand Colors */
+  --color-brand-100: #FFEDD5;
+  --color-brand-200: #FED7AA;
+  --color-brand-300: #FDBA74;
+  --color-brand-400: #FB923C;
+  --color-brand-500: #F97316;
+  --color-brand-600: #EA580C;
+  
+  /* Neutral Colors */
+  --color-neutral-100: #F8FAFC;
+  --color-neutral-200: #F1F5F9;
+  --color-neutral-300: #E2E8F0;
+  --color-neutral-400: #94A3B8;
+  --color-neutral-500: #0F172A;
+  
+  /* Highlight Colors */
+  --color-highlight-100: #FEF3C7;
+  --color-highlight-200: #FDE68A;
+  --color-highlight-300: #F59E0B;
+  
+  /* Notify Colors */
+  --color-notify-success: #10B981;
+  --color-notify-success-glass: rgba(16, 185, 129, 0.15);
+  --color-notify-warning: #F59E0B;
+  --color-notify-warning-glass: rgba(245, 158, 11, 0.15);
+  --color-notify-error: #EF4444;
+  --color-notify-error-glass: rgba(239, 68, 68, 0.15);
+  --color-notify-info: #3B82F6;
+  --color-notify-info-glass: rgba(59, 130, 246, 0.15);
+  
+  /* Glass Colors */
+  --color-glass-light-1: rgba(255, 255, 255, 0.3);
+  --color-glass-light-2: rgba(255, 255, 255, 0.6);
+  --color-glass-light-3: rgba(255, 255, 255, 0.85);
+  --color-glass-light-4: rgba(255, 255, 255, 0.65);
+  --color-glass-dark-1: rgba(15, 23, 42, 0.4);
+  --color-glass-dark-2: rgba(15, 23, 42, 0.75);
+  
+  /* Background Colors */
+  --color-bg-light: #FFFFFF;
+  --color-bg-dark: #020617;
 }
 
 :root {
@@ -121,17 +164,86 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
 }
+
 @layer utilities {
+  /* Typography Tokens */
+  .text-title-1 {
+    font-size: 2rem;
+    line-height: 2.5rem;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+  .text-title-2 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+  .text-title-3 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+  .text-body-1 {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 400;
+  }
+  .text-body-2 {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 400;
+  }
+  .text-caption-1 {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 400;
+  }
+  .text-caption-2 {
+    font-size: 0.625rem;
+    line-height: 0.875rem;
+    font-weight: 500;
+  }
+  .text-button-1 {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .text-input-1 {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 400;
+  }
+
+  /* Mesh Gradient Background */
+  .bg-mesh-sunset {
+    background-color: #fcf9f8;
+    background-image: 
+      radial-gradient(at 0% 0%, #e2d1f9 0px, transparent 60%),
+      radial-gradient(at 100% 0%, #fcd3a1 0px, transparent 60%),
+      radial-gradient(at 100% 100%, #f8e2cf 0px, transparent 60%),
+      radial-gradient(at 0% 100%, #f3b2b4 0px, transparent 60%);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  /* Scrollbar utilities */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;

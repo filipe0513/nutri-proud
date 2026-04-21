@@ -5,16 +5,16 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store/store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ArrowRight, ArrowLeft } from 'lucide-react';
-import { UserProfile } from '@/types';
+import { UserProfile } from '@/store/types';
 
 type Step = 'name' | 'goal' | 'stats' | 'calculating';
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const setProfile = useAppStore((state) => state.setProfile);
+  const saveOnboardingData = useAppStore((state) => state.saveOnboardingData);
   
   const [step, setStep] = useState<Step>('name');
   const [formData, setFormData] = useState({
@@ -36,41 +36,22 @@ export default function OnboardingPage() {
     else if (step === 'stats') setStep('goal');
   };
 
-  const calculateAndFinish = () => {
+  const calculateAndFinish = async () => {
     setStep('calculating');
     
-    const weight = parseFloat(formData.weight);
-    const height = parseFloat(formData.height);
-    
-    // Simple calculations for MVP
-    const waterTarget = Math.round(weight * 35);
-    const mealsTarget = formData.goal === 'muscle_gain' ? 5 : 4;
-    const sleepTarget = 8;
-    
-    const profile: UserProfile = {
+    await saveOnboardingData({
       name: formData.name,
-      profile: {
-        weight_kg: weight,
-        height_cm: height,
-        gender: formData.gender,
-        main_goal: formData.goal,
-      },
-      targets: {
-        water_ml_per_day: waterTarget,
-        meals_per_day: mealsTarget,
-        sleep_hours_per_night: sleepTarget,
-        weekly_workouts: { cardio: 2, strength: 3 },
-      },
-    };
+      weight: parseFloat(formData.weight),
+      height: parseFloat(formData.height),
+      gender: formData.gender,
+      goal: formData.goal,
+    });
 
-    setTimeout(() => {
-      setProfile(profile);
-      router.push('/');
-    }, 2000);
+    router.push('/');
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col p-6 items-center justify-center">
+    <div className="min-h-screen flex flex-col p-6 items-center justify-center">
       <AnimatePresence mode="wait">
         {step === 'name' && (
           <motion.div
@@ -80,18 +61,18 @@ export default function OnboardingPage() {
             exit={{ opacity: 0, x: -20 }}
             className="w-full max-w-sm"
           >
-            <h2 className="text-3xl font-bold mb-8 text-slate-900 leading-tight">Como podemos te chamar?</h2>
+            <h2 className="text-title-1 text-neutral-500 mb-8">Como podemos te chamar?</h2>
             <div className="space-y-6">
               <Input
                 placeholder="Seu nome"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="h-14 text-lg border-slate-200 focus:border-slate-900 focus:ring-slate-900 rounded-2xl px-6"
+                className="h-14 text-input-1 border-white/40 focus:border-brand-500 focus:ring-brand-500 bg-glass-light-1 backdrop-blur-sm rounded-2xl px-6"
               />
               <Button 
                 onClick={nextStep} 
                 disabled={!formData.name}
-                className="w-full h-14 text-lg font-semibold bg-slate-900 hover:bg-slate-800 rounded-2xl shadow-lg transition-all"
+                className="w-full h-14 text-button-1 bg-brand-500 hover:bg-brand-400 text-white rounded-2xl shadow-lg transition-all"
               >
                 Continuar <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -107,7 +88,7 @@ export default function OnboardingPage() {
             exit={{ opacity: 0, x: -20 }}
             className="w-full max-w-sm"
           >
-            <h2 className="text-3xl font-bold mb-8 text-slate-900 leading-tight">Qual seu principal objetivo?</h2>
+            <h2 className="text-title-1 text-neutral-500 mb-8">Qual seu principal objetivo?</h2>
             <div className="grid gap-4">
               {[
                 { id: 'fat_loss', label: 'Emagrecer', desc: 'Foco em queima de gordura' },
@@ -116,15 +97,15 @@ export default function OnboardingPage() {
               ].map((goal) => (
                 <Card 
                   key={goal.id}
-                  className={`cursor-pointer border-2 transition-all rounded-2xl overflow-hidden ${
-                    formData.goal === goal.id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300'
+                  className={`cursor-pointer border transition-all rounded-2xl overflow-hidden ${
+                    formData.goal === goal.id ? 'border-brand-500 bg-brand-500 text-white' : 'border-white/40 bg-glass-light-1 backdrop-blur-sm text-neutral-500 hover:bg-glass-light-2'
                   }`}
                   onClick={() => setFormData({ ...formData, goal: goal.id as any })}
                 >
                   <CardContent className="p-6 flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-xl">{goal.label}</p>
-                      <p className={`text-sm ${formData.goal === goal.id ? 'text-slate-300' : 'text-slate-500'}`}>{goal.desc}</p>
+                      <p className="text-title-3 font-bold">{goal.label}</p>
+                      <p className={`text-caption-1 mt-1 ${formData.goal === goal.id ? 'text-white/80' : 'text-neutral-500/80'}`}>{goal.desc}</p>
                     </div>
                     {formData.goal === goal.id && <Check className="h-6 w-6" />}
                   </CardContent>
@@ -132,12 +113,12 @@ export default function OnboardingPage() {
               ))}
             </div>
             <div className="mt-8 flex gap-4">
-              <Button variant="ghost" onClick={prevStep} className="h-14 w-14 rounded-2xl border border-slate-200">
+              <Button variant="ghost" onClick={prevStep} className="h-14 w-14 rounded-2xl border border-white/40 bg-glass-light-1 backdrop-blur-sm hover:bg-glass-light-2 text-neutral-500">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <Button 
                 onClick={nextStep}
-                className="flex-1 h-14 text-lg font-semibold bg-slate-900 hover:bg-slate-800 rounded-2xl shadow-lg transition-all"
+                className="flex-1 h-14 text-button-1 bg-brand-500 hover:bg-brand-400 text-white rounded-2xl shadow-lg transition-all"
               >
                 Próximo passo
               </Button>
@@ -153,36 +134,36 @@ export default function OnboardingPage() {
             exit={{ opacity: 0, x: -20 }}
             className="w-full max-w-sm"
           >
-            <h2 className="text-3xl font-bold mb-8 text-slate-900 leading-tight">Seus dados físicos</h2>
+            <h2 className="text-title-1 text-neutral-500 mb-8">Seus dados físicos</h2>
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-500 ml-2">Peso (kg)</label>
+                <label className="text-caption-1 font-semibold text-neutral-500/80 ml-2">Peso (kg)</label>
                 <Input
                   type="number"
                   placeholder="Ex: 75"
                   value={formData.weight}
                   onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                  className="h-14 text-lg border-slate-200 focus:border-slate-900 rounded-2xl px-6"
+                  className="h-14 text-input-1 border-white/40 focus:border-brand-500 bg-glass-light-1 backdrop-blur-sm rounded-2xl px-6"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-500 ml-2">Altura (cm)</label>
+                <label className="text-caption-1 font-semibold text-neutral-500/80 ml-2">Altura (cm)</label>
                 <Input
                   type="number"
                   placeholder="Ex: 175"
                   value={formData.height}
                   onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-                  className="h-14 text-lg border-slate-200 focus:border-slate-900 rounded-2xl px-6"
+                  className="h-14 text-input-1 border-white/40 focus:border-brand-500 bg-glass-light-1 backdrop-blur-sm rounded-2xl px-6"
                 />
               </div>
               <div className="flex gap-4">
-                <Button variant="ghost" onClick={prevStep} className="h-14 w-14 rounded-2xl border border-slate-200">
+                <Button variant="ghost" onClick={prevStep} className="h-14 w-14 rounded-2xl border border-white/40 bg-glass-light-1 backdrop-blur-sm hover:bg-glass-light-2 text-neutral-500">
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <Button 
                   onClick={nextStep}
                   disabled={!formData.weight || !formData.height}
-                  className="flex-1 h-14 text-lg font-semibold bg-slate-900 hover:bg-slate-800 rounded-2xl shadow-lg transition-all"
+                  className="flex-1 h-14 text-button-1 bg-brand-500 hover:bg-brand-400 text-white rounded-2xl shadow-lg transition-all"
                 >
                   Calcular minhas metas
                 </Button>
@@ -202,12 +183,12 @@ export default function OnboardingPage() {
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="w-full h-full border-4 border-slate-200 border-t-slate-900 rounded-full"
+                className="w-full h-full border-4 border-white/40 border-t-brand-500 rounded-full"
               />
             </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-slate-900">Preparando seu plano...</h2>
-              <p className="text-slate-500">Estamos calculando suas metas personalizadas com base no seu perfil.</p>
+              <h2 className="text-title-2 text-neutral-500">Preparando seu plano...</h2>
+              <p className="text-body-1 text-neutral-500/80">Estamos calculando suas metas personalizadas com base no seu perfil.</p>
             </div>
           </motion.div>
         )}

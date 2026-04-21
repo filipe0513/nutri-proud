@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store/store';
 import { toast } from 'sonner';
 import { Utensils } from 'lucide-react';
 import { VerticalEqualizer } from './VerticalEqualizer';
@@ -39,10 +39,13 @@ export function MealEqualizerDrawer() {
   const handleSave = () => {
     if (!selectedMeal) return;
 
+    const avgDeviation = (Math.abs(protein) + Math.abs(carbs) + Math.abs(fats) + Math.abs(fiber)) / 4;
+    const score = Math.max(0, Math.round(100 - (avgDeviation / 50) * 100));
+
     addLog({
       event_time: new Date().toISOString(),
       category: 'food',
-      primary_value: 100, // could be dynamic based on eq values
+      primary_value: score,
       details: { 
         meal_type: selectedMeal as any,
         factors: { protein, carbs, fats, fiber }
@@ -59,21 +62,24 @@ export function MealEqualizerDrawer() {
   return (
     <Drawer onOpenChange={(open) => !open && setTimeout(resetState, 300)}>
       <DrawerTrigger asChild>
-        <Card className="rounded-3xl border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
+        <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
           <CardContent className="p-0 flex flex-col items-center justify-center space-y-3">
             <div className="h-16 w-16 rounded-2xl bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Utensils className="h-8 w-8 text-orange-500" />
             </div>
-            <p className="font-bold text-slate-900 text-sm text-center px-2">Refeição</p>
+            <p className="text-body-1 font-bold text-neutral-500 text-center px-2">Refeição</p>
           </CardContent>
         </Card>
       </DrawerTrigger>
       
-      <DrawerContent className="bg-white rounded-t-[40px] px-6 pb-12">
+      <DrawerContent className="!bg-glass-light-4 backdrop-blur-xl rounded-t-[40px] px-6 pb-12 shadow-xl border-white/50">
         <DrawerHeader className="px-0">
-          <DrawerTitle className="text-2xl font-bold">
-            {!selectedMeal ? 'Qual foi a refeição?' : 'Como foi o prato?'}
+          <DrawerTitle className="text-title-2 text-neutral-500">
+            {!selectedMeal ? 'Adicionar Refeição 🥗' : `Como foi o ${MEALS.find(m => m.id === selectedMeal)?.label}?`}
           </DrawerTitle>
+          {selectedMeal && (
+            <p className="text-body-1 text-neutral-500/80 mt-2">Desvio em relação ao seu plano normal.</p>
+          )}
         </DrawerHeader>
 
         {!selectedMeal ? (
@@ -83,10 +89,10 @@ export function MealEqualizerDrawer() {
                 <Button 
                   key={meal.id}
                   variant="outline" 
-                  className="h-16 rounded-2xl border-2 hover:border-slate-900 hover:bg-slate-50 flex flex-col items-center justify-center"
+                  className="h-16 rounded-2xl border border-white/40 bg-glass-light-2 backdrop-blur-sm hover:border-brand-500 hover:bg-glass-light-3 text-neutral-500 flex flex-col items-center justify-center"
                   onClick={() => setSelectedMeal(meal.id)}
                 >
-                  <span className="font-bold">{meal.label}</span>
+                  <span className="text-button-1">{meal.label}</span>
                 </Button>
               ))}
             </div>
@@ -94,23 +100,23 @@ export function MealEqualizerDrawer() {
         ) : (
           <div className="flex flex-col mt-4 space-y-6">
             <div className="flex items-center space-x-4 overflow-x-auto pb-4 no-scrollbar">
-              <VerticalEqualizer label="Proteínas" value={protein} min={-10} max={10} onChange={setProtein} />
-              <VerticalEqualizer label="Carbos" value={carbs} min={-10} max={10} onChange={setCarbs} />
-              <VerticalEqualizer label="Gorduras" value={fats} min={-10} max={10} onChange={setFats} />
-              <VerticalEqualizer label="Fibras" value={fiber} min={-10} max={10} onChange={setFiber} />
+              <VerticalEqualizer label="Proteínas" value={protein} min={-50} max={50} step={10} onChange={setProtein} />
+              <VerticalEqualizer label="Carbos" value={carbs} min={-50} max={50} step={10} onChange={setCarbs} />
+              <VerticalEqualizer label="Gorduras" value={fats} min={-50} max={50} step={10} onChange={setFats} />
+              <VerticalEqualizer label="Fibras" value={fiber} min={-50} max={50} step={10} onChange={setFiber} />
             </div>
 
             <div className="flex space-x-3">
               <Button 
                 variant="outline"
-                className="h-14 rounded-2xl border-2 flex-1 font-bold"
+                className="h-14 rounded-2xl border border-white/40 bg-glass-light-2 backdrop-blur-sm text-neutral-500 hover:bg-glass-light-3 flex-1 text-button-1"
                 onClick={() => setSelectedMeal(null)}
               >
                 Voltar
               </Button>
               <DrawerClose asChild>
                 <Button 
-                  className="h-14 rounded-2xl bg-slate-900 text-white flex-1 font-bold"
+                  className="h-14 rounded-2xl bg-brand-500 text-white flex-1 text-button-1"
                   onClick={handleSave}
                 >
                   Confirmar

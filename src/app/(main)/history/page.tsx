@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store/store';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Droplets, 
@@ -82,23 +82,23 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 pt-8 px-6 max-w-lg mx-auto">
+    <div className="min-h-screen pb-24 pt-8 px-6 max-w-lg mx-auto">
       <div className="flex items-center space-x-4 mb-8">
-        <Button asChild variant="ghost" className="h-10 w-10 p-0 rounded-xl bg-white border border-slate-200 shadow-sm">
+        <Button asChild variant="ghost" className="h-10 w-10 p-0 rounded-xl bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm hover:bg-glass-light-2 text-neutral-500">
           <Link href="/">
-            <ChevronLeft className="h-6 w-6 text-slate-900" />
+            <ChevronLeft className="h-6 w-6" />
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold text-slate-900">Diário</h1>
+        <h1 className="text-title-1 text-neutral-500">Diário</h1>
       </div>
 
       {Object.keys(groupedLogs).length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-          <div className="h-20 w-20 bg-slate-100 rounded-full flex items-center justify-center">
-            <CalendarIcon className="h-10 w-10 text-slate-300" />
+          <div className="h-20 w-20 bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-full flex items-center justify-center">
+            <CalendarIcon className="h-10 w-10 text-neutral-500/80" />
           </div>
-          <p className="text-slate-500 font-medium">Nenhum registro encontrado.<br/>Comece agora mesmo!</p>
-          <Button asChild className="rounded-2xl bg-slate-900">
+          <p className="text-body-1 font-medium text-neutral-500">Nenhum registro encontrado.<br/>Comece agora mesmo!</p>
+          <Button asChild className="rounded-2xl bg-brand-500 text-button-1 text-white hover:bg-brand-400">
             <Link href="/">Voltar para Início</Link>
           </Button>
         </div>
@@ -106,26 +106,26 @@ export default function HistoryPage() {
         <div className="space-y-8">
           {Object.entries(groupedLogs).map(([date, logs]) => (
             <div key={date} className="space-y-4">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">
+              <h3 className="text-caption-1 font-bold text-neutral-500/80 uppercase tracking-widest px-1">
                 {formatDateHeader(date)}
               </h3>
               <div className="space-y-3">
                 {logs.map((log) => (
-                  <Card key={log.id} className="rounded-2xl border-none shadow-sm overflow-hidden">
+                  <Card key={log.id} className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-2xl shadow-sm overflow-hidden">
                     <CardContent className="p-4 flex flex-col justify-center">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
-                          <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
+                          <div className="h-10 w-10 rounded-xl bg-glass-light-2 backdrop-blur-sm border border-white/40 flex items-center justify-center shrink-0">
                             {getCategoryIcon(log.category)}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900 text-sm">{getLogTitle(log)}</p>
+                            <p className="text-body-1 font-bold text-neutral-500">{getLogTitle(log)}</p>
                             {log.details.notes && (
-                              <p className="text-xs text-slate-500 mt-1 line-clamp-2">{log.details.notes}</p>
+                              <p className="text-caption-1 text-neutral-500/80 mt-1 line-clamp-2">{log.details.notes}</p>
                             )}
                           </div>
                         </div>
-                        <div className="text-xs font-bold text-slate-400 self-start mt-1 shrink-0">
+                        <div className="text-caption-1 font-bold text-neutral-500/80 self-start mt-1 shrink-0">
                           {format(parseISO(log.event_time), 'HH:mm')}
                         </div>
                       </div>
@@ -135,14 +135,14 @@ export default function HistoryPage() {
                           {Object.entries(log.details.factors).map(([key, value]) => {
                             const val = value as number;
                             let Icon = Check;
-                            let colorClass = "text-emerald-500 bg-emerald-50";
+                            let colorClass = "text-notify-success bg-notify-success-glass border border-notify-success/20";
                             
                             if (val > 0) {
                               Icon = ArrowUp;
-                              colorClass = "text-red-500 bg-red-50";
+                              colorClass = "text-notify-error bg-notify-error-glass border border-notify-error/20";
                             } else if (val < 0) {
                               Icon = ArrowDown;
-                              colorClass = "text-purple-500 bg-purple-50";
+                              colorClass = "text-brand-500 bg-brand-100/50 border border-brand-500/20";
                             }
 
                             const factorLabel: any = {
@@ -157,7 +157,7 @@ export default function HistoryPage() {
                             return (
                               <div key={key} className={`flex items-center space-x-1 px-2 py-1 rounded-md ${colorClass}`}>
                                 <Icon className="h-3 w-3" />
-                                <span className="text-[10px] font-bold uppercase">{factorLabel[key] || key}</span>
+                                <span className="text-caption-2 font-bold uppercase">{factorLabel[key] || key}</span>
                               </div>
                             );
                           })}
@@ -172,22 +172,6 @@ export default function HistoryPage() {
         </div>
       )}
 
-      {/* Simplified Bottom Nav for consistency */}
-      <div className="fixed bottom-6 left-6 right-6 h-20 bg-white/80 backdrop-blur-xl border border-slate-200 rounded-[32px] shadow-2xl flex items-center justify-around px-4">
-        <Link href="/" className="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-600 transition-colors">
-          <div className="p-2">
-            <Home className="h-6 w-6" />
-          </div>
-        </Link>
-        <div className="flex flex-col items-center space-y-1 text-slate-900">
-          <div className="p-2 bg-slate-900 rounded-2xl">
-            <History className="h-6 w-6 text-white" />
-          </div>
-        </div>
-        <div className="flex flex-col items-center space-y-1 text-slate-400">
-          <Settings className="h-6 w-6" />
-        </div>
-      </div>
     </div>
   );
 }

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f8fafc", // Tailwind cor: slate-50
+  themeColor: "#fcf9f8",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -34,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${inter.variable} font-sans antialiased bg-slate-50 text-slate-900`}>
+      <body className={`${inter.variable} font-sans antialiased bg-mesh-sunset text-neutral-500`}>
         <RootProvider>
           {children}
         </RootProvider>

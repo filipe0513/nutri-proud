@@ -14,10 +14,10 @@ interface StoryCircleProps {
 
 export function StoryCircle({ label, icon: Icon, value, active, onClick }: StoryCircleProps) {
   const getBorderColor = (v: number) => {
-    if (v === 0) return 'border-slate-200';
-    if (v < 50) return 'border-red-500';
-    if (v < 75) return 'border-yellow-500';
-    return 'border-green-500';
+    if (v === 0) return 'border-white/40';
+    if (v < 50) return 'border-notify-error';
+    if (v < 75) return 'border-notify-warning';
+    return 'border-notify-success';
   };
 
   return (
@@ -25,12 +25,12 @@ export function StoryCircle({ label, icon: Icon, value, active, onClick }: Story
       <motion.div
         whileTap={{ scale: 0.9 }}
         className={cn(
-          "relative w-16 h-16 rounded-full border-[3px] p-1 flex items-center justify-center bg-white transition-colors shadow-sm",
+          "relative w-16 h-16 rounded-full border-[3px] p-1 flex items-center justify-center bg-glass-light-1 backdrop-blur-sm transition-colors shadow-sm",
           getBorderColor(value),
-          active && "ring-2 ring-slate-900 ring-offset-2"
+          active && "ring-2 ring-brand-500 ring-offset-2"
         )}
       >
-        <div className="w-full h-full rounded-full bg-slate-50 flex items-center justify-center text-slate-700">
+        <div className="w-full h-full rounded-full bg-glass-light-2 backdrop-blur-md flex items-center justify-center text-neutral-500">
           <Icon className="h-7 w-7" />
         </div>
         
@@ -41,7 +41,7 @@ export function StoryCircle({ label, icon: Icon, value, active, onClick }: Story
            </div>
         )}
       </motion.div>
-      <span className="text-xs font-semibold text-slate-500 uppercase tracking-tight">{label}</span>
+      <span className="text-caption-1 font-semibold text-neutral-500/80 uppercase tracking-tight">{label}</span>
     </div>
   );
 }

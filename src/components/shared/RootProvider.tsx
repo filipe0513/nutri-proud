@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store/store';
 import { Toaster } from '@/components/ui/sonner';
 
 export function RootProvider({ children }: { children: React.ReactNode }) {
