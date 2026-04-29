@@ -9,6 +9,7 @@ import { useAppStore } from '@/store/store';
 import { toast } from 'sonner';
 import { Utensils } from 'lucide-react';
 import { VerticalEqualizer } from './VerticalEqualizer';
+import { DatePickerInput } from './DatePickerInput';
 
 const MEALS = [
   { id: 'breakfast', label: 'Café da manhã' },
@@ -22,6 +23,7 @@ const MEALS = [
 export function MealEqualizerDrawer({ customTrigger }: { customTrigger?: React.ReactNode }) {
   const addLog = useAppStore(state => state.addLog);
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   
   // Equalizer states
   const [protein, setProtein] = useState(0);
@@ -35,6 +37,7 @@ export function MealEqualizerDrawer({ customTrigger }: { customTrigger?: React.R
     setCarbs(0);
     setFats(0);
     setFiber(0);
+    setSelectedDate(new Date().toISOString().split('T')[0]);
   };
 
   const handleSave = () => {
@@ -44,7 +47,7 @@ export function MealEqualizerDrawer({ customTrigger }: { customTrigger?: React.R
     const score = Math.max(0, Math.round(100 - (avgDeviation / 50) * 100));
 
     addLog({
-      event_time: new Date().toISOString(),
+      event_time: `${selectedDate}T12:00:00.000Z`,
       category: 'food',
       primary_value: score,
       details: { 
@@ -77,9 +80,17 @@ export function MealEqualizerDrawer({ customTrigger }: { customTrigger?: React.R
       
       <DrawerContent className="!bg-green-50/95 backdrop-blur-2xl border-t border-green-200 text-green-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
         <DrawerHeader className="px-0">
-          <DrawerTitle className="text-title-2 text-green-950">
-            {!selectedMeal ? 'Adicionar Refeição 🥗' : `Como foi o ${MEALS.find(m => m.id === selectedMeal)?.label}?`}
-          </DrawerTitle>
+          <div className="flex items-center justify-between">
+            <DrawerTitle className="text-title-2 text-green-950">
+              {!selectedMeal ? 'Adicionar Refeição 🥗' : `Como foi o ${MEALS.find(m => m.id === selectedMeal)?.label}?`}
+            </DrawerTitle>
+            <DatePickerInput
+              value={selectedDate}
+              onChange={setSelectedDate}
+              accentColor="text-green-700"
+              borderColor="border-green-200"
+            />
+          </div>
           {selectedMeal && (
             <p className="text-body-1 text-green-900/80 mt-2">Desvio em relação ao seu plano normal.</p>
           )}

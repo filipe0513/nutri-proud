@@ -9,6 +9,7 @@ import { Slider } from '@/components/ui/slider';
 import { useAppStore } from '@/store/store';
 import { toast } from 'sonner';
 import { Moon, Minus, Plus } from 'lucide-react';
+import { DatePickerInput } from './DatePickerInput';
 
 export function BottomSheet_Sleep({ customTrigger }: { customTrigger?: React.ReactNode }) {
   const addLog = useAppStore(state => state.addLog);
@@ -16,11 +17,13 @@ export function BottomSheet_Sleep({ customTrigger }: { customTrigger?: React.Rea
   const [duration, setDuration] = useState(8);
   const [awokeTimes, setAwokeTimes] = useState(0);
   const [quality, setQuality] = useState<'cansado' | 'normal' | 'revigorado' | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   const resetState = () => {
     setDuration(8);
     setAwokeTimes(0);
     setQuality(null);
+    setSelectedDate(new Date().toISOString().split('T')[0]);
   };
 
   const handleSave = () => {
@@ -35,7 +38,7 @@ export function BottomSheet_Sleep({ customTrigger }: { customTrigger?: React.Rea
     if (duration < 5 || quality === 'cansado') score = 30;
 
     addLog({
-      event_time: new Date().toISOString(),
+      event_time: `${selectedDate}T12:00:00.000Z`,
       category: 'sleep',
       primary_value: score,
       details: { 
@@ -68,9 +71,17 @@ export function BottomSheet_Sleep({ customTrigger }: { customTrigger?: React.Rea
       
       <DrawerContent className="!bg-indigo-50/95 backdrop-blur-2xl border-t border-indigo-200 text-indigo-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
         <DrawerHeader className="px-0">
-          <DrawerTitle className="text-title-2 text-indigo-950">
-            Como foi sua noite?
-          </DrawerTitle>
+          <div className="flex items-center justify-between">
+            <DrawerTitle className="text-title-2 text-indigo-950">
+              Como foi sua noite?
+            </DrawerTitle>
+            <DatePickerInput
+              value={selectedDate}
+              onChange={setSelectedDate}
+              accentColor="text-indigo-700"
+              borderColor="border-indigo-200"
+            />
+          </div>
         </DrawerHeader>
 
         <div className="flex flex-col mt-4 space-y-8">

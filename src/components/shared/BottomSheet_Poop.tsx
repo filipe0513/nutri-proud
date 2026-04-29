@@ -5,15 +5,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAppStore } from '@/store/store';
 import { toast } from 'sonner';
 import { Smile } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { DatePickerInput } from './DatePickerInput';
 
 export function BottomSheet_Poop({ customTrigger }: { customTrigger?: React.ReactNode }) {
   const addLog = useAppStore(state => state.addLog);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   const handleSave = (state: string, primaryValue: number) => {
     addLog({
-      event_time: new Date().toISOString(),
+      event_time: `${selectedDate}T12:00:00.000Z`,
       category: 'poop',
       primary_value: primaryValue,
       details: { state }
@@ -46,9 +48,17 @@ export function BottomSheet_Poop({ customTrigger }: { customTrigger?: React.Reac
       
       <DrawerContent className="!bg-amber-50/95 backdrop-blur-2xl border-t border-amber-200 text-amber-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
         <DrawerHeader className="px-0">
-          <DrawerTitle className="text-title-2 text-amber-950">
-            Como funcionou hoje?
-          </DrawerTitle>
+          <div className="flex items-center justify-between">
+            <DrawerTitle className="text-title-2 text-amber-950">
+              Como funcionou hoje?
+            </DrawerTitle>
+            <DatePickerInput
+              value={selectedDate}
+              onChange={setSelectedDate}
+              accentColor="text-amber-700"
+              borderColor="border-amber-200"
+            />
+          </div>
         </DrawerHeader>
 
         <div className="flex flex-col mt-4 space-y-3">

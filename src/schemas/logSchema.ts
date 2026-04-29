@@ -24,4 +24,12 @@ export const logSchema = z.object({
   category: z.enum(['water', 'sleep', 'poop', 'food', 'workout', 'note']),
   primary_value: z.number().min(0).max(100),
   details: z.any(),
+  // event_time is optional; when provided it must not be in the future
+  event_time: z
+    .string()
+    .datetime({ offset: true, message: 'event_time deve ser uma data ISO válida.' })
+    .refine((val) => new Date(val) <= new Date(), {
+      message: 'Não é possível registrar eventos em datas futuras.',
+    })
+    .optional(),
 });

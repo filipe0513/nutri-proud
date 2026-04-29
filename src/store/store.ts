@@ -21,7 +21,7 @@ interface AppState {
   updateProfile: (profile: UserProfile) => Promise<void>;
   addLog: (log: Omit<ActivityLog, 'id' | 'created_at'>) => Promise<void>;
   removeLog: (id: string) => Promise<void>;
-  setWaterToTarget: () => Promise<void>;
+  setWaterToTarget: (date?: string) => Promise<void>;
   initializeData: () => Promise<void>;
   resetData: () => void;
 }
@@ -100,25 +100,25 @@ export const useAppStore = create<AppState>()((set, get) => ({
         }));
       },
 
-      setWaterToTarget: async () => {
+      setWaterToTarget: async (date?: string) => {
         const state = get();
         const profile = state.user_profile;
         if (!profile) return;
 
         const targetMl = profile.targets.water_ml_per_day;
-        const today = new Date().toISOString().split('T')[0];
+        const targetDate = date ?? new Date().toISOString().split('T')[0];
 
-        // Filter out today's water logs
+        // Filter out existing water logs for the target date
         const filteredLogs = state.activity_logs.filter(log => {
           if (log.category !== 'water') return true;
           const logDate = new Date(log.event_time).toISOString().split('T')[0];
-          return logDate !== today;
+          return logDate !== targetDate;
         });
 
         const newLog: ActivityLog = {
           id: uuidv4(),
           created_at: new Date().toISOString(),
-          event_time: new Date().toISOString(),
+          event_time: `${targetDate}T12:00:00.000Z`,
           category: 'water',
           primary_value: 100, // fully met
           details: { quantity_ml: targetMl }

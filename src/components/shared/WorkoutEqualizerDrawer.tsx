@@ -8,6 +8,7 @@ import { useAppStore } from '@/store/store';
 import { toast } from 'sonner';
 import { Dumbbell } from 'lucide-react';
 import { VerticalEqualizer } from './VerticalEqualizer';
+import { DatePickerInput } from './DatePickerInput';
 
 export function WorkoutEqualizerDrawer({ customTrigger }: { customTrigger?: React.ReactNode }) {
   const addLog = useAppStore(state => state.addLog);
@@ -15,10 +16,12 @@ export function WorkoutEqualizerDrawer({ customTrigger }: { customTrigger?: Reac
   // Equalizer states
   const [cardio, setCardio] = useState(0);
   const [carga, setCarga] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   const resetState = () => {
     setCardio(0);
     setCarga(0);
+    setSelectedDate(new Date().toISOString().split('T')[0]);
   };
 
   const handleSave = () => {
@@ -26,7 +29,7 @@ export function WorkoutEqualizerDrawer({ customTrigger }: { customTrigger?: Reac
     const score = Math.max(0, Math.round(100 - (avgDeviation / 50) * 100));
 
     addLog({
-      event_time: new Date().toISOString(),
+      event_time: `${selectedDate}T12:00:00.000Z`,
       category: 'workout',
       primary_value: score,
       details: { 
@@ -55,9 +58,17 @@ export function WorkoutEqualizerDrawer({ customTrigger }: { customTrigger?: Reac
       
       <DrawerContent className="!bg-red-50/95 backdrop-blur-2xl border-t border-red-200 text-red-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
         <DrawerHeader className="px-0">
-          <DrawerTitle className="text-title-2 text-red-950">
-            Como foi o treino?
-          </DrawerTitle>
+          <div className="flex items-center justify-between">
+            <DrawerTitle className="text-title-2 text-red-950">
+              Como foi o treino?
+            </DrawerTitle>
+            <DatePickerInput
+              value={selectedDate}
+              onChange={setSelectedDate}
+              accentColor="text-red-700"
+              borderColor="border-red-200"
+            />
+          </div>
           <p className="text-body-1 text-red-900/80 mt-2">Desvio em relação ao seu plano normal.</p>
         </DrawerHeader>
 
