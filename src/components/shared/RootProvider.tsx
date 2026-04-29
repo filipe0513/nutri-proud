@@ -9,11 +9,14 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const userProfile = useAppStore((state) => state.user_profile);
+  const initializeData = useAppStore((state) => state.initializeData);
   const [mounted, setMounted] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    initializeData().finally(() => setLoadingData(false));
+  }, [initializeData]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -27,7 +30,7 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
     }
   }, [mounted, userProfile, pathname, router]);
 
-  if (!mounted) return null;
+  if (!mounted || loadingData) return null;
 
   return (
     <>

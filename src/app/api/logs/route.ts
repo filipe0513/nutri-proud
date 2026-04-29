@@ -2,34 +2,90 @@ import { NextResponse } from 'next/server';
 import { logSchema, foodDetailsSchema } from '@/schemas/logSchema';
 import { prisma } from '@/lib/prisma';
 
+import { auth } from '@/auth';
+import { cookies } from 'next/headers';
+import { logService } from '@/services/logService';
+import { PermissionError } from '@/services/userService';
+
+async function getUserId() {
+  const session = await auth();
+  if (session?.user?.id) return session.user.id;
+  
+  const cookieStore = await cookies();
+  return cookieStore.get('anon_user_id')?.value;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const data = logSchema.parse(body);
 
-    // Validação extra se for Comida
     if (data.category === 'food') {
       foodDetailsSchema.parse(data.details);
     }
 
-    // Por enquanto, apenas logamos no servidor para teste
-    console.log("Dados válidos recebidos:", data);
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+    }
 
-    // TODO: Usar ID de usuário real após implementar Auth
-    const MOCK_USER_ID = "mock-user-1"; 
-
-    const log = await prisma.dailyLog.create({
-      data: {
-        category: data.category,
-        primaryValue: data.primary_value,
-        details: data.details,
-        eventTime: new Date(),
-        userId: MOCK_USER_ID,
-      }
-    });
+    const log = await logService.saveLog(userId, data);
     
     return NextResponse.json({ message: "Validado e salvo com sucesso!", log }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
+    if (error instanceof PermissionError) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
     return NextResponse.json({ error: "Dados inválidos", details: error }, { status: 400 });
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '15', 10);
+    const categoriesParam = searchParams.get('categories');
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
+
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+    }
+
+    // Construção do objeto where
+    const where: any = { userId };
+
+    if (categoriesParam) {
+      where.category = { in: categoriesParam.split(',') };
+    }
+
+    if (startDateParam || endDateParam) {
+      where.eventTime = {};
+      if (startDateParam) where.eventTime.gte = new Date(startDateParam);
+      if (endDateParam) where.eventTime.lte = new Date(endDateParam);
+    }
+
+    const logs = await prisma.dailyLog.findMany({
+      where,
+      orderBy: { eventTime: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    // Mapear do formato Prisma pro formato do Frontend
+    const formattedLogs = logs.map(log => ({
+      id: log.id,
+      created_at: log.createdAt.toISOString(),
+      event_time: log.eventTime.toISOString(),
+      category: log.category,
+      primary_value: log.primaryValue,
+      details: log.details,
+    }));
+
+    return NextResponse.json({ logs: formattedLogs, hasMore: logs.length === limit }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ error: "Falha ao buscar logs", details: error }, { status: 400 });
   }
 }

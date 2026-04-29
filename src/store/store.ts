@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { UserProfile, ActivityLog } from './types';
 import * as api from './api';
@@ -18,17 +17,25 @@ interface AppState {
   
   // Actions
   saveOnboardingData: (data: OnboardingData) => Promise<void>;
+  updateProfile: (profile: UserProfile) => Promise<void>;
   addLog: (log: Omit<ActivityLog, 'id' | 'created_at'>) => Promise<void>;
   removeLog: (id: string) => Promise<void>;
   setWaterToTarget: () => Promise<void>;
+  initializeData: () => Promise<void>;
   resetData: () => void;
 }
 
-export const useAppStore = create<AppState>()(
-  persist(
-    (set, get) => ({
+export const useAppStore = create<AppState>()((set, get) => ({
       user_profile: null,
       activity_logs: [],
+
+      initializeData: async () => {
+        const [profile, logs] = await Promise.all([
+          api.fetchUserProfile(),
+          api.fetchActivityLogs()
+        ]);
+        set({ user_profile: profile, activity_logs: logs });
+      },
 
       saveOnboardingData: async (data: OnboardingData) => {
         const { name, weight, height, gender, goal } = data;
@@ -73,6 +80,11 @@ export const useAppStore = create<AppState>()(
         await api.saveUserProfile(profile);
         
         // 2. Atualiza estado global
+        set({ user_profile: profile });
+      },
+
+      updateProfile: async (profile: UserProfile) => {
+        await api.saveUserProfile(profile);
         set({ user_profile: profile });
       },
 
@@ -131,10 +143,4 @@ export const useAppStore = create<AppState>()(
       },
 
       resetData: () => set({ user_profile: null, activity_logs: [] }),
-    }),
-    {
-      name: 'nutri_proud_storage',
-      storage: createJSONStorage(() => localStorage),
-    }
-  )
-);
+    }));

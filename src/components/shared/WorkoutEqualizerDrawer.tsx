@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { Dumbbell } from 'lucide-react';
 import { VerticalEqualizer } from './VerticalEqualizer';
 
-export function WorkoutEqualizerDrawer() {
+export function WorkoutEqualizerDrawer({ customTrigger }: { customTrigger?: React.ReactNode }) {
   const addLog = useAppStore(state => state.addLog);
   
   // Equalizer states
@@ -41,14 +41,16 @@ export function WorkoutEqualizerDrawer() {
   return (
     <Drawer onOpenChange={(open) => !open && setTimeout(resetState, 300)}>
       <DrawerTrigger asChild>
-        <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
-          <CardContent className="p-0 flex flex-col items-center justify-center space-y-3">
-            <div className="h-16 w-16 rounded-2xl bg-red-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Dumbbell className="h-8 w-8 text-red-500" />
-            </div>
-            <p className="text-body-1 font-bold text-neutral-500 text-center px-2">Treino</p>
-          </CardContent>
-        </Card>
+        {customTrigger ? customTrigger : (
+          <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
+            <CardContent className="p-0 flex flex-col items-center justify-center space-y-3">
+              <div className="h-16 w-16 rounded-2xl bg-red-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Dumbbell className="h-8 w-8 text-red-500" />
+              </div>
+              <p className="text-body-1 font-bold text-neutral-500 text-center px-2">Treino</p>
+            </CardContent>
+          </Card>
+        )}
       </DrawerTrigger>
       
       <DrawerContent className="!bg-red-50/95 backdrop-blur-2xl border-t border-red-200 text-red-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">

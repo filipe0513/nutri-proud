@@ -66,13 +66,14 @@ export function StoryHeader({ onCategorySelect }: StoryHeaderProps) {
 
       <div className="flex justify-between overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar space-x-4">
         {categories.map((cat) => (
-          <StoryCircle
-            key={cat.id}
-            label={cat.label}
-            icon={cat.icon}
-            value={getProgress(cat.id)}
-            onClick={() => onCategorySelect?.(cat.id)}
-          />
+          <Link key={cat.id} href={`/pillar/${cat.id}`}>
+            <StoryCircle
+              label={cat.label}
+              icon={cat.icon}
+              value={getProgress(cat.id)}
+              onClick={() => onCategorySelect?.(cat.id)}
+            />
+          </Link>
         ))}
       </div>
     </>

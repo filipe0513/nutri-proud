@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Smile } from 'lucide-react';
 import { useRef } from 'react';
 
-export function BottomSheet_Poop() {
+export function BottomSheet_Poop({ customTrigger }: { customTrigger?: React.ReactNode }) {
   const addLog = useAppStore(state => state.addLog);
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -32,14 +32,16 @@ export function BottomSheet_Poop() {
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
-          <CardContent className="p-0 flex flex-col items-center justify-center space-y-3">
-            <div className="h-16 w-16 rounded-2xl bg-amber-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Smile className="h-8 w-8 text-amber-500" />
-            </div>
-            <p className="text-body-1 font-bold text-neutral-500 text-center px-2">Intestino</p>
-          </CardContent>
-        </Card>
+        {customTrigger ? customTrigger : (
+          <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
+            <CardContent className="p-0 flex flex-col items-center justify-center space-y-3">
+              <div className="h-16 w-16 rounded-2xl bg-amber-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Smile className="h-8 w-8 text-amber-500" />
+              </div>
+              <p className="text-body-1 font-bold text-neutral-500 text-center px-2">Intestino</p>
+            </CardContent>
+          </Card>
+        )}
       </DrawerTrigger>
       
       <DrawerContent className="!bg-amber-50/95 backdrop-blur-2xl border-t border-amber-200 text-amber-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">

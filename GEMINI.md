@@ -5,15 +5,16 @@ Aplicativo web (PWA) focado no registro rápido e diário de 5 pilares da saúde
 **Diferencial (UX/UI):** Usabilidade extrema com zero atrito (One-Click Actions). Interface minimalista e gamificada inspirada no padrão visual do **Nubank** (uso intenso de Cards, Bottom Sheets, fundos em tom cinza claro e componentes modais para manter o usuário na mesma página).
 
 ---
-
 ## 🛠️ Tech Stack Oficial
-- **Core:** React 18+ e Next.js 14+ (App Router)
+- **Core:** React 18+ e Next.js 14+ (App Router Full-Stack)
 - **Linguagem:** TypeScript
 - **Estilização:** Tailwind CSS
 - **Biblioteca de Componentes:** Shadcn UI + Radix UI (Foco em acessibilidade e design Headless)
 - **Ícones:** Lucide React
-- **Gerenciamento de Estado:** Zustand (Global State)
-- **Banco de Dados (MVP):** LocalStorage (JSON Web via Zustand com persistência)
+- **Autenticação:** NextAuth / Auth.js (Magic Link via Resend + OAuth Google)
+- **Estado Global (Client-side):** Zustand (Atua apenas como gerenciador de UI e cache temporário em memória, sincronizado com a API)
+- **Banco de Dados:** PostgreSQL hospedado na nuvem (Neon/Supabase) gerenciado via **Prisma ORM**.
+- **Validação Isomórfica:** Zod (Schemas compartilhados entre Front e Back)
 
 ---
 
@@ -44,25 +45,29 @@ src/
 
 ---
 
-## 🗄️ Modelagem de Dados (Zustand + LocalStorage)
 
-O MVP utiliza duas entidades principais. O Zustand deve ser configurado com o middleware `persist` para salvar estes dados automaticamente no LocalStorage.
+## 🗄️ Modelagem de Dados (Frontend 🤝 Backend)
 
-### 1. `user_profile` (Configurações e Metas)
+O sistema abandonou o LocalStorage como fonte de verdade. Agora, o Frontend faz requisições (Fetches) para as rotas da API (`/api/*`), que por sua vez comunicam-se com o PostgreSQL via Prisma. 
+
+O Zustand deve ser usado **apenas para guardar a sessão atual e fazer otimizações de UI** (Optimistic Updates), sem o middleware `persist` para dados sensíveis.
+
+### 1. `User` / Perfil (Backend e Zustand Store)
+No banco, as configurações e metas moram na tabela de Usuário.
 ~~~typescript
-interface UserProfile {
+interface UserSession {
+  id: string; // UUID
+  email: string | null;
+  is_anonymous: boolean;
   profile: {
     weight_kg: number;
     height_cm: number;
     gender: 'male' | 'female' | 'other';
     main_goal: 'fat_loss' | 'muscle_gain' | 'health';
-    body_fat_percentage?: number;
   };
   targets: {
-    water_ml_per_day: number; // Ex: peso * 35ml
-    meals_per_day: number;
+    water_ml_per_day: number;
     sleep_hours_per_night: number;
-    weekly_workouts: { cardio: number; strength: number };
   };
 }
 ~~~
@@ -70,19 +75,13 @@ interface UserProfile {
 ### 2. `activity_log` (Registros Diários)
 Cada ação gera um objeto neste array. O campo `primary_value` (0 a 100) é crucial para a gamificação.
 ~~~typescript
-interface ActivityLog {
+interface DailyLog {
   id: string; // UUID
-  created_at: string; // ISO String (quando o botão foi clicado)
-  event_time: string; // ISO String (quando o fato ocorreu)
-  category: 'water' | 'food' | 'sleep' | 'workout' | 'poop';
-  primary_value: number; // Nota de 0 a 100 para o "Story"
-  details: {
-    // Campos dinâmicos dependendo da categoria
-    meal_type?: 'breakfast' | 'lunch' | 'snack' | 'dinner';
-    quantity_ml?: number;
-    factors?: any;
-    notes?: string;
-  };
+  user_id: string;
+  category: 'WATER' | 'FOOD' | 'SLEEP' | 'WORKOUT' | 'POOP';
+  score: number; // Nota de 0 a 100 para o "Story" gamificado
+  details: any; // JSON dinâmico (validado com Zod via src/schemas/logSchema.ts)
+  created_at: string; // ISO String (quando o fato ocorreu)
 }
 ~~~
 
@@ -165,3 +164,18 @@ O efeito Glass exige a cor do tema somada a uma classe de blur (`backdrop-blur-s
 - **Bottom Navigation (Menu):** `bg-glass-light-2 backdrop-blur-md`
 - **Drawers / Modais:** `bg-glass-light-3 backdrop-blur-lg`
 - **Toasts:** Devem usar as cores `*-glass` de notificação. Ex: `bg-notify-info-glass backdrop-blur-md border border-notify-info`.
+
+## Camada de Serviços (Service Layer)
+- **Regra:** Nenhuma lógica de negócio ou consulta direta ao Prisma deve morar nas API Routes (`src/app/api/`).
+- **Estrutura:** Toda lógica deve ser isolada na pasta `src/services/`. 
+  - Ex: `userService.ts` cuida de limites e permissões. `logService.ts` cuida de salvar e validar registros.
+- **Vantagem:** Facilita testes unitários e mantém as rotas focadas apenas em Request/Response.
+
+## Regras de Negócio: Usuários Anônimos
+- **Limite de Tempo:** O acesso é bloqueado após 7 dias do primeiro registro.
+- **Limite de Uso:** O acesso é bloqueado após o 11º log registrado.
+- **Conversão:** Ao converter para conta real (Google/Resend), esses limites são removidos.
+
+## Controle de Acesso (RBAC)
+- **Roles:** Usuários possuem o campo `role` no banco (default: 'USER').
+- **Admin:** Apenas usuários com `role: 'ADMIN'` podem acessar rotas `/admin` e APIs administrativas.

@@ -9,7 +9,7 @@ import { useAppStore } from '@/store/store';
 import { toast } from 'sonner';
 import { Moon, Minus, Plus } from 'lucide-react';
 
-export function BottomSheet_Sleep() {
+export function BottomSheet_Sleep({ customTrigger }: { customTrigger?: React.ReactNode }) {
   const addLog = useAppStore(state => state.addLog);
   
   const [duration, setDuration] = useState(8);
@@ -53,14 +53,16 @@ export function BottomSheet_Sleep() {
   return (
     <Drawer onOpenChange={(open) => !open && setTimeout(resetState, 300)}>
       <DrawerTrigger asChild>
-        <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
-          <CardContent className="p-0 flex flex-col items-center justify-center space-y-3">
-            <div className="h-16 w-16 rounded-2xl bg-indigo-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Moon className="h-8 w-8 text-indigo-500" />
-            </div>
-            <p className="text-body-1 font-bold text-neutral-500 text-center px-2">Sono</p>
-          </CardContent>
-        </Card>
+        {customTrigger ? customTrigger : (
+          <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
+            <CardContent className="p-0 flex flex-col items-center justify-center space-y-3">
+              <div className="h-16 w-16 rounded-2xl bg-indigo-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Moon className="h-8 w-8 text-indigo-500" />
+              </div>
+              <p className="text-body-1 font-bold text-neutral-500 text-center px-2">Sono</p>
+            </CardContent>
+          </Card>
+        )}
       </DrawerTrigger>
       
       <DrawerContent className="!bg-indigo-50/95 backdrop-blur-2xl border-t border-indigo-200 text-indigo-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
