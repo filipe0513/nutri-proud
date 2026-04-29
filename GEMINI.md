@@ -29,16 +29,22 @@ src/
 │   │   └── onboarding/page.tsx   # Fluxo de metas e perfil
 │   ├── (main)/
 │   │   ├── history/page.tsx      # Diário e registros passados
+│   │   ├── settings/page.tsx     # Perfil e ajuste de metas
+│   │   ├── pillar/[category]/    # Insights educativos (water|food|sleep|workout|poop)
 │   │   └── page.tsx              # Home (Dashboard de Stories e Ações)
+│   ├── admin/                    # Rotas exclusivas para ADMIN
+│   ├── api/                      # Rotas RESTful (Thin controllers)
 │   ├── layout.tsx
 │   └── globals.css
 ├── components/
-│   ├── ui/                       # Componentes gerados pelo Shadcn UI (Button, Card, Drawer...)
-│   └── shared/                   # Componentes criados por nós (StoryCircle, BottomNav...)
+│   ├── ui/                       # Componentes gerados pelo Shadcn UI
+│   └── shared/                   # Componentes criados por nós
+├── schemas/                      # Schemas Zod de validação (Front e Back)
+├── services/                     # Camada de lógica de negócio (logService, userService...)
 ├── store/
-│   └── useAppStore.ts            # Lógica do Zustand e LocalStorage
+│   └── useAppStore.ts            # Zustand (Sessão e UI cache, sem persistência no localstorage)
 ├── lib/
-│   └── utils.ts                  # Funções utilitárias (cn para Tailwind, cálculos de data)
+│   └── utils.ts                  # Funções utilitárias e lib Prisma
 └── types/
     └── index.ts                  # Interfaces e Tipos do TypeScript
 ~~~
@@ -105,7 +111,13 @@ O coração do app. Fundo `bg-slate-50`.
 - **Corpo:** Lista vertical de Cards de Ações Rápidas (Ex: "💧 Beba Água - Meta: 2.5L").
 - **Rodapé:** Menu flutuante de navegação (Home, Diário, Ajustes).
 
-### 4. Componentes Globais (Shadcn UI)
+### 4. Novas Rotas (Settings, Pillars e Admin)
+- **`/history`**: Feed de registros diários com infinite scroll.
+- **`/settings`**: Perfil único para ajustes finos de metas.
+- **`/pillar/[category]`**: Insights educativos baseados na categoria de saúde.
+- **`/admin`**: Dashboard gerencial de métricas (Gráficos Recharts).
+
+### 5. Componentes Globais (Shadcn UI)
 - **`Drawer` (Bottom Sheet):** Obrigatório para todos os formulários. Ao clicar em "Adicionar Refeição" na Home, sobe uma gaveta. A página não muda.
 - **`Toast`:** Para feedback ("Salvo com sucesso").
 
@@ -179,3 +191,23 @@ O efeito Glass exige a cor do tema somada a uma classe de blur (`backdrop-blur-s
 ## Controle de Acesso (RBAC)
 - **Roles:** Usuários possuem o campo `role` no banco (default: 'USER').
 - **Admin:** Apenas usuários com `role: 'ADMIN'` podem acessar rotas `/admin` e APIs administrativas.
+
+## 🧪 Protocolo de Testes (QA)
+- **Framework:** Vitest + `vitest-mock-extended`.
+- **Escopo:** Testar de forma unitária a **camada de serviços** (`src/services/`). Não testar as rotas de API diretamente se não for estritamente necessário.
+- **Nunca use o banco real:** Faça mock do Prisma Client.
+- **Padrão AAA (Arrange, Act, Assert):**
+  1. **Arrange** — mock de dados do Prisma.
+  2. **Act** — chamar função do Service.
+  3. **Assert** — validar resultados e chamadas.
+- **Regra contra Bugs:** Reportou erro em prod? Escreva um teste que falhe para simular o erro, corrija o serviço, e veja o teste passar.
+
+## ✅ Definition of Done (Obrigatório)
+Execute a validação após **qualquer** modificação nos arquivos:
+
+```bash
+npm run validate
+```
+- 🟢 **Passou (Sem erros):** A tarefa está concluída.
+- 🔴 **Falhou (Com erros):** NÃO dê a tarefa como concluída. Leia os logs, corrija (TS, ESLint ou Vitest) de forma autônoma e rode novamente. Repita até ficar verde.
+- Nenhum `no-unused-vars` deve restar. Se tocou no BD, não esqueça de rodar `npx prisma generate`.

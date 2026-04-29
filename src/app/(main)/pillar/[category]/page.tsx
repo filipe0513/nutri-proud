@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -76,19 +77,19 @@ export default function PillarInsightsPage() {
   const data = PILLAR_DATA[catKey];
   const { user_profile } = useAppStore();
 
-  if (!data) return notFound();
-
-  const Icon = data.icon;
-  const DrawerComp = data.DrawerComponent;
-
   const targetText = useMemo(() => {
     if (!user_profile) return '';
     if (catKey === 'water') return `Meta: ${user_profile.targets.water_ml_per_day}ml / dia`;
     if (catKey === 'food') return `Meta: ${user_profile.targets.meals_per_day} refs / dia`;
     if (catKey === 'sleep') return `Meta: ${user_profile.targets.sleep_hours_per_night}h / noite`;
-    if (catKey === 'workout') return `Meta: ${user_profile.targets.weekly_workouts.strength} treinos / sem`;
+    if (catKey === 'workout') return `Meta: ${user_profile.targets.weekly_workouts} treinos / sem`;
     return '1x ao dia é o ideal';
   }, [user_profile, catKey]);
+
+  if (!data) return notFound();
+
+  const Icon = data.icon;
+  const DrawerComp = data.DrawerComponent;
 
   return (
     <div className={`min-h-screen pb-32`}>

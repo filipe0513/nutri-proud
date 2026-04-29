@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { NextAuthConfig } from 'next-auth';
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";

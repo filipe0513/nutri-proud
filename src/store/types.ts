@@ -11,7 +11,7 @@ export interface UserProfile {
     water_ml_per_day: number;
     meals_per_day: number;
     sleep_hours_per_night: number;
-    weekly_workouts: { cardio: number; strength: number };
+    weekly_workouts: number;
   };
 }
 
@@ -26,7 +26,7 @@ export interface ActivityLog {
   details: {
     meal_type?: 'breakfast' | 'lunch' | 'snack' | 'dinner';
     quantity_ml?: number;
-    factors?: any;
+    factors?: unknown;
     notes?: string;
     duration_hours?: number;
     awoke_times?: number;

@@ -9,6 +9,7 @@ interface OnboardingData {
   height: number;
   gender: 'male' | 'female' | 'other';
   goal: 'fat_loss' | 'muscle_gain' | 'health';
+  weeklyWorkouts: number;
 }
 
 interface AppState {
@@ -38,26 +39,14 @@ export const useAppStore = create<AppState>()((set, get) => ({
       },
 
       saveOnboardingData: async (data: OnboardingData) => {
-        const { name, weight, height, gender, goal } = data;
+        const { name, weight, height, gender, goal, weeklyWorkouts } = data;
         
         // Regras de Negócio: Cálculo de metas
         const waterTarget = Math.round(weight * 35);
         let mealsTarget = 4;
-        let cardioTarget = 3;
-        let strengthTarget = 3;
-        
-        if (goal === 'fat_loss') {
-          mealsTarget = 4;
-          cardioTarget = 5;
-          strengthTarget = 3;
-        } else if (goal === 'muscle_gain') {
+
+        if (goal === 'muscle_gain') {
           mealsTarget = 6;
-          cardioTarget = 2;
-          strengthTarget = 4;
-        } else {
-          mealsTarget = 4;
-          cardioTarget = 3;
-          strengthTarget = 3;
         }
         
         const profile: UserProfile = {
@@ -72,7 +61,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
             water_ml_per_day: waterTarget,
             meals_per_day: mealsTarget,
             sleep_hours_per_night: 7.5,
-            weekly_workouts: { cardio: cardioTarget, strength: strengthTarget },
+            weekly_workouts: weeklyWorkouts,
           },
         };
 

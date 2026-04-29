@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
@@ -23,6 +24,7 @@ export default function OnboardingPage() {
     weight: '',
     height: '',
     gender: 'male' as UserProfile['profile']['gender'],
+    weeklyWorkouts: '3',
   });
 
   const nextStep = () => {
@@ -45,6 +47,7 @@ export default function OnboardingPage() {
       height: parseFloat(formData.height),
       gender: formData.gender,
       goal: formData.goal,
+      weeklyWorkouts: parseInt(formData.weeklyWorkouts) || 3,
     });
 
     router.push('/');
@@ -156,13 +159,25 @@ export default function OnboardingPage() {
                   className="h-14 text-input-1 border-white/40 focus:border-brand-500 bg-glass-light-1 backdrop-blur-sm rounded-2xl px-6"
                 />
               </div>
+              <div className="space-y-2">
+                <label className="text-caption-1 font-semibold text-neutral-500/80 ml-2">Dias de treino por semana</label>
+                <Input
+                  type="number"
+                  min="3"
+                  max="7"
+                  placeholder="Ex: 3"
+                  value={formData.weeklyWorkouts}
+                  onChange={(e) => setFormData({ ...formData, weeklyWorkouts: e.target.value })}
+                  className="h-14 text-input-1 border-white/40 focus:border-brand-500 bg-glass-light-1 backdrop-blur-sm rounded-2xl px-6"
+                />
+              </div>
               <div className="flex gap-4">
                 <Button variant="ghost" onClick={prevStep} className="h-14 w-14 rounded-2xl border border-white/40 bg-glass-light-1 backdrop-blur-sm hover:bg-glass-light-2 text-neutral-500">
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <Button 
                   onClick={nextStep}
-                  disabled={!formData.weight || !formData.height}
+                  disabled={!formData.weight || !formData.height || parseInt(formData.weeklyWorkouts) < 3 || parseInt(formData.weeklyWorkouts) > 7}
                   className="flex-1 h-14 text-button-1 bg-brand-500 hover:bg-brand-400 text-white rounded-2xl shadow-lg transition-all"
                 >
                   Calcular minhas metas

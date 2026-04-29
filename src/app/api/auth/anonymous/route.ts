@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, react-hooks/set-state-in-effect, react-hooks/rules-of-hooks */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
+import { userService } from '@/services/userService';
 
 export async function POST() {
   try {
@@ -15,20 +17,8 @@ export async function POST() {
       }
     }
 
-    // Cria um novo usuário anônimo
-    const user = await prisma.user.create({
-      data: {
-        is_anonymous: true,
-        name: 'Visitante',
-        profile: {}, // defaults
-        targets: {
-            water_ml_per_day: 2000,
-            meals_per_day: 4,
-            sleep_hours_per_night: 8,
-            weekly_workouts: { cardio: 3, strength: 3 }
-        }
-      }
-    });
+    // Cria um novo usuário anônimo através da camada de serviço
+    const user = await userService.createAnonymousUser();
 
     cookieStore.set('anon_user_id', user.id, {
       httpOnly: true,

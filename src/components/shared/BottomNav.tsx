@@ -8,6 +8,9 @@ import { cn } from '@/lib/utils';
 export function BottomNav() {
   const pathname = usePathname();
 
+  // Hide nav when inside a Story/Pillar screen
+  if (pathname.startsWith('/pillar')) return null;
+
   const navItems = [
     {
       label: 'Início',

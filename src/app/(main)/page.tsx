@@ -1,23 +1,17 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/store';
 import { StoryHeader } from '@/components/shared/StoryHeader';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Droplets, 
-  Utensils, 
-  Moon, 
-  Dumbbell, 
+import {
+  Utensils,
+  Moon,
+  Dumbbell,
   Smile,
-  Plus,
-  History,
-  Settings,
-  Flame,
-  X,
   StickyNote
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { MealEqualizerDrawer } from '@/components/shared/MealEqualizerDrawer';
 import { WorkoutEqualizerDrawer } from '@/components/shared/WorkoutEqualizerDrawer';
 import { BottomSheet_Water } from '@/components/shared/BottomSheet_Water';
@@ -27,49 +21,27 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, Drawer
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { DynamicStreakCard } from '@/components/shared/DynamicStreakCard';
 
 export default function DashboardPage() {
   const { addLog } = useAppStore();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [isStreakDismissed, setIsStreakDismissed] = useState(false);
   const [noteText, setNoteText] = useState('');
+  const [userId, setUserId] = useState<string>('');
+
+  // Get anonymous userId from cookie for streak calculation
+  useEffect(() => {
+    const match = document.cookie.match(/anon_user_id=([^;]+)/);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (match) setUserId(decodeURIComponent(match[1]));
+  }, []);
 
   return (
     <div className="pb-24 pt-8 px-6 max-w-lg mx-auto space-y-8">
       <StoryHeader onCategorySelect={setSelectedCategory} />
 
-      {/* Streak Card */}
-      <AnimatePresence>
-        {!isStreakDismissed && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, height: 0, marginTop: 0, overflow: 'hidden' }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card className="bg-glass-dark-2 backdrop-blur-md text-white rounded-3xl border border-white/20 shadow-2xl overflow-hidden relative">
-              <button 
-                onClick={() => setIsStreakDismissed(true)}
-                className="absolute top-4 right-4 z-10 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
-              >
-                <X className="h-4 w-4 text-white" />
-              </button>
-              <div className="absolute top-0 right-0 p-4 opacity-10">
-                <Flame className="h-24 w-24" />
-              </div>
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center space-x-2">
-                  <div className="bg-notify-warning p-2 rounded-xl">
-                    <Flame className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="text-title-3">3 Dias de Fogo</span>
-                </div>
-                <p className="text-body-2 text-white/80">Você está indo muito bem! Continue assim para bater seu recorde.</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Dynamic Streak Card */}
+      {userId && <DynamicStreakCard userId={userId} />}
 
       {/* Quick Actions */}
       <div className="space-y-4">

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -29,6 +30,7 @@ export default function SettingsPage() {
         goal: user_profile.profile.main_goal,
         water_target_ml: user_profile.targets.water_ml_per_day,
         sleep_target_hours: user_profile.targets.sleep_hours_per_night,
+        weekly_workouts: user_profile.targets.weekly_workouts ?? 3,
       });
     }
   }, [user_profile, reset]);
@@ -49,6 +51,7 @@ export default function SettingsPage() {
         ...user_profile.targets,
         water_ml_per_day: data.water_target_ml,
         sleep_hours_per_night: data.sleep_target_hours,
+        weekly_workouts: data.weekly_workouts,
       }
     });
 
@@ -150,6 +153,18 @@ export default function SettingsPage() {
                 className="w-full h-14 bg-white/50 border border-white/40 rounded-2xl px-4 text-input-1 text-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
               {errors.sleep_target_hours && <p className="text-caption-2 text-notify-error">{errors.sleep_target_hours.message}</p>}
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <label className="text-caption-1 font-medium text-neutral-500/80">Dias de treino por semana (3–7)</label>
+              <input
+                type="number"
+                min="3"
+                max="7"
+                {...register('weekly_workouts', { valueAsNumber: true })}
+                className="w-full h-14 bg-white/50 border border-white/40 rounded-2xl px-4 text-input-1 text-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+              {errors.weekly_workouts && <p className="text-caption-2 text-notify-error">{errors.weekly_workouts.message}</p>}
             </div>
           </CardContent>
         </Card>

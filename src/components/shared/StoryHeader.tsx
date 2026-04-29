@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useAppStore } from '@/store/store';
 import { StoryCircle } from './StoryCircle';
-import { Settings, Droplets, Utensils, Dumbbell, Moon, Smile } from 'lucide-react';
+import { Droplets, Utensils, Dumbbell, Moon, Smile } from 'lucide-react';
 import Link from 'next/link';
 
 interface StoryHeaderProps {
@@ -22,7 +22,7 @@ export function StoryHeader({ onCategorySelect }: StoryHeaderProps) {
   const categories = [
     { id: 'water', label: 'Água', icon: Droplets, target: user_profile?.targets.water_ml_per_day || 2000, unit: 'ml' },
     { id: 'food', label: 'Comida', icon: Utensils, target: user_profile?.targets.meals_per_day || 4, unit: 'ref' },
-    { id: 'workout', label: 'Treino', icon: Dumbbell, target: user_profile?.targets.weekly_workouts.strength || 1, unit: 'sessão' },
+    { id: 'workout', label: 'Treino', icon: Dumbbell, target: user_profile?.targets.weekly_workouts || 3, unit: 'sessão' },
     { id: 'sleep', label: 'Sono', icon: Moon, target: user_profile?.targets.sleep_hours_per_night || 8, unit: 'h' },
     { id: 'poop', label: 'Intestino', icon: Smile, target: 1, unit: 'vez' },
   ];
