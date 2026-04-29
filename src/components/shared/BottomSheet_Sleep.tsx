@@ -17,13 +17,17 @@ export function BottomSheet_Sleep({ customTrigger }: { customTrigger?: React.Rea
   const [duration, setDuration] = useState(8);
   const [awokeTimes, setAwokeTimes] = useState(0);
   const [quality, setQuality] = useState<'cansado' | 'normal' | 'revigorado' | null>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  });
 
   const resetState = () => {
     setDuration(8);
     setAwokeTimes(0);
     setQuality(null);
-    setSelectedDate(new Date().toISOString().split('T')[0]);
+    const now = new Date();
+    setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
   };
 
   const handleSave = () => {
@@ -38,7 +42,7 @@ export function BottomSheet_Sleep({ customTrigger }: { customTrigger?: React.Rea
     if (duration < 5 || quality === 'cansado') score = 30;
 
     addLog({
-      event_time: `${selectedDate}T12:00:00.000Z`,
+      event_time: new Date(selectedDate).toISOString(),
       category: 'sleep',
       primary_value: score,
       details: { 

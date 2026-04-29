@@ -119,41 +119,29 @@ export function FilterDrawer() {
 
           {/* Date Picker */}
           <div className="space-y-3">
-            <h3 className="text-body-1 font-bold text-neutral-500/80">Período</h3>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full h-14 justify-start text-left font-normal bg-glass-light-2 border-white/40 rounded-2xl text-neutral-500 text-button-1"
-                >
-                  <CalendarIcon className="mr-2 h-5 w-5 opacity-70" />
-                  {dateRange?.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, "d 'de' MMM", { locale: ptBR })} -{" "}
-                        {format(dateRange.to, "d 'de' MMM", { locale: ptBR })}
-                      </>
-                    ) : (
-                      format(dateRange.from, "d 'de' MMM", { locale: ptBR })
-                    )
-                  ) : (
-                    <span>Selecione um período...</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 rounded-2xl border-white/40 bg-white/95 backdrop-blur-xl shadow-lg" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={dateRange?.from}
-                  selected={dateRange}
-                  onSelect={(range: any) => setDateRange(range)}
-                  numberOfMonths={1}
-                  locale={ptBR}
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+            <h3 className="text-body-1 font-bold text-neutral-500/80">Início</h3>
+            <div className="relative">
+              <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 pointer-events-none" />
+              <input
+                type="date"
+                value={filters.startDate ? filters.startDate.split('T')[0] : ''}
+                onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value ? new Date(e.target.value) : undefined }))}
+                className="w-full h-14 pl-12 pr-4 bg-glass-light-2 border border-white/40 rounded-2xl text-neutral-500 text-button-1 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all appearance-none"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-body-1 font-bold text-neutral-500/80">Fim</h3>
+            <div className="relative">
+              <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 pointer-events-none" />
+              <input
+                type="date"
+                value={filters.endDate ? filters.endDate.split('T')[0] : ''}
+                onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value ? new Date(e.target.value) : undefined }))}
+                className="w-full h-14 pl-12 pr-4 bg-glass-light-2 border border-white/40 rounded-2xl text-neutral-500 text-button-1 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all appearance-none"
+              />
+            </div>
           </div>
 
           {/* Actions */}

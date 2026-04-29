@@ -23,7 +23,10 @@ const MEALS = [
 export function MealEqualizerDrawer({ customTrigger }: { customTrigger?: React.ReactNode }) {
   const addLog = useAppStore(state => state.addLog);
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  });
   
   // Equalizer states
   const [protein, setProtein] = useState(0);
@@ -37,7 +40,9 @@ export function MealEqualizerDrawer({ customTrigger }: { customTrigger?: React.R
     setCarbs(0);
     setFats(0);
     setFiber(0);
-    setSelectedDate(new Date().toISOString().split('T')[0]);
+    setFiber(0);
+    const now = new Date();
+    setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
   };
 
   const handleSave = () => {
@@ -47,7 +52,7 @@ export function MealEqualizerDrawer({ customTrigger }: { customTrigger?: React.R
     const score = Math.max(0, Math.round(100 - (avgDeviation / 50) * 100));
 
     addLog({
-      event_time: `${selectedDate}T12:00:00.000Z`,
+      event_time: new Date(selectedDate).toISOString(),
       category: 'food',
       primary_value: score,
       details: { 
@@ -78,7 +83,7 @@ export function MealEqualizerDrawer({ customTrigger }: { customTrigger?: React.R
         )}
       </DrawerTrigger>
       
-      <DrawerContent className="!bg-green-50/95 backdrop-blur-2xl border-t border-green-200 text-green-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
+      <DrawerContent className="!bg-green-100/95 backdrop-blur-2xl border-t border-green-200 text-green-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
         <DrawerHeader className="px-0">
           <div className="flex items-center justify-between">
             <DrawerTitle className="text-title-2 text-green-950">

@@ -4,17 +4,12 @@ import { useRef } from 'react';
 import { CalendarDays } from 'lucide-react';
 
 interface DatePickerInputProps {
-  value: string; // YYYY-MM-DD
+  value: string; // ISO String or YYYY-MM-DDTHH:mm
   onChange: (date: string) => void;
-  accentColor?: string; // Tailwind text color class, e.g. 'text-blue-700'
-  borderColor?: string; // Tailwind border color class, e.g. 'border-blue-200'
+  accentColor?: string;
+  borderColor?: string;
 }
 
-/**
- * A discrete date picker displayed at the top of Bottom Sheets.
- * Clicking the chip opens the native date picker.
- * Defaults to today and blocks future dates.
- */
 export function DatePickerInput({
   value,
   onChange,
@@ -22,12 +17,31 @@ export function DatePickerInput({
   borderColor = 'border-neutral-200',
 }: DatePickerInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const today = new Date().toISOString().split('T')[0];
+  
+  // Get current local time in YYYY-MM-DDTHH:mm format for 'max' attribute
+  const now = new Date();
+  const tzOffset = now.getTimezoneOffset() * 60000;
+  const localISOTime = new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
 
   const formatLabel = (dateStr: string): string => {
-    if (dateStr === today) return 'Hoje';
-    const date = new Date(`${dateStr}T12:00:00`);
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return 'Selecione data';
+      
+      const isToday = date.toDateString() === new Date().toDateString();
+      const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      
+      if (isToday) return `Hoje, ${timeStr}`;
+      
+      return date.toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: 'short', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    } catch (e) {
+      return 'Data inválida';
+    }
   };
 
   return (
@@ -36,21 +50,19 @@ export function DatePickerInput({
       tabIndex={0}
       onClick={() => inputRef.current?.showPicker()}
       onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.showPicker()}
-      className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/50 border ${borderColor} w-fit cursor-pointer select-none transition-colors hover:bg-white/80 active:scale-95`}
-      aria-label={`Data do registro: ${formatLabel(value)}. Clique para alterar.`}
+      className={`relative flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-white/50 border ${borderColor} w-fit cursor-pointer select-none transition-all hover:bg-white/80 active:scale-95 shadow-sm`}
     >
-      <CalendarDays size={14} className={accentColor} />
-      <span className={`text-caption-1 font-semibold ${accentColor}`}>{formatLabel(value)}</span>
+      <CalendarDays size={16} className={accentColor} />
+      <span className={`text-caption-1 font-bold ${accentColor}`}>{formatLabel(value)}</span>
 
-      {/* Hidden native date input */}
+      {/* Native datetime-local input */}
       <input
         ref={inputRef}
-        type="date"
-        max={today}
-        value={value}
+        type="datetime-local"
+        max={localISOTime}
+        value={value.length > 16 ? value.slice(0, 16) : value}
         onChange={(e) => {
-          // Guard: reject future dates
-          if (e.target.value && e.target.value <= today) {
+          if (e.target.value) {
             onChange(e.target.value);
           }
         }}

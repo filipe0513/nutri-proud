@@ -44,7 +44,7 @@ const PILLAR_DATA: Record<string, any> = {
     icon: Utensils,
     colorClass: 'text-green-500',
     bgClass: 'bg-green-50',
-    ctaColor: 'bg-green-500 hover:bg-green-600',
+    ctaColor: 'bg-green-600 hover:bg-green-700',
     why: ['🧱 Fornece blocos de construção muscular', '🔥 Combustível para o dia', '🦠 Nutre a flora intestinal'],
     how: ['Priorize alimentos integrais', 'Coma proteína em todas refeições', 'Evite ultraprocessados'],
     DrawerComponent: MealEqualizerDrawer,
@@ -82,7 +82,12 @@ export default function PillarInsightsPage() {
     if (catKey === 'water') return `Meta: ${user_profile.targets.water_ml_per_day}ml / dia`;
     if (catKey === 'food') return `Meta: ${user_profile.targets.meals_per_day} refs / dia`;
     if (catKey === 'sleep') return `Meta: ${user_profile.targets.sleep_hours_per_night}h / noite`;
-    if (catKey === 'workout') return `Meta: ${user_profile.targets.weekly_workouts} treinos / sem`;
+    if (catKey === 'workout') {
+      const targetValue = typeof user_profile.targets.weekly_workouts === 'object' 
+        ? (user_profile.targets.weekly_workouts as any).total || 3
+        : user_profile.targets.weekly_workouts;
+      return `Meta: ${targetValue} treinos / sem`;
+    }
     return '1x ao dia é o ideal';
   }, [user_profile, catKey]);
 

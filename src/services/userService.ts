@@ -54,7 +54,7 @@ export const userService = {
             water_ml_per_day: 2000,
             meals_per_day: 4,
             sleep_hours_per_night: 8,
-            weekly_workouts: { cardio: 3, strength: 3 }
+            weekly_workouts: 3
         }
       }
     });

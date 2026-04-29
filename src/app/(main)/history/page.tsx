@@ -16,6 +16,14 @@ const CATEGORY_ICONS: Record<string, string> = {
   poop: "💩",
 };
 
+const CATEGORY_NAMES: Record<string, string> = {
+  water: "Água",
+  food: "Alimentação",
+  workout: "Treino",
+  sleep: "Sono",
+  poop: "Intestino",
+};
+
 const formatGroupDate = (dateString: string) => {
   const date = parseISO(dateString);
   if (isToday(date)) return "Hoje";
@@ -93,8 +101,8 @@ export default function HistoryPage() {
                           {CATEGORY_ICONS[log.category] || "📌"}
                         </div>
                         <div>
-                          <p className="font-bold text-body-1 text-neutral-500 capitalize">
-                            {log.category}
+                          <p className="font-bold text-body-1 text-neutral-500">
+                            {CATEGORY_NAMES[log.category] || log.category}
                           </p>
                           <p className="text-caption-1 text-neutral-400">
                             {format(parseISO(log.event_time), "HH:mm")} •

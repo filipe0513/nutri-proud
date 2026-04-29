@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils';
 export function BottomNav() {
   const pathname = usePathname();
 
-  // Hide nav when inside a Story/Pillar screen
-  if (pathname.startsWith('/pillar')) return null;
+  // Hide nav when inside a Story/Pillar screen or Settings
+  if (pathname.startsWith('/pillar') || pathname.startsWith('/settings') || pathname.startsWith('/profile')) return null;
 
   const navItems = [
     {

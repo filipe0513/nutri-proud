@@ -11,11 +11,14 @@ import { DatePickerInput } from './DatePickerInput';
 export function BottomSheet_Poop({ customTrigger }: { customTrigger?: React.ReactNode }) {
   const addLog = useAppStore(state => state.addLog);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  });
 
   const handleSave = (state: string, primaryValue: number) => {
     addLog({
-      event_time: `${selectedDate}T12:00:00.000Z`,
+      event_time: new Date(selectedDate).toISOString(),
       category: 'poop',
       primary_value: primaryValue,
       details: { state }

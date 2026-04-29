@@ -16,14 +16,17 @@ export function BottomSheet_Water({ customTrigger }: { customTrigger?: React.Rea
   
   const [customInput, setCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  });
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const targetMl = userProfile?.targets.water_ml_per_day || 2000;
 
   const handleSave = (ml: number) => {
     addLog({
-      event_time: `${selectedDate}T12:00:00.000Z`,
+      event_time: new Date(selectedDate).toISOString(),
       category: 'water',
       primary_value: 100,
       details: { quantity_ml: ml }
@@ -50,12 +53,13 @@ export function BottomSheet_Water({ customTrigger }: { customTrigger?: React.Rea
     setTimeout(() => {
       setCustomInput(false);
       setCustomValue('');
-      setSelectedDate(new Date().toISOString().split('T')[0]);
+      const now = new Date();
+      setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
     }, 300);
   };
 
   return (
-    <Drawer onOpenChange={(open) => !open && setTimeout(() => { setCustomInput(false); setCustomValue(''); setSelectedDate(new Date().toISOString().split('T')[0]); }, 300)}>
+    <Drawer onOpenChange={(open) => !open && setTimeout(() => { setCustomInput(false); setCustomValue(''); const now = new Date(); setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16)); }, 300)}>
       <DrawerTrigger asChild>
         {customTrigger ? customTrigger : (
           <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">

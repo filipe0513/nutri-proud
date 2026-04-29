@@ -16,12 +16,17 @@ export function WorkoutEqualizerDrawer({ customTrigger }: { customTrigger?: Reac
   // Equalizer states
   const [cardio, setCardio] = useState(0);
   const [carga, setCarga] = useState(0);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  });
 
   const resetState = () => {
     setCardio(0);
     setCarga(0);
-    setSelectedDate(new Date().toISOString().split('T')[0]);
+    setCarga(0);
+    const now = new Date();
+    setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
   };
 
   const handleSave = () => {
@@ -29,7 +34,7 @@ export function WorkoutEqualizerDrawer({ customTrigger }: { customTrigger?: Reac
     const score = Math.max(0, Math.round(100 - (avgDeviation / 50) * 100));
 
     addLog({
-      event_time: `${selectedDate}T12:00:00.000Z`,
+      event_time: new Date(selectedDate).toISOString(),
       category: 'workout',
       primary_value: score,
       details: { 
