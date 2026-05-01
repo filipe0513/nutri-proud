@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useHistoryStore } from "@/store/historyStore";
 import { FilterDrawer } from "@/components/shared/FilterDrawer";
 import { Card, CardContent } from "@/components/ui/card";
 import { format, isToday, isYesterday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ActivityLog } from "@/store/types";
+import { BottomSheet_Water } from "@/components/shared/BottomSheet_Water";
+import { BottomSheet_Sleep } from "@/components/shared/BottomSheet_Sleep";
+import { BottomSheet_Poop } from "@/components/shared/BottomSheet_Poop";
+import { MealEqualizerDrawer } from "@/components/shared/MealEqualizerDrawer";
+import { WorkoutEqualizerDrawer } from "@/components/shared/WorkoutEqualizerDrawer";
 
 const CATEGORY_ICONS: Record<string, string> = {
   water: "💧",
@@ -33,7 +39,6 @@ const formatGroupDate = (dateString: string) => {
 
 export default function HistoryPage() {
   const {
-    filters,
     logs,
     hasMore,
     isFetching,
@@ -42,6 +47,16 @@ export default function HistoryPage() {
     isEmptyFilters,
   } = useHistoryStore();
   const { ref, inView } = useInView();
+  
+  const [editingLog, setEditingLog] = useState<ActivityLog | null>(null);
+
+  const handleEdit = (log: ActivityLog) => {
+    setEditingLog(log);
+  };
+  
+  const handleClose = () => {
+    setEditingLog(null);
+  };
 
   useEffect(() => {
     fetchNextPage();
@@ -93,7 +108,8 @@ export default function HistoryPage() {
                 {dayLogs.map((log) => (
                   <Card
                     key={log.id}
-                    className="bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm rounded-2xl"
+                    className="bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm rounded-2xl cursor-pointer hover:bg-glass-light-2 transition-colors active:scale-[0.98]"
+                    onClick={() => handleEdit(log as ActivityLog)}
                   >
                     <CardContent className="p-4 flex items-center justify-between">
                       <div className="flex items-center space-x-4">
@@ -130,6 +146,38 @@ export default function HistoryPage() {
           </p>
         )}
       </div>
+
+      {/* Modals for editing */}
+      <BottomSheet_Water 
+        open={editingLog?.category === 'water'} 
+        onOpenChange={(open) => !open && handleClose()} 
+        initialData={editingLog?.category === 'water' ? editingLog : undefined}
+        customTrigger={<div className="hidden" />}
+      />
+      <BottomSheet_Sleep 
+        open={editingLog?.category === 'sleep'} 
+        onOpenChange={(open) => !open && handleClose()} 
+        initialData={editingLog?.category === 'sleep' ? editingLog : undefined}
+        customTrigger={<div className="hidden" />}
+      />
+      <BottomSheet_Poop 
+        open={editingLog?.category === 'poop'} 
+        onOpenChange={(open) => !open && handleClose()} 
+        initialData={editingLog?.category === 'poop' ? editingLog : undefined}
+        customTrigger={<div className="hidden" />}
+      />
+      <MealEqualizerDrawer 
+        open={editingLog?.category === 'food'} 
+        onOpenChange={(open) => !open && handleClose()} 
+        initialData={editingLog?.category === 'food' ? editingLog : undefined}
+        customTrigger={<div className="hidden" />}
+      />
+      <WorkoutEqualizerDrawer 
+        open={editingLog?.category === 'workout'} 
+        onOpenChange={(open) => !open && handleClose()} 
+        initialData={editingLog?.category === 'workout' ? editingLog : undefined}
+        customTrigger={<div className="hidden" />}
+      />
     </div>
   );
 }

@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Droplet, Moon, Utensils, Dumbbell, Smile, CheckCircle2, Lightbulb, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useAppStore } from '@/store/store';
+import { ActivityLog } from '@/store/types';
 
 // Aqui eu importo os drawers existentes, mas vou precisar controla-los de fora ou replicar a chamada.
 // Como o Drawer do Shadcn pode ser controlado por estado global ou id, vamos passar um trigger customizado.
@@ -75,7 +76,7 @@ export default function PillarInsightsPage() {
   const { category } = useParams();
   const catKey = category as string;
   const data = PILLAR_DATA[catKey];
-  const { user_profile } = useAppStore();
+  const { user_profile, activity_logs } = useAppStore();
 
   const targetText = useMemo(() => {
     if (!user_profile) return '';
@@ -90,6 +91,60 @@ export default function PillarInsightsPage() {
     }
     return '1x ao dia é o ideal';
   }, [user_profile, catKey]);
+
+  const todayLogs = useMemo(() => {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    return activity_logs.filter(
+      (log) => log.category === catKey && new Date(log.event_time) >= startOfDay
+    );
+  }, [catKey, activity_logs]);
+
+  const { progressPercentage, currentTotal, targetValue, unit } = useMemo(() => {
+    let current = 0;
+    let target = 1;
+    let unitLabel = '';
+
+    if (!user_profile) return { progressPercentage: 0, currentTotal: 0, targetValue: 1, unit: '' };
+
+    if (catKey === 'water') {
+      current = todayLogs.reduce((acc, log) => acc + (log.details?.quantity_ml || 0), 0);
+      target = user_profile.targets.water_ml_per_day || 2000;
+      unitLabel = 'ml';
+    } else if (catKey === 'food') {
+      current = todayLogs.length;
+      target = user_profile.targets.meals_per_day || 4;
+      unitLabel = 'ref';
+    } else if (catKey === 'workout') {
+      current = todayLogs.length;
+      target = typeof user_profile.targets.weekly_workouts === 'object' 
+        ? (user_profile.targets.weekly_workouts as any).total || 3
+        : user_profile.targets.weekly_workouts || 3;
+      unitLabel = 'treino';
+    } else if (catKey === 'sleep') {
+      current = todayLogs.length;
+      target = 1;
+      unitLabel = 'registro';
+    } else if (catKey === 'poop') {
+      current = todayLogs.length;
+      target = 1;
+      unitLabel = 'vez';
+    }
+
+    const percentage = Math.min(100, target > 0 ? (current / target) * 100 : 0);
+    return { progressPercentage: percentage, currentTotal: current, targetValue: target, unit: unitLabel };
+  }, [todayLogs, user_profile, catKey]);
+
+  const feedbackState = useMemo(() => {
+    if (progressPercentage === 0) return 0; // Nenhum registro
+    if (progressPercentage < 75) return 1;  // Longe da meta
+    if (progressPercentage < 100) return 2; // Perto da meta
+    return 3;                               // Meta Atingida
+  }, [progressPercentage]);
+
+  const formatTime = (isoString: string) => {
+    return new Date(isoString).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  };
 
   if (!data) return notFound();
 
@@ -120,6 +175,54 @@ export default function PillarInsightsPage() {
       {/* Body / Bullets */}
       <div className="px-6 py-8 space-y-6 max-w-lg mx-auto">
         
+        {/* Progresso do Dia */}
+        {feedbackState > 0 && (
+          <div className="space-y-4">
+            <Card className="bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-title-3 font-bold text-neutral-600">Evolução de Hoje</h2>
+                  <span className="text-body-2 font-medium text-neutral-500">
+                    {currentTotal} / {targetValue} {unit}
+                  </span>
+                </div>
+                
+                <div className="space-y-3 mt-4">
+                  {todayLogs.map((log: ActivityLog) => (
+                    <div key={log.id} className="flex justify-between items-center p-3 bg-white/50 rounded-2xl border border-white/60">
+                      <span className="text-body-2 font-medium text-neutral-600">
+                        {formatTime(log.event_time)}
+                      </span>
+                      <span className="text-body-2 font-bold text-neutral-700">
+                        {catKey === 'water' && log.details?.quantity_ml ? `${log.details.quantity_ml}ml` : '+1 registro'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-white/40">
+                  {feedbackState === 1 && (
+                    <p className="text-body-2 font-medium text-neutral-500">
+                      Bom começo! Ainda faltam {targetValue - currentTotal} {unit} para atingir sua meta diária.
+                    </p>
+                  )}
+                  {feedbackState === 2 && (
+                    <p className="text-body-2 font-bold text-notify-warning">
+                      Você está quase lá! Faltam apenas {targetValue - currentTotal} {unit}. Continue assim!
+                    </p>
+                  )}
+                  {feedbackState === 3 && (
+                    <p className="text-body-2 font-bold text-notify-success flex items-center gap-2">
+                      <Smile className="w-5 h-5" />
+                      Parabéns! Você atingiu sua meta diária! 🎉
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Why matters */}
         <Card className="bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl">
           <CardContent className="p-6 space-y-4">
@@ -136,19 +239,21 @@ export default function PillarInsightsPage() {
         </Card>
 
         {/* How to achieve */}
-        <Card className="bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl">
-          <CardContent className="p-6 space-y-4">
-            <h2 className="text-title-3 font-bold text-neutral-600">Como atingir a meta?</h2>
-            <ul className="space-y-3">
-              {data.how.map((item: string, i: number) => (
-                <li key={i} className="flex items-start space-x-3">
-                  <Lightbulb className="h-6 w-6 text-orange-400 flex-shrink-0" />
-                  <span className="text-body-2 text-neutral-500 font-medium leading-relaxed">{item}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        {feedbackState < 3 && (
+          <Card className="bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl">
+            <CardContent className="p-6 space-y-4">
+              <h2 className="text-title-3 font-bold text-neutral-600">Como atingir a meta?</h2>
+              <ul className="space-y-3">
+                {data.how.map((item: string, i: number) => (
+                  <li key={i} className="flex items-start space-x-3">
+                    <Lightbulb className="h-6 w-6 text-orange-400 flex-shrink-0" />
+                    <span className="text-body-2 text-neutral-500 font-medium leading-relaxed">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
 
       </div>
 

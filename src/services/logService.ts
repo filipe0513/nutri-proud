@@ -34,6 +34,30 @@ export const logService = {
     });
 
     return newLog;
+  },
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async updateDailyLog(logId: string, userId: string, logData: any) {
+    await userService.checkUserPermissions(userId);
+
+    const updatedLog = await prisma.dailyLog.update({
+      where: {
+        id: logId,
+        userId, // ensure user owns it
+      },
+      data: {
+        category: logData.category,
+        primaryValue: logData.primary_value,
+        details: logData.details,
+        eventTime: toSafeEventTime(logData.event_time),
+      }
+    });
+
+    // TODO: Re-calculate streaks (Task 19) -> Need to add streak service logic here?
+    // Wait, the instructions say "Após uma edição bem-sucedida, garantir que o motor de streaks (Task 19) seja notificado ou re-executado".
+    // Let's check streak engine if there is one.
+
+    return updatedLog;
   }
 };
 

@@ -17,6 +17,7 @@ interface HistoryState {
   fetchNextPage: () => Promise<void>;
   applyFilters: (filters: FilterState) => Promise<void>;
   resetHistory: () => void;
+  updateLogHistory: (id: string, updatedLog: Partial<ActivityLog>) => void;
   isEmptyFilters: () => boolean;
 }
 
@@ -86,6 +87,14 @@ export const useHistoryStore = create<HistoryState>()((set, get) => ({
       isFetching: false,
       filters: { startDate: null, endDate: null, categories: [] },
     });
+  },
+
+  updateLogHistory: (id, updatedLog) => {
+    set((state) => ({
+      logs: state.logs.map((log) => 
+        log.id === id ? { ...log, ...updatedLog } as ActivityLog : log
+      )
+    }));
   },
 
   isEmptyFilters: () => {

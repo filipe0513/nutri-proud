@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 'use client';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/store';
@@ -12,10 +11,11 @@ import { profileSettingsSchema, ProfileSettingsForm } from '@/schemas/profileSch
 import { toast } from 'sonner';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function SettingsPage() {
-  const router = useRouter();
   const { user_profile, updateProfile } = useAppStore();
+  const router = useRouter();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ProfileSettingsForm>({
     resolver: zodResolver(profileSettingsSchema),
@@ -68,6 +68,18 @@ export default function SettingsPage() {
         </Link>
         <h1 className="text-title-1 font-bold text-neutral-500">Configurações</h1>
       </div>
+
+      {user_profile?.is_anonymous && (
+        <Card className="bg-orange-50 border-orange-200 shadow-sm rounded-3xl overflow-hidden mb-6">
+          <CardContent className="p-6 space-y-4">
+            <h2 className="text-title-3 font-bold text-orange-800">Modo Visitante</h2>
+            <p className="text-body-2 text-orange-700">Seus dados não estão salvos na nuvem. Crie uma conta gratuita para não perdê-los.</p>
+            <Button onClick={() => router.push('/welcome?forceLogin=true')} className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold">
+              Criar conta grátis
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         

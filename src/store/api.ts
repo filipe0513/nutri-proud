@@ -54,3 +54,17 @@ export const saveActivityLog = async (log: ActivityLog): Promise<void> => {
     console.error('Falha ao salvar log', await res.text());
   }
 };
+
+/**
+ * Atualiza um registro de atividade no servidor
+ */
+export const updateActivityLog = async (id: string, log: ActivityLog): Promise<void> => {
+  const res = await fetch(`/api/logs/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(log),
+  });
+  if (!res.ok) {
+    console.error('Falha ao atualizar log', await res.text());
+  }
+};

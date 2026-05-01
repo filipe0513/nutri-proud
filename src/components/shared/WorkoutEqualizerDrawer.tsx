@@ -1,71 +1,132 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/set-state-in-effect */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/store';
+import { useHistoryStore } from '@/store/historyStore';
 import { toast } from 'sonner';
 import { Dumbbell } from 'lucide-react';
-import { VerticalEqualizer } from './VerticalEqualizer';
+import { Slider } from '@/components/ui/slider';
 import { DatePickerInput } from './DatePickerInput';
+import { ActivityLog } from '@/store/types';
 
-export function WorkoutEqualizerDrawer({ customTrigger }: { customTrigger?: React.ReactNode }) {
+export function WorkoutEqualizerDrawer({ 
+  customTrigger,
+  initialData,
+  open,
+  onOpenChange
+}: { 
+  customTrigger?: React.ReactNode;
+  initialData?: ActivityLog;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
   const addLog = useAppStore(state => state.addLog);
+  const updateLog = useAppStore(state => state.updateLog);
+  const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
   
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const drawerOpen = isControlled ? open : internalOpen;
+
   // Equalizer states
   const [cardio, setCardio] = useState(0);
   const [carga, setCarga] = useState(0);
   const [selectedDate, setSelectedDate] = useState(() => {
+    if (initialData?.event_time) {
+      return new Date(initialData.event_time).toISOString().slice(0, 16);
+    }
     const now = new Date();
     return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   });
 
-  const resetState = () => {
-    setCardio(0);
-    setCarga(0);
-    setCarga(0);
-    const now = new Date();
-    setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+  const getThumbColorClass = (value: number) => {
+    const score = 100 - (Math.abs(value) / 50) * 100;
+    if (score < 50) return 'bg-notify-error border-notify-error';
+    if (score < 75) return 'bg-notify-warning border-notify-warning';
+    return 'bg-notify-success border-notify-success';
   };
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (initialData) {
+      const factors: any = initialData.details.factors || {};
+      setCardio(factors.cardio || 0);
+      setCarga(factors.carga || 0);
+      setSelectedDate(new Date(initialData.event_time).toISOString().slice(0, 16));
+    }
+  }, [initialData]);
+
+  const resetState = () => {
+    if (!initialData) {
+      setCardio(0);
+      setCarga(0);
+      const now = new Date();
+      setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+    }
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (isControlled && onOpenChange) {
+      onOpenChange(newOpen);
+    } else {
+      setInternalOpen(newOpen);
+    }
+    if (!newOpen) {
+      setTimeout(resetState, 300);
+    }
+  };
+
+  const handleSave = async () => {
     const avgDeviation = (Math.abs(cardio) + Math.abs(carga)) / 2;
     const score = Math.max(0, Math.round(100 - (avgDeviation / 50) * 100));
 
-    addLog({
+    const logData = {
       event_time: new Date(selectedDate).toISOString(),
-      category: 'workout',
+      category: 'workout' as const,
       primary_value: score,
       details: { 
         factors: { cardio, carga }
       }
-    });
+    };
 
-    toast.success('Treino registrado com sucesso!');
+    if (initialData) {
+      await updateLog(initialData.id, logData);
+      updateLogHistory(initialData.id, logData);
+      toast.success('Treino atualizado com sucesso!');
+      if (isControlled && onOpenChange) onOpenChange(false);
+    } else {
+      await addLog(logData);
+      toast.success('Treino registrado com sucesso!');
+    }
+
     setTimeout(resetState, 300);
   };
 
   return (
-    <Drawer onOpenChange={(open) => !open && setTimeout(resetState, 300)}>
-      <DrawerTrigger asChild>
-        {customTrigger ? customTrigger : (
-          <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
-            <CardContent className="p-0 flex flex-col items-center justify-center space-y-3">
-              <div className="h-16 w-16 rounded-2xl bg-red-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Dumbbell className="h-8 w-8 text-red-500" />
-              </div>
-              <p className="text-body-1 font-bold text-neutral-500 text-center px-2">Treino</p>
-            </CardContent>
-          </Card>
-        )}
-      </DrawerTrigger>
+    <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
+      {!isControlled && (
+        <DrawerTrigger asChild>
+          {customTrigger ? customTrigger : (
+            <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
+              <CardContent className="p-0 flex flex-col items-center justify-center space-y-3">
+                <div className="h-16 w-16 rounded-2xl bg-red-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Dumbbell className="h-8 w-8 text-red-500" />
+                </div>
+                <p className="text-body-1 font-bold text-neutral-500 text-center px-2">Treino</p>
+              </CardContent>
+            </Card>
+          )}
+        </DrawerTrigger>
+      )}
       
       <DrawerContent className="!bg-red-50/95 backdrop-blur-2xl border-t border-red-200 text-red-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
         <DrawerHeader className="px-0">
           <div className="flex items-center justify-between">
             <DrawerTitle className="text-title-2 text-red-950">
-              Como foi o treino?
+              {initialData ? 'Editar Treino' : 'Como foi o treino?'}
             </DrawerTitle>
             <DatePickerInput
               value={selectedDate}
@@ -78,19 +139,45 @@ export function WorkoutEqualizerDrawer({ customTrigger }: { customTrigger?: Reac
         </DrawerHeader>
 
         <div className="flex flex-col mt-4 space-y-6">
-          <div className="flex justify-center space-x-8 overflow-x-auto pb-4 no-scrollbar">
-            <VerticalEqualizer label="Cardio" value={cardio} min={-50} max={50} step={10} onChange={setCardio} />
-            <VerticalEqualizer label="Carga" value={carga} min={-50} max={50} step={10} onChange={setCarga} />
+          <div className="flex flex-col space-y-6 overflow-y-auto pb-4 no-scrollbar">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-body-1 font-medium text-red-900/80">Cardio</span>
+                <span className="text-title-3 font-bold text-red-950">{cardio > 0 ? `+${cardio}%` : `${cardio}%`}</span>
+              </div>
+              <div className="w-full touch-none relative px-2">
+                <Slider value={[cardio]} min={-50} max={50} step={10} onValueChange={(v) => setCardio(v[0])} thumbClassName={getThumbColorClass} />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-body-1 font-medium text-red-900/80">Carga</span>
+                <span className="text-title-3 font-bold text-red-950">{carga > 0 ? `+${carga}%` : `${carga}%`}</span>
+              </div>
+              <div className="w-full touch-none relative px-2">
+                <Slider value={[carga]} min={-50} max={50} step={10} onValueChange={(v) => setCarga(v[0])} thumbClassName={getThumbColorClass} />
+              </div>
+            </div>
           </div>
 
-          <DrawerClose asChild>
+          {initialData ? (
             <Button 
               className="h-14 rounded-2xl bg-red-500 hover:bg-red-600 text-white border-transparent w-full text-button-1 shadow-md"
               onClick={handleSave}
             >
-              Confirmar
+              Salvar
             </Button>
-          </DrawerClose>
+          ) : (
+            <DrawerClose asChild>
+              <Button 
+                className="h-14 rounded-2xl bg-red-500 hover:bg-red-600 text-white border-transparent w-full text-button-1 shadow-md"
+                onClick={handleSave}
+              >
+                Confirmar
+              </Button>
+            </DrawerClose>
+          )}
         </div>
       </DrawerContent>
     </Drawer>

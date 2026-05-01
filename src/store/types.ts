@@ -1,5 +1,6 @@
 export interface UserProfile {
   name: string;
+  is_anonymous?: boolean;
   profile: {
     weight_kg: number;
     height_cm: number;

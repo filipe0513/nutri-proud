@@ -1,36 +1,79 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, react-hooks/set-state-in-effect, react-hooks/rules-of-hooks */
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/set-state-in-effect */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useAppStore } from '@/store/store';
+import { useHistoryStore } from '@/store/historyStore';
 import { toast } from 'sonner';
 import { Moon, Minus, Plus } from 'lucide-react';
 import { DatePickerInput } from './DatePickerInput';
+import { ActivityLog } from '@/store/types';
 
-export function BottomSheet_Sleep({ customTrigger }: { customTrigger?: React.ReactNode }) {
+export function BottomSheet_Sleep({ 
+  customTrigger,
+  initialData,
+  open,
+  onOpenChange
+}: { 
+  customTrigger?: React.ReactNode;
+  initialData?: ActivityLog;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
   const addLog = useAppStore(state => state.addLog);
+  const updateLog = useAppStore(state => state.updateLog);
+  const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
   
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const drawerOpen = isControlled ? open : internalOpen;
+
   const [duration, setDuration] = useState(8);
   const [awokeTimes, setAwokeTimes] = useState(0);
   const [quality, setQuality] = useState<'cansado' | 'normal' | 'revigorado' | null>(null);
   const [selectedDate, setSelectedDate] = useState(() => {
+    if (initialData?.event_time) {
+      return new Date(initialData.event_time).toISOString().slice(0, 16);
+    }
     const now = new Date();
     return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   });
 
+  useEffect(() => {
+    if (initialData) {
+      setDuration(initialData.details.duration_hours || 8);
+      setAwokeTimes(initialData.details.awoke_times || 0);
+      setQuality(initialData.details.quality_feeling || null);
+      setSelectedDate(new Date(initialData.event_time).toISOString().slice(0, 16));
+    }
+  }, [initialData]);
+
   const resetState = () => {
-    setDuration(8);
-    setAwokeTimes(0);
-    setQuality(null);
-    const now = new Date();
-    setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+    if (!initialData) {
+      setDuration(8);
+      setAwokeTimes(0);
+      setQuality(null);
+      const now = new Date();
+      setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+    }
   };
 
-  const handleSave = () => {
+  const handleOpenChange = (newOpen: boolean) => {
+    if (isControlled && onOpenChange) {
+      onOpenChange(newOpen);
+    } else {
+      setInternalOpen(newOpen);
+    }
+    if (!newOpen) {
+      setTimeout(resetState, 300);
+    }
+  };
+
+  const handleSave = async () => {
     if (!quality) {
       toast.error('Selecione a qualidade do sono!');
       return;
@@ -41,43 +84,56 @@ export function BottomSheet_Sleep({ customTrigger }: { customTrigger?: React.Rea
     if (duration >= 7 && quality !== 'cansado') score = 100;
     if (duration < 5 || quality === 'cansado') score = 30;
 
-    addLog({
+    const logData = {
       event_time: new Date(selectedDate).toISOString(),
-      category: 'sleep',
+      category: 'sleep' as const,
       primary_value: score,
       details: { 
         duration_hours: duration,
         awoke_times: awokeTimes,
         quality_feeling: quality
       }
-    });
+    };
 
-    toast.success('Sono registrado!', {
-      className: 'bg-indigo-500 text-white border-transparent'
-    });
+    if (initialData) {
+      await updateLog(initialData.id, logData);
+      updateLogHistory(initialData.id, logData);
+      toast.success('Sono atualizado!', {
+        className: 'bg-indigo-500 text-white border-transparent'
+      });
+      if (isControlled && onOpenChange) onOpenChange(false);
+    } else {
+      await addLog(logData);
+      toast.success('Sono registrado!', {
+        className: 'bg-indigo-500 text-white border-transparent'
+      });
+    }
+    
     setTimeout(resetState, 300);
   };
 
   return (
-    <Drawer onOpenChange={(open) => !open && setTimeout(resetState, 300)}>
-      <DrawerTrigger asChild>
-        {customTrigger ? customTrigger : (
-          <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
-            <CardContent className="p-0 flex flex-col items-center justify-center space-y-3">
-              <div className="h-16 w-16 rounded-2xl bg-indigo-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Moon className="h-8 w-8 text-indigo-500" />
-              </div>
-              <p className="text-body-1 font-bold text-neutral-500 text-center px-2">Sono</p>
-            </CardContent>
-          </Card>
-        )}
-      </DrawerTrigger>
+    <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
+      {!isControlled && (
+        <DrawerTrigger asChild>
+          {customTrigger ? customTrigger : (
+            <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
+              <CardContent className="p-0 flex flex-col items-center justify-center space-y-3">
+                <div className="h-16 w-16 rounded-2xl bg-indigo-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Moon className="h-8 w-8 text-indigo-500" />
+                </div>
+                <p className="text-body-1 font-bold text-neutral-500 text-center px-2">Sono</p>
+              </CardContent>
+            </Card>
+          )}
+        </DrawerTrigger>
+      )}
       
       <DrawerContent className="!bg-indigo-50/95 backdrop-blur-2xl border-t border-indigo-200 text-indigo-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
         <DrawerHeader className="px-0">
           <div className="flex items-center justify-between">
             <DrawerTitle className="text-title-2 text-indigo-950">
-              Como foi sua noite?
+              {initialData ? 'Editar Sono' : 'Como foi sua noite?'}
             </DrawerTitle>
             <DatePickerInput
               value={selectedDate}
@@ -102,7 +158,12 @@ export function BottomSheet_Sleep({ customTrigger }: { customTrigger?: React.Rea
                 min={0} 
                 max={12} 
                 step={0.5} 
-                onValueChange={(val) => setDuration(val[0])} 
+                onValueChange={(val) => setDuration(val[0])}
+                thumbClassName={(val) => {
+                  if (val >= 7) return 'bg-notify-success border-notify-success';
+                  if (val >= 5) return 'bg-notify-warning border-notify-warning';
+                  return 'bg-notify-error border-notify-error';
+                }}
               />
             </div>
           </div>
@@ -151,14 +212,23 @@ export function BottomSheet_Sleep({ customTrigger }: { customTrigger?: React.Rea
             </div>
           </div>
 
-          <DrawerClose asChild>
+          {initialData ? (
             <Button 
               className="h-14 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white border-transparent w-full text-button-1 shadow-md"
               onClick={handleSave}
             >
-              Salvar Sono
+              Salvar
             </Button>
-          </DrawerClose>
+          ) : (
+            <DrawerClose asChild>
+              <Button 
+                className="h-14 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white border-transparent w-full text-button-1 shadow-md"
+                onClick={handleSave}
+              >
+                Salvar Sono
+              </Button>
+            </DrawerClose>
+          )}
         </div>
       </DrawerContent>
     </Drawer>

@@ -1,40 +1,81 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/store';
+import { useHistoryStore } from '@/store/historyStore';
 import { toast } from 'sonner';
 import { Droplet, Trophy } from 'lucide-react';
 import { DatePickerInput } from './DatePickerInput';
+import { ActivityLog } from '@/store/types';
 
-export function BottomSheet_Water({ customTrigger }: { customTrigger?: React.ReactNode }) {
+export function BottomSheet_Water({ 
+  customTrigger, 
+  initialData, 
+  open, 
+  onOpenChange 
+}: { 
+  customTrigger?: React.ReactNode; 
+  initialData?: ActivityLog;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
   const addLog = useAppStore(state => state.addLog);
+  const updateLog = useAppStore(state => state.updateLog);
+  const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
   const setWaterToTarget = useAppStore(state => state.setWaterToTarget);
   const userProfile = useAppStore(state => state.user_profile);
   
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const drawerOpen = isControlled ? open : internalOpen;
+
   const [customInput, setCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState('');
+  
   const [selectedDate, setSelectedDate] = useState(() => {
+    if (initialData?.event_time) {
+      return new Date(initialData.event_time).toISOString().slice(0, 16);
+    }
     const now = new Date();
     return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   });
+  
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const targetMl = userProfile?.targets.water_ml_per_day || 2000;
 
-  const handleSave = (ml: number) => {
-    addLog({
+  useEffect(() => {
+    if (initialData) {
+      setCustomInput(true);
+      setCustomValue(String(initialData.details.quantity_ml || ''));
+      setSelectedDate(new Date(initialData.event_time).toISOString().slice(0, 16));
+    }
+  }, [initialData]);
+
+  const handleSave = async (ml: number) => {
+    const logData = {
       event_time: new Date(selectedDate).toISOString(),
-      category: 'water',
+      category: 'water' as const,
       primary_value: 100,
       details: { quantity_ml: ml }
-    });
+    };
 
-    toast.success(`${ml}ml registrados!`, {
-      className: 'bg-blue-500 text-white border-transparent'
-    });
+    if (initialData) {
+      await updateLog(initialData.id, logData);
+      updateLogHistory(initialData.id, logData);
+      toast.success(`Água atualizada para ${ml}ml!`, {
+        className: 'bg-blue-500 text-white border-transparent'
+      });
+    } else {
+      await addLog(logData);
+      toast.success(`${ml}ml registrados!`, {
+        className: 'bg-blue-500 text-white border-transparent'
+      });
+    }
     
     closeDrawer();
   };
@@ -50,34 +91,61 @@ export function BottomSheet_Water({ customTrigger }: { customTrigger?: React.Rea
 
   const closeDrawer = () => {
     if (closeRef.current) closeRef.current.click();
+    if (isControlled && onOpenChange) {
+      onOpenChange(false);
+    } else {
+      setInternalOpen(false);
+    }
     setTimeout(() => {
-      setCustomInput(false);
-      setCustomValue('');
-      const now = new Date();
-      setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+      if (!initialData) {
+        setCustomInput(false);
+        setCustomValue('');
+        const now = new Date();
+        setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+      }
     }, 300);
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (isControlled && onOpenChange) {
+      onOpenChange(newOpen);
+    } else {
+      setInternalOpen(newOpen);
+    }
+    if (!newOpen) {
+      setTimeout(() => {
+        if (!initialData) {
+          setCustomInput(false);
+          setCustomValue('');
+          const now = new Date();
+          setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+        }
+      }, 300);
+    }
+  };
+
   return (
-    <Drawer onOpenChange={(open) => !open && setTimeout(() => { setCustomInput(false); setCustomValue(''); const now = new Date(); setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16)); }, 300)}>
-      <DrawerTrigger asChild>
-        {customTrigger ? customTrigger : (
-          <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
-            <CardContent className="p-0 flex flex-col items-center justify-center space-y-3">
-              <div className="h-16 w-16 rounded-2xl bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Droplet className="h-8 w-8 text-blue-500" />
-              </div>
-              <p className="text-body-1 font-bold text-neutral-500 text-center px-2">Água</p>
-            </CardContent>
-          </Card>
-        )}
-      </DrawerTrigger>
+    <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
+      {!isControlled && (
+        <DrawerTrigger asChild>
+          {customTrigger ? customTrigger : (
+            <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden group aspect-square flex flex-col items-center justify-center">
+              <CardContent className="p-0 flex flex-col items-center justify-center space-y-3">
+                <div className="h-16 w-16 rounded-2xl bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Droplet className="h-8 w-8 text-blue-500" />
+                </div>
+                <p className="text-body-1 font-bold text-neutral-500 text-center px-2">Água</p>
+              </CardContent>
+            </Card>
+          )}
+        </DrawerTrigger>
+      )}
       
       <DrawerContent className="!bg-blue-50/95 backdrop-blur-2xl border-t border-blue-200 text-blue-950 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
         <DrawerHeader className="px-0">
           <div className="flex items-center justify-between">
             <DrawerTitle className="text-title-2 text-blue-950">
-              {customInput ? 'Digitar quantidade (ml)' : 'Quanto você bebeu?'}
+              {initialData ? 'Editar Água' : (customInput ? 'Digitar quantidade (ml)' : 'Quanto você bebeu?')}
             </DrawerTitle>
             <DatePickerInput
               value={selectedDate}
@@ -88,7 +156,7 @@ export function BottomSheet_Water({ customTrigger }: { customTrigger?: React.Rea
           </div>
         </DrawerHeader>
 
-        {!customInput ? (
+        {!customInput && !initialData ? (
           <div className="flex flex-col mt-4 space-y-4">
             
             {/* Target Button */}
@@ -145,13 +213,15 @@ export function BottomSheet_Water({ customTrigger }: { customTrigger?: React.Rea
             </div>
             
             <div className="flex space-x-3">
-              <Button 
-                variant="outline"
-                className="h-14 rounded-2xl border border-blue-200 bg-white/50 backdrop-blur-sm text-blue-900 hover:bg-white/80 flex-1 text-button-1 shadow-sm"
-                onClick={() => setCustomInput(false)}
-              >
-                Voltar
-              </Button>
+              {!initialData && (
+                <Button 
+                  variant="outline"
+                  className="h-14 rounded-2xl border border-blue-200 bg-white/50 backdrop-blur-sm text-blue-900 hover:bg-white/80 flex-1 text-button-1 shadow-sm"
+                  onClick={() => setCustomInput(false)}
+                >
+                  Voltar
+                </Button>
+              )}
               <Button 
                 className="h-14 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white border-transparent flex-1 text-button-1 shadow-md"
                 onClick={() => {
@@ -160,8 +230,9 @@ export function BottomSheet_Water({ customTrigger }: { customTrigger?: React.Rea
                   }
                 }}
               >
-                Confirmar
+                {initialData ? 'Salvar' : 'Confirmar'}
               </Button>
+              <DrawerClose ref={closeRef} className="hidden" />
             </div>
           </div>
         )}

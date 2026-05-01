@@ -20,6 +20,7 @@ interface AppState {
   saveOnboardingData: (data: OnboardingData) => Promise<void>;
   updateProfile: (profile: UserProfile) => Promise<void>;
   addLog: (log: Omit<ActivityLog, 'id' | 'created_at'>) => Promise<void>;
+  updateLog: (id: string, log: Omit<ActivityLog, 'id' | 'created_at'>) => Promise<void>;
   removeLog: (id: string) => Promise<void>;
   setWaterToTarget: (date?: string) => Promise<void>;
   initializeData: () => Promise<void>;
@@ -90,6 +91,24 @@ export const useAppStore = create<AppState>()((set, get) => ({
         // 2. Atualiza estado global
         set((state) => ({
           activity_logs: [...state.activity_logs, newLog]
+        }));
+      },
+
+      updateLog: async (id, log) => {
+        const existingLog = get().activity_logs.find(l => l.id === id);
+        if (!existingLog) return;
+        
+        const updatedLog: ActivityLog = {
+          ...existingLog,
+          ...log,
+        };
+
+        // 1. Chama a API
+        await api.updateActivityLog(id, updatedLog);
+
+        // 2. Atualiza estado global
+        set((state) => ({
+          activity_logs: state.activity_logs.map(l => l.id === id ? updatedLog : l)
         }));
       },
 

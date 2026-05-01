@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { signIn } from 'next-auth/react';
@@ -12,8 +12,11 @@ import { toast } from 'sonner';
 
 const emailSchema = z.string().email('Por favor, insira um e-mail válido.');
 
-export default function WelcomePage() {
+function WelcomeContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const forceLogin = searchParams.get('forceLogin') === 'true';
+
   const [email, setEmail] = useState('');
   const [loadingEmail, setLoadingEmail] = useState(false);
   const [loadingAnon, setLoadingAnon] = useState(false);
@@ -50,7 +53,7 @@ export default function WelcomePage() {
       
       // Quando cria o anônimo, enviamos pro onboarding
       router.push('/onboarding');
-    } catch (error) {
+    } catch {
       toast.error('Falha ao iniciar. Tente novamente.');
       setLoadingAnon(false);
     }
@@ -135,15 +138,25 @@ export default function WelcomePage() {
         </Button>
 
         {/* Anonymous Auth */}
-        <Button 
-          onClick={handleAnonymousSignIn}
-          disabled={loadingAnon}
-          variant="ghost"
-          className="w-full h-14 hover:bg-white/30 text-neutral-500 font-medium text-button-1 rounded-2xl transition-all"
-        >
-          {loadingAnon ? 'Criando sessão...' : 'Explorar sem conta'}
-        </Button>
+        {!forceLogin && (
+          <Button 
+            onClick={handleAnonymousSignIn}
+            disabled={loadingAnon}
+            variant="ghost"
+            className="w-full h-14 hover:bg-white/30 text-neutral-500 font-medium text-button-1 rounded-2xl transition-all"
+          >
+            {loadingAnon ? 'Criando sessão...' : 'Explorar sem conta'}
+          </Button>
+        )}
       </motion.div>
     </div>
+  );
+}
+
+export default function WelcomePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-mesh-sunset flex items-center justify-center text-white">Carregando...</div>}>
+      <WelcomeContent />
+    </Suspense>
   );
 }
