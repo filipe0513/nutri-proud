@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import packageInfo from '../../../../package.json';
 
 export default function SettingsPage() {
   const { user_profile, updateProfile } = useAppStore();
@@ -59,6 +60,9 @@ export default function SettingsPage() {
       className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success'
     });
   };
+
+  const appVersion = packageInfo.version;
+  const environment = process.env.NODE_ENV;
 
   return (
     <div className="pb-24 pt-8 px-6 max-w-lg mx-auto space-y-8">
@@ -190,6 +194,13 @@ export default function SettingsPage() {
           </Button>
         </div>
       </form>
+
+      <div className="mt-8 text-center">
+        <p className="text-caption-1 text-neutral-400">
+          Nutri Proud • Versao {appVersion} 
+          <span className="text-neutral-300 ml-1 text-xs">({environment})</span>
+        </p>
+      </div>
     </div>
   );
 }

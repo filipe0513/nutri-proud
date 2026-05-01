@@ -11,8 +11,7 @@ O seu objetivo é SIMULAR EXATAMENTE O AMBIENTE DO VERCEL localmente para evitar
 Sempre que você alterar, criar ou deletar arquivos, você DEVE rodar os seguintes comandos no terminal do projeto, estritamente nesta ordem:
 
 1. `npx prisma generate` (Para garantir que as tipagens do banco estão atualizadas)
-2. `npm run validate` (Para rodar o ESLint e pegar erros de sintaxe ou variáveis não usadas)
-3. `npm run build` (Para rodar o compilador rigoroso do Next.js e TypeScript)
+2. `npm run validate` (Este script agora roda sequencialmente: typecheck, lint, test e por fim o compilador rigoroso do Next.js via `npm run build`, simulando 100% o ambiente do Vercel)
 
 ### Como lidar com os resultados:
 
@@ -20,9 +19,9 @@ Sempre que você alterar, criar ou deletar arquivos, você DEVE rodar os seguint
 2. **Se algum dos comandos falhar (Vermelho / Erro):**
    - Você NÃO deve me avisar que terminou.
    - Leia o erro gerado no terminal.
-   - Se o erro for "has no exported member" no Prisma, vá no arquivo `schema.prisma`, verifique o nome real do model e corrija a importação.
+   - Se o erro for "has no exported member" no Prisma, vá no arquivo `schema.prisma`, verifique o nome real do model e corrija a importação. Lembre-se que o script `postinstall` no `package.json` garante que o Vercel também gere esse client.
    - Corrija o código imediatamente de forma autônoma.
-   - Rode todos os 3 comandos novamente.
+   - Rode os 2 comandos novamente.
    - Repita o processo até que o terminal não apresente mais erros.
 
 ## Regras de Linting e Build
