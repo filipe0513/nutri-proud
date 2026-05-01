@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { logSchema, foodDetailsSchema } from '@/schemas/logSchema';
 import { prisma } from '@/lib/prisma';
+import { DailyLog } from '@prisma/client';
 
 import { auth } from '@/auth';
 import { cookies } from 'next/headers';
@@ -76,7 +77,7 @@ export async function GET(request: Request) {
     });
 
     // Mapear do formato Prisma pro formato do Frontend
-    const formattedLogs = logs.map(log => ({
+    const formattedLogs = logs.map((log: DailyLog) => ({
       id: log.id,
       created_at: log.createdAt.toISOString(),
       event_time: log.eventTime.toISOString(),
