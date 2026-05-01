@@ -4,9 +4,20 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import { authConfig } from "./auth.config"
 import { cookies } from "next/headers"
+import Google from "next-auth/providers/google";
+import Resend from "next-auth/providers/resend";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
+  providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+    Resend({
+      from: "Nutri Proud <onboarding@resend.dev>",
+    }),
+  ],
   adapter: PrismaAdapter(prisma),
   callbacks: {
     ...authConfig.callbacks,
