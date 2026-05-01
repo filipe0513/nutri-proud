@@ -124,7 +124,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
         const profile = state.user_profile;
         if (!profile) return;
 
-        const targetMl = profile.targets.water_ml_per_day;
+        const targetMl = profile.targets?.water_ml_per_day || 2000;
         const targetDate = date ?? new Date().toISOString().split('T')[0];
 
         // Filter out existing water logs for the target date

@@ -24,9 +24,12 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
 
     const isSetupPage = pathname === '/welcome' || pathname === '/onboarding';
     
+    // Se for a página de welcome e estiver com forceLogin=true, permite o acesso
+    const isForceLogin = pathname === '/welcome' && window.location.search.includes('forceLogin=true');
+    
     if (!userProfile && !isSetupPage) {
       router.push('/welcome');
-    } else if (userProfile && isSetupPage) {
+    } else if (userProfile && isSetupPage && !isForceLogin) {
       router.push('/');
     }
   }, [mounted, userProfile, pathname, router]);

@@ -80,13 +80,13 @@ export default function PillarInsightsPage() {
 
   const targetText = useMemo(() => {
     if (!user_profile) return '';
-    if (catKey === 'water') return `Meta: ${user_profile.targets.water_ml_per_day}ml / dia`;
-    if (catKey === 'food') return `Meta: ${user_profile.targets.meals_per_day} refs / dia`;
-    if (catKey === 'sleep') return `Meta: ${user_profile.targets.sleep_hours_per_night}h / noite`;
+    if (catKey === 'water') return `Meta: ${user_profile.targets?.water_ml_per_day || 2000}ml / dia`;
+    if (catKey === 'food') return `Meta: ${user_profile.targets?.meals_per_day || 4} refs / dia`;
+    if (catKey === 'sleep') return `Meta: ${user_profile.targets?.sleep_hours_per_night || 8}h / noite`;
     if (catKey === 'workout') {
-      const targetValue = typeof user_profile.targets.weekly_workouts === 'object' 
-        ? (user_profile.targets.weekly_workouts as any).total || 3
-        : user_profile.targets.weekly_workouts;
+      const targetValue = typeof user_profile.targets?.weekly_workouts === 'object' 
+        ? (user_profile.targets?.weekly_workouts as any).total || 3
+        : user_profile.targets?.weekly_workouts || 3;
       return `Meta: ${targetValue} treinos / sem`;
     }
     return '1x ao dia é o ideal';
@@ -109,17 +109,17 @@ export default function PillarInsightsPage() {
 
     if (catKey === 'water') {
       current = todayLogs.reduce((acc, log) => acc + (log.details?.quantity_ml || 0), 0);
-      target = user_profile.targets.water_ml_per_day || 2000;
+      target = user_profile.targets?.water_ml_per_day || 2000;
       unitLabel = 'ml';
     } else if (catKey === 'food') {
       current = todayLogs.length;
-      target = user_profile.targets.meals_per_day || 4;
+      target = user_profile.targets?.meals_per_day || 4;
       unitLabel = 'ref';
     } else if (catKey === 'workout') {
       current = todayLogs.length;
-      target = typeof user_profile.targets.weekly_workouts === 'object' 
-        ? (user_profile.targets.weekly_workouts as any).total || 3
-        : user_profile.targets.weekly_workouts || 3;
+      target = typeof user_profile.targets?.weekly_workouts === 'object' 
+        ? (user_profile.targets?.weekly_workouts as any).total || 3
+        : user_profile.targets?.weekly_workouts || 3;
       unitLabel = 'treino';
     } else if (catKey === 'sleep') {
       current = todayLogs.length;

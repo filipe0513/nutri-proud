@@ -6,8 +6,10 @@ import { RootProvider } from "@/components/shared/RootProvider";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Nutri Proud | Seu Diário de Saúde Gamificado",
-  description: "Registre sua água, alimentação, sono e treinos com zero atrito. Transforme sua saúde em um jogo.",
+  title:
+    "Orgulho da Nutri | Cumprir as metas da nutri agora ficou fácil e divertido!",
+  description:
+    "Registre sua água, alimentação, sono e treinos com zero atrito. Transforme sua saúde em um jogo.",
   icons: {
     icon: "/hero.png",
     apple: "/hero.png",
@@ -15,7 +17,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Nutri Proud",
+    title: "Orgulho da Nutri",
   },
 };
 
@@ -34,10 +36,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${inter.variable} font-sans antialiased bg-mesh-sunset text-neutral-500`}>
-        <RootProvider>
-          {children}
-        </RootProvider>
+      <body
+        className={`${inter.variable} font-sans antialiased bg-mesh-sunset text-neutral-500`}
+      >
+        <RootProvider>{children}</RootProvider>
       </body>
     </html>
   );

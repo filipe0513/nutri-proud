@@ -5,12 +5,33 @@ export const fetchUserProfile = async (): Promise<UserProfile | null> => {
     const res = await fetch('/api/users/profile');
     if (!res.ok) return null;
     const data = await res.json();
+    
+    if (data.profile) {
+      if (!data.profile.targets) {
+        data.profile.targets = {
+          water_ml_per_day: 2000,
+          meals_per_day: 4,
+          sleep_hours_per_night: 8,
+          weekly_workouts: 3,
+        };
+      }
+      if (!data.profile.profile) {
+        data.profile.profile = {
+          weight_kg: 70,
+          height_cm: 170,
+          gender: 'other',
+          main_goal: 'health',
+        };
+      }
+    }
+    
     return data.profile || null;
   } catch (error) {
     console.error('Falha ao buscar perfil', error);
     return null;
   }
 };
+
 
 /**
  * Salva o perfil do usuário no servidor (Mock)

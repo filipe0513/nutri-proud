@@ -46,7 +46,7 @@ export function BottomSheet_Water({
   
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  const targetMl = userProfile?.targets.water_ml_per_day || 2000;
+  const targetMl = userProfile?.targets?.water_ml_per_day || 2000;
 
   useEffect(() => {
     if (initialData) {

@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import NextAuth from "next-auth"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
-import { authConfig } from "./auth.config"
-import { cookies } from "next/headers"
+import NextAuth from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/lib/prisma";
+import { authConfig } from "./auth.config";
+import { cookies } from "next/headers";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
 
@@ -15,7 +15,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
     Resend({
-      from: "Nutri Proud <onboarding@resend.dev>",
+      from: "Orgulho da Nutri <onboarding@resend.dev>",
     }),
   ],
   adapter: PrismaAdapter(prisma),
@@ -24,35 +24,90 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ user, account, profile }) {
       // Lógica de Upgrade (O "Merge")
       const cookieStore = await cookies();
-      const anonUserId = cookieStore.get('anon_user_id')?.value;
-      
+      const anonUserId = cookieStore.get("anon_user_id")?.value;
+
       if (anonUserId) {
         const realUserId = user.id;
+        console.log(
+          `[Auth/Merge] Iniciando merge: anônimo=${anonUserId} → real=${realUserId}`,
+        );
 
         if (realUserId && realUserId !== anonUserId) {
           try {
             const anonUser = await prisma.user.findUnique({
-              where: { id: anonUserId, is_anonymous: true }
+              where: { id: anonUserId, is_anonymous: true },
             });
 
             if (anonUser) {
-              await prisma.dailyLog.updateMany({
+              console.log(
+                `[Auth/Merge] Usuário anônimo encontrado. Migrando logs...`,
+              );
+
+              const updated = await prisma.dailyLog.updateMany({
                 where: { userId: anonUserId },
-                data: { userId: realUserId }
+                data: { userId: realUserId },
+              });
+              console.log(
+                `[Auth/Merge] ${updated.count} logs migrados com sucesso.`,
+              );
+
+              const realUserFromDb = await prisma.user.findUnique({
+                where: { id: realUserId },
               });
 
-              await prisma.user.delete({
-                where: { id: anonUserId }
+              // Se o usuário real não tiver profile/targets (é uma conta nova), copiamos do anônimo
+              const newProfile =
+                realUserFromDb?.profile || anonUser.profile || undefined;
+              const newTargets =
+                realUserFromDb?.targets || anonUser.targets || undefined;
+              const newName =
+                realUserFromDb?.name || anonUser.name || undefined;
+
+              await prisma.user.update({
+                where: { id: realUserId },
+                data: {
+                  profile: newProfile ?? undefined,
+                  targets: newTargets ?? undefined,
+                  name: newName ?? undefined,
+                },
               });
+              console.log(
+                `[Auth/Merge] Perfil e metas transferidos para o usuário real.`,
+              );
+
+              await prisma.user.delete({
+                where: { id: anonUserId },
+              });
+              console.log(
+                `[Auth/Merge] Usuário anônimo ${anonUserId} deletado.`,
+              );
+            } else {
+              console.log(
+                `[Auth/Merge] Nenhum usuário anônimo encontrado com id=${anonUserId}. Merge ignorado.`,
+              );
             }
           } catch (e) {
-            console.error('Falha ao migrar dados anônimos:', e);
+            // Não bloqueia o login — apenas loga o erro.
+            console.error("[Auth/Merge] Falha ao migrar dados anônimos:", e);
           }
+        } else {
+          console.log(
+            `[Auth/Merge] realUserId ausente ou igual ao anonUserId. Merge ignorado.`,
+          );
         }
-        cookieStore.delete('anon_user_id');
+
+        try {
+          cookieStore.delete("anon_user_id");
+          console.log(`[Auth/Merge] Cookie anon_user_id removido.`);
+        } catch (cookieError) {
+          console.error(
+            "[Auth/Merge] Falha ao remover cookie anon_user_id (pode ser restrição do ambiente):",
+            cookieError,
+          );
+        }
       }
 
       return true;
-    }
-  }
-})
+    },
+  },
+});

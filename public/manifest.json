@@ -1,7 +1,7 @@
 {
-  "name": "Nutri Proud",
+  "name": "Orgulho da Nutri",
   "short_name": "NutriProud",
-  "description": "Seu Diário de Saúde Gamificado",
+  "description": "Cumprir as metas da nutri agora ficou fácil e divertido!",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f8fafc",

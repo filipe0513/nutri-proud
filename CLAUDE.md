@@ -1,4 +1,4 @@
-# 📱 Nutri Proud — Agent Instructions (CLAUDE.md)
+# 📱 Orgulho da Nutri — Agent Instructions (CLAUDE.md)
 
 > Read `AGENTS.md` first, then this file. Rules here complement and extend it.
 
@@ -15,18 +15,18 @@ A gamified daily health diary PWA tracking **5 pillars**: Water, Food, Sleep, Wo
 
 ## 🛠️ Tech Stack
 
-| Layer | Tool |
-|---|---|
-| Core | React 18+ · Next.js 14+ (App Router, Full-Stack) |
-| Language | TypeScript |
-| Styling | Tailwind CSS (custom tokens only — see Design System) |
-| Components | Shadcn UI + Radix UI |
-| Icons | Lucide React |
-| Auth | NextAuth / Auth.js (Magic Link via Resend + OAuth Google) |
+| Layer        | Tool                                                                           |
+| ------------ | ------------------------------------------------------------------------------ |
+| Core         | React 18+ · Next.js 14+ (App Router, Full-Stack)                               |
+| Language     | TypeScript                                                                     |
+| Styling      | Tailwind CSS (custom tokens only — see Design System)                          |
+| Components   | Shadcn UI + Radix UI                                                           |
+| Icons        | Lucide React                                                                   |
+| Auth         | NextAuth / Auth.js (Magic Link via Resend + OAuth Google)                      |
 | Client State | Zustand (UI cache & optimistic updates only — no `persist` for sensitive data) |
-| Database | PostgreSQL on Neon/Supabase via **Prisma ORM** |
-| Validation | Zod — isomorphic schemas in `src/schemas/` |
-| Testing | Vitest + vitest-mock-extended |
+| Database     | PostgreSQL on Neon/Supabase via **Prisma ORM**                                 |
+| Validation   | Zod — isomorphic schemas in `src/schemas/`                                     |
+| Testing      | Vitest + vitest-mock-extended                                                  |
 
 ---
 
@@ -64,9 +64,11 @@ src/
 ## 🗺️ Route Map
 
 ### Public (no auth)
+
 - `/welcome` — Entry screen. Login via Google, Magic Link, or anonymous.
 
 ### Private (requires NextAuth session)
+
 - `/onboarding` — Step-by-step goals, weight, height setup.
 - `/` — Home dashboard: Stories carousel + quick-action cards.
 - `/history` — Log feed with infinite scroll (filter via `?categories=`).
@@ -74,9 +76,11 @@ src/
 - `/pillar/[category]` — Educational insights. Valid categories: `water`, `food`, `sleep`, `workout`, `poop`.
 
 ### Admin (`role: 'ADMIN'` required)
+
 - `/admin` — Management dashboard (Recharts, conversion metrics).
 
 ### Main API Routes
+
 - `POST /api/logs` — Save a new DailyLog (Zod-validated).
 - `GET /api/logs` — Paginated history (`page`, `limit`, `categories`).
 - `POST /api/auth/anonymous` — Create anonymous session; merge logs on upgrade.
@@ -86,16 +90,17 @@ src/
 ## 🗄️ Data Model
 
 ### UserSession (Zustand + Backend)
+
 ```typescript
 interface UserSession {
-  id: string;            // UUID
+  id: string; // UUID
   email: string | null;
   is_anonymous: boolean;
   profile: {
     weight_kg: number;
     height_cm: number;
-    gender: 'male' | 'female' | 'other';
-    main_goal: 'fat_loss' | 'muscle_gain' | 'health';
+    gender: "male" | "female" | "other";
+    main_goal: "fat_loss" | "muscle_gain" | "health";
   };
   targets: {
     water_ml_per_day: number;
@@ -105,14 +110,15 @@ interface UserSession {
 ```
 
 ### DailyLog (Prisma / PostgreSQL)
+
 ```typescript
 interface DailyLog {
-  id: string;          // UUID
+  id: string; // UUID
   user_id: string;
-  category: 'WATER' | 'FOOD' | 'SLEEP' | 'WORKOUT' | 'POOP';
-  score: number;       // 0–100, drives Story gamification
-  details: any;        // JSONB — validated by Zod schema in src/schemas/
-  created_at: string;  // ISO string
+  category: "WATER" | "FOOD" | "SLEEP" | "WORKOUT" | "POOP";
+  score: number; // 0–100, drives Story gamification
+  details: any; // JSONB — validated by Zod schema in src/schemas/
+  created_at: string; // ISO string
 }
 ```
 
@@ -121,18 +127,22 @@ interface DailyLog {
 ## 🏗️ Architecture Rules
 
 ### Service Layer (MANDATORY)
+
 - **No business logic in `route.ts` files.** Routes are thin controllers: parse → call service → return HTTP.
 - All logic lives in `src/services/` (e.g., `logService.ts`, `userService.ts`).
 
 ### Validation (MANDATORY)
+
 - Every data shape validated with **Zod**.
 - Schemas saved in `src/schemas/`. Import the same schema in both the API route and the frontend form.
 
 ### Zustand Store
+
 - Used **only** for: current session, optimistic UI updates, temporary in-memory cache.
 - Do **not** use `persist` middleware for data that lives in the database.
 
 ### Database
+
 - Single `DailyLog` table with JSONB `details` column — no separate tables per category.
 - All DB access via Prisma. Run `npx prisma generate` after schema changes.
 
@@ -143,33 +153,38 @@ interface DailyLog {
 Using arbitrary Tailwind font sizes or opacities in new components is **FORBIDDEN**. Use only tokens from `tailwind.config.ts`.
 
 ### Typography Tokens
-| Role | Token |
-|---|---|
-| Headings | `text-title-1`, `text-title-2`, `text-title-3` |
-| Body | `text-body-1`, `text-body-2` |
-| Support | `text-caption-1`, `text-caption-2` |
-| Interactive | `text-button-1`, `text-input-1` |
+
+| Role        | Token                                          |
+| ----------- | ---------------------------------------------- |
+| Headings    | `text-title-1`, `text-title-2`, `text-title-3` |
+| Body        | `text-body-1`, `text-body-2`                   |
+| Support     | `text-caption-1`, `text-caption-2`             |
+| Interactive | `text-button-1`, `text-input-1`                |
 
 ### Color Palette
-| Usage | Token |
-|---|---|
-| Page background | `bg-neutral-100` / `bg-bg-light` |
-| Primary text | `text-neutral-500` |
-| Secondary text | `text-neutral-400` |
+
+| Usage                     | Token                                                             |
+| ------------------------- | ----------------------------------------------------------------- |
+| Page background           | `bg-neutral-100` / `bg-bg-light`                                  |
+| Primary text              | `text-neutral-500`                                                |
+| Secondary text            | `text-neutral-400`                                                |
 | Success / Warning / Error | `text-notify-success`, `text-notify-warning`, `text-notify-error` |
 
 ### Glassmorphism Rules
+
 All overlaid components **must** use translucent backgrounds + blur:
 
-| Component | Classes |
-|---|---|
-| Normal Cards | `bg-glass-light-1 backdrop-blur-sm border border-white/40` |
-| Bottom Navigation | `bg-glass-light-2 backdrop-blur-md` |
-| Drawers / Modals | `bg-glass-light-3 backdrop-blur-lg` |
-| Toasts | `bg-notify-*-glass backdrop-blur-md border border-notify-*` |
+| Component         | Classes                                                     |
+| ----------------- | ----------------------------------------------------------- |
+| Normal Cards      | `bg-glass-light-1 backdrop-blur-sm border border-white/40`  |
+| Bottom Navigation | `bg-glass-light-2 backdrop-blur-md`                         |
+| Drawers / Modals  | `bg-glass-light-3 backdrop-blur-lg`                         |
+| Toasts            | `bg-notify-*-glass backdrop-blur-md border border-notify-*` |
 
 ### Story Circle Color Rules
+
 Border color is based on the sum of `score` values for the day:
+
 - `< 50` → `text-notify-error` (red)
 - `< 75` → `text-notify-warning` (yellow)
 - `>= 75` → `text-notify-success` (green)
@@ -187,11 +202,13 @@ Border color is based on the sum of `score` values for the day:
 ## 🔐 Business Rules
 
 ### Anonymous Users
+
 - **Time limit:** Access blocked after **7 days** from first log.
 - **Usage limit:** Access blocked after **11 logs** registered.
 - **Upgrade (merge):** On real login (Google / Magic Link), transfer all anonymous logs to the new user ID.
 
 ### RBAC
+
 - Default role: `'USER'`.
 - `'ADMIN'` role required for `/admin` routes and admin API endpoints.
 
@@ -212,30 +229,40 @@ Border color is based on the sum of `score` values for the day:
 
 ## ✅ Definition of Done (MANDATORY before reporting task complete)
 
-Run the validation command after **every** file change:
+> **Goal:** Simulate the Vercel build environment locally so deploys never break.
+
+After **every** file change, run the following two commands **in order**:
 
 ```bash
+# 1. Always regenerate Prisma typings first
+npx prisma generate
+
+# 2. Full pipeline: typecheck → lint → vitest → next build (Vercel simulation)
 npm run validate
 ```
 
-- 🟢 **Passes** → Task is done. Report completion.
-- 🔴 **Fails** → Do NOT report completion. Read the error (ESLint / TypeScript / Vitest), fix it autonomously, re-run. Repeat until green.
+> `npm run validate` runs sequentially: `typecheck && lint && test && build`. The `build` step is what Vercel executes — if it fails here it will fail in production.
 
-**Additional checks:**
-- No unused variables (`no-unused-vars`).
-- All imports resolve; dependencies listed in `package.json`.
-- DB schema changes → run `npx prisma generate` before `npm run validate`.
+- 🟢 **All pass** → Task is done. Code is tested, compiled, and deploy-ready.
+- 🔴 **Any step fails** → Do NOT report completion. Read the error, fix autonomously, re-run both commands. Repeat until green.
+
+**Specific error guidance:**
+
+- `no-unused-vars` → remove or use the variable.
+- Implicit `any` → add explicit types (breaks the production Next.js build).
+- Prisma `"has no exported member"` → check the real model name in `schema.prisma`, fix the import, re-run `npx prisma generate`.
+- All imports must resolve; all dependencies must be in `package.json`.
 
 ---
 
 ## 📏 Code Style
 
-| Context | Convention |
-|---|---|
-| JSON / DB keys | `snake_case` |
-| TS variables & functions | `camelCase` |
-| React components | `PascalCase` |
-| Components | Keep small and focused — componentize Stories and Cards |
+| Context                  | Convention                                              |
+| ------------------------ | ------------------------------------------------------- |
+| JSON / DB keys           | `snake_case`                                            |
+| TS variables & functions | `camelCase`                                             |
+| React components         | `PascalCase`                                            |
+| Components               | Keep small and focused — componentize Stories and Cards |
 
 ---
 

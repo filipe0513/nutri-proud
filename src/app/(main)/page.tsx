@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/store/store';
 import { StoryHeader } from '@/components/shared/StoryHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,8 +17,10 @@ import { toast } from 'sonner';
 import { DynamicStreakCard } from '@/components/shared/DynamicStreakCard';
 import { LimitWarningDrawer } from '@/components/shared/LimitWarningDrawer';
 
-export default function DashboardPage() {
-  const { addLog, user_profile, activity_logs } = useAppStore();
+function DashboardContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { addLog, user_profile, activity_logs, initializeData } = useAppStore();
   const [noteText, setNoteText] = useState('');
   const [userId, setUserId] = useState<string>('');
 
@@ -35,6 +38,20 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (match) setUserId(decodeURIComponent(match[1]));
   }, []);
+
+  // Detecta redirecionamento pós-conversão de conta anônima → real
+  useEffect(() => {
+    if (searchParams.get('merged') === 'true') {
+      initializeData().then(() => {
+        toast.success('Conta criada! Seus dados foram preservados. 🎉', {
+          className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
+        });
+        router.replace('/');
+      });
+    }
+  // Executar apenas na montagem (ou quando o parâmetro mudar)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   return (
     <div className="pb-24 pt-8 px-6 max-w-lg mx-auto space-y-8">
@@ -137,5 +154,13 @@ export default function DashboardPage() {
         }}
       />
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="pb-24 pt-8 px-6" />}>
+      <DashboardContent />
+    </Suspense>
   );
 }
