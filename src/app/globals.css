@@ -183,107 +183,103 @@
   }
 }
 
-@layer utilities {
-  /* Typography Tokens */
-  .text-title-1 {
-    font-size: 2rem;
-    line-height: 2.5rem;
-    letter-spacing: -0.02em;
-    font-weight: 700;
-  }
-  .text-title-2 {
-    font-size: 1.5rem;
-    line-height: 2rem;
-    letter-spacing: -0.01em;
-    font-weight: 600;
-  }
-  .text-title-3 {
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-    letter-spacing: -0.01em;
-    font-weight: 600;
-  }
-  .text-body-1 {
-    font-size: 1rem;
-    line-height: 1.5rem;
-    font-weight: 400;
-  }
-  .text-body-2 {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    font-weight: 400;
-  }
-  .text-caption-1 {
-    font-size: 0.75rem;
-    line-height: 1rem;
-    font-weight: 400;
-  }
-  .text-caption-2 {
-    font-size: 0.625rem;
-    line-height: 0.875rem;
-    font-weight: 500;
-  }
-  .text-button-1 {
-    font-size: 1rem;
-    line-height: 1.5rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-  }
-  .text-input-1 {
-    font-size: 1rem;
-    line-height: 1.5rem;
-    font-weight: 400;
-  }
+/* ── Typography Tokens ── */
+@utility text-title-1 {
+  font-size: 2rem;
+  line-height: 2.5rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+@utility text-title-2 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+@utility text-title-3 {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+@utility text-body-1 {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 400;
+}
+@utility text-body-2 {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 400;
+}
+@utility text-caption-1 {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 400;
+}
+@utility text-caption-2 {
+  font-size: 0.625rem;
+  line-height: 0.875rem;
+  font-weight: 500;
+}
+@utility text-button-1 {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+@utility text-input-1 {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 400;
+}
 
-  /* Mesh Gradient Background (legacy — kept for reuse) */
-  .bg-mesh-sunset {
-    background-color: #fcf9f8;
-    background-image: 
-      radial-gradient(at 0% 0%, #e2d1f9 0px, transparent 60%),
-      radial-gradient(at 100% 0%, #fcd3a1 0px, transparent 60%),
-      radial-gradient(at 100% 100%, #f8e2cf 0px, transparent 60%),
-      radial-gradient(at 0% 100%, #f3b2b4 0px, transparent 60%);
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-  }
+/* ── Background Gradients ── */
+@utility bg-mesh-sunset {
+  background-color: #fcf9f8;
+  background-image:
+    radial-gradient(at 0% 0%, #e2d1f9 0px, transparent 60%),
+    radial-gradient(at 100% 0%, #fcd3a1 0px, transparent 60%),
+    radial-gradient(at 100% 100%, #f8e2cf 0px, transparent 60%),
+    radial-gradient(at 0% 100%, #f3b2b4 0px, transparent 60%);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
 
-  /* Score Card Gradient */
-  .bg-gradient-score {
-    background: linear-gradient(135deg, #C084FC 0%, #F9A8D4 40%, #FDBA74 100%);
-  }
+@utility bg-gradient-score {
+  background: linear-gradient(135deg, #C084FC 0%, #F9A8D4 40%, #FDBA74 100%);
+}
 
-  /* Insights Banner Gradient */
-  .bg-gradient-insights {
-    background: linear-gradient(135deg, #2DD4BF 0%, #A78BFA 100%);
-  }
+@utility bg-gradient-insights {
+  background: linear-gradient(135deg, #2DD4BF 0%, #A78BFA 100%);
+}
 
-  /* FAB Gradient */
-  .bg-gradient-fab {
-    background: linear-gradient(135deg, #A78BFA 0%, #F472B6 100%);
-  }
+@utility bg-gradient-fab {
+  background: linear-gradient(135deg, #A78BFA 0%, #F472B6 100%);
+}
 
-  /* Scrollbar utilities */
-  .no-scrollbar::-webkit-scrollbar {
+@utility bg-gradient-flow {
+  background: linear-gradient(270deg, #00c6ff, #00d4a3, #f9d423, #ff8c42, #ff3cac);
+  background-size: 400% 400%;
+  animation: gradientFlow 10s ease infinite;
+}
+
+/* ── Animations ── */
+@utility animate-splash {
+  animation: splashIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* ── Scrollbar Utilities ── */
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
     display: none;
-  }
-
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .bg-gradient-flow {
-    background: linear-gradient(270deg, #00c6ff, #00d4a3, #f9d423, #ff8c42, #ff3cac);
-    background-size: 400% 400%;
-    animation: gradientFlow 10s ease infinite;
-  }
-
-  .animate-splash {
-    animation: splashIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
 }
 
+/* ── Keyframes ── */
 @keyframes gradientFlow {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
