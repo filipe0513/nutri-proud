@@ -12,12 +12,15 @@ export const metadata: Metadata = {
     "Registre sua água, alimentação, sono e treinos com zero atrito. Transforme sua saúde em um jogo.",
   icons: {
     icon: "/icon-192.webp",
-    apple: "/icon-192.webp",
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Orgulho da Nutri",
+    startupImage: "/apple-touch-icon.png",
   },
 };
 
