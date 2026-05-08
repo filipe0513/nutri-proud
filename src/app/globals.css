@@ -60,7 +60,7 @@
   --color-neutral-100: #F8FAFC;
   --color-neutral-200: #F1F5F9;
   --color-neutral-300: #E2E8F0;
-  --color-neutral-400: #94A3B8;
+  --color-neutral-400: #44403C;   /* stone-700 — quente, lê bem sobre bg colorido */
   --color-neutral-500: #0F172A;
   
   /* Highlight Colors */
@@ -97,7 +97,7 @@
   --color-cat-workout: #EF4444;
   --color-cat-sleep: #94A3B8;
   --color-cat-poop: #F59E0B;
-  --color-ring-bg: #E5E7EB;
+  --color-ring-bg: rgba(255, 255, 255, 0.45); /* branco glass — círculos dos stories visíveis sobre gradiente */
 }
 
 :root {
