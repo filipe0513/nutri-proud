@@ -28,10 +28,10 @@ export function StoryHeader() {
   return (
     <div className="space-y-3">
       <Image
-        src="/logo-white-h.webp"
+        src="/logo-white-h.webp?v=2"
         alt="Orgulho da Nutri"
-        width={300}
-        height={100}
+        width={1332}
+        height={281}
         priority
         className="h-8 w-auto drop-shadow-md"
       />
