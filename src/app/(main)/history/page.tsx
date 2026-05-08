@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useInView } from "react-intersection-observer";
 import { useHistoryStore } from "@/store/historyStore";
 import { FilterDrawer } from "@/components/shared/FilterDrawer";
@@ -83,6 +84,14 @@ export default function HistoryPage() {
 
   return (
     <div className="pb-24 pt-8 px-6 max-w-lg mx-auto space-y-6">
+      <Image
+        src="/logo-white-h.webp"
+        alt="Orgulho da Nutri"
+        width={300}
+        height={100}
+        priority
+        className="h-8 w-auto drop-shadow-md mb-2"
+      />
       <div className="flex items-center justify-between">
         <h1 className="text-title-1 font-bold text-neutral-500">Histórico</h1>
         <FilterDrawer />
