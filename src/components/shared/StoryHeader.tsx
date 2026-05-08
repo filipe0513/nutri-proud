@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { useAppStore } from '@/store/store';
-import { Flame } from 'lucide-react';
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useAppStore } from "@/store/store";
+import { Flame } from "lucide-react";
 
 export function StoryHeader() {
   const { user_profile } = useAppStore();
@@ -19,27 +19,33 @@ export function StoryHeader() {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!data) return;
-        const best = Math.max(data.workout?.streak || 0, data.bestDaily?.streak || 0);
+        const best = Math.max(
+          data.workout?.streak || 0,
+          data.bestDaily?.streak || 0,
+        );
         setStreakCount(best);
       })
-      .catch(() => { /* silently ignore */ });
+      .catch(() => {
+        /* silently ignore */
+      });
   }, []);
 
   return (
     <div className="space-y-3">
       <Image
-        src="/logo-white-h.webp?v=2"
+        src="/logo-color-h.webp"
         alt="Orgulho da Nutri"
         width={1332}
         height={281}
         priority
-        className="h-8 w-auto drop-shadow-md"
+        unoptimized
+        className="h-8 w-auto drop-shadow-md mx-auto"
       />
 
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-title-1 text-neutral-500">
-            Olá, {user_profile?.name || 'Explorador'}
+            Olá, {user_profile?.name || "Explorador"}
           </h1>
           <p className="text-body-1 text-neutral-400 mt-0.5">
             Como está seu dia hoje?

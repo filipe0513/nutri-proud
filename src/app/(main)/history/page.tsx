@@ -85,11 +85,12 @@ export default function HistoryPage() {
   return (
     <div className="pb-24 pt-8 px-6 max-w-lg mx-auto space-y-6">
       <Image
-        src="/logo-white-h.webp?v=2"
+        src="/logo-white-h.webp"
         alt="Orgulho da Nutri"
         width={1332}
         height={281}
         priority
+        unoptimized
         className="h-8 w-auto drop-shadow-md mb-2"
       />
       <div className="flex items-center justify-between">

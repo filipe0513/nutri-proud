@@ -9,11 +9,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint src",
+    "lint": "eslint src --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "postinstall": "prisma generate",
-    "validate": "npm run typecheck && npm run lint && npm run test && npm run build"
+    "validate": "npx prisma generate && npm run typecheck && npm run lint && npm run test && npm run build"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
