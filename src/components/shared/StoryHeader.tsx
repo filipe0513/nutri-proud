@@ -33,7 +33,7 @@ export function StoryHeader() {
   return (
     <div className="space-y-3">
       <div className="flex justify-center">
-        <div className="inline-flex items-center px-5 py-2.5 rounded-2xl bg-glass-light-3 backdrop-blur-md border border-white/60 shadow-sm">
+        <div className="inline-flex items-center px-5 py-2.5 rounded-full bg-glass-light-2 backdrop-blur-md border border-white/60 shadow-sm">
           <Image
             src="/logo-color-h.webp"
             alt="Orgulho da Nutri"
