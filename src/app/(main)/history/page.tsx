@@ -48,13 +48,13 @@ export default function HistoryPage() {
     isEmptyFilters,
   } = useHistoryStore();
   const { ref, inView } = useInView();
-  
+
   const [editingLog, setEditingLog] = useState<ActivityLog | null>(null);
 
   const handleEdit = (log: ActivityLog) => {
     setEditingLog(log);
   };
-  
+
   const handleClose = () => {
     setEditingLog(null);
   };
@@ -84,15 +84,19 @@ export default function HistoryPage() {
 
   return (
     <div className="pb-24 pt-8 px-6 max-w-lg mx-auto space-y-6">
-      <Image
-        src="/logo-white-h.webp"
-        alt="Orgulho da Nutri"
-        width={1332}
-        height={281}
-        priority
-        unoptimized
-        className="h-8 w-auto drop-shadow-md mb-2"
-      />
+      <div className="flex justify-center mb-2">
+        <div className="inline-flex items-center px-5 py-2.5 rounded-2xl bg-glass-light-3 backdrop-blur-md border border-white/60 shadow-sm">
+          <Image
+            src="/logo-color-h.webp"
+            alt="Orgulho da Nutri"
+            width={1332}
+            height={281}
+            priority
+            unoptimized
+            className="h-7 w-auto"
+          />
+        </div>
+      </div>
       <div className="flex items-center justify-between">
         <h1 className="text-title-1 font-bold text-neutral-500">Histórico</h1>
         <FilterDrawer />
@@ -158,34 +162,36 @@ export default function HistoryPage() {
       </div>
 
       {/* Modals for editing */}
-      <BottomSheet_Water 
-        open={editingLog?.category === 'water'} 
-        onOpenChange={(open) => !open && handleClose()} 
-        initialData={editingLog?.category === 'water' ? editingLog : undefined}
+      <BottomSheet_Water
+        open={editingLog?.category === "water"}
+        onOpenChange={(open) => !open && handleClose()}
+        initialData={editingLog?.category === "water" ? editingLog : undefined}
         customTrigger={<div className="hidden" />}
       />
-      <BottomSheet_Sleep 
-        open={editingLog?.category === 'sleep'} 
-        onOpenChange={(open) => !open && handleClose()} 
-        initialData={editingLog?.category === 'sleep' ? editingLog : undefined}
+      <BottomSheet_Sleep
+        open={editingLog?.category === "sleep"}
+        onOpenChange={(open) => !open && handleClose()}
+        initialData={editingLog?.category === "sleep" ? editingLog : undefined}
         customTrigger={<div className="hidden" />}
       />
-      <BottomSheet_Poop 
-        open={editingLog?.category === 'poop'} 
-        onOpenChange={(open) => !open && handleClose()} 
-        initialData={editingLog?.category === 'poop' ? editingLog : undefined}
+      <BottomSheet_Poop
+        open={editingLog?.category === "poop"}
+        onOpenChange={(open) => !open && handleClose()}
+        initialData={editingLog?.category === "poop" ? editingLog : undefined}
         customTrigger={<div className="hidden" />}
       />
-      <MealEqualizerDrawer 
-        open={editingLog?.category === 'food'} 
-        onOpenChange={(open) => !open && handleClose()} 
-        initialData={editingLog?.category === 'food' ? editingLog : undefined}
+      <MealEqualizerDrawer
+        open={editingLog?.category === "food"}
+        onOpenChange={(open) => !open && handleClose()}
+        initialData={editingLog?.category === "food" ? editingLog : undefined}
         customTrigger={<div className="hidden" />}
       />
-      <WorkoutEqualizerDrawer 
-        open={editingLog?.category === 'workout'} 
-        onOpenChange={(open) => !open && handleClose()} 
-        initialData={editingLog?.category === 'workout' ? editingLog : undefined}
+      <WorkoutEqualizerDrawer
+        open={editingLog?.category === "workout"}
+        onOpenChange={(open) => !open && handleClose()}
+        initialData={
+          editingLog?.category === "workout" ? editingLog : undefined
+        }
         customTrigger={<div className="hidden" />}
       />
     </div>

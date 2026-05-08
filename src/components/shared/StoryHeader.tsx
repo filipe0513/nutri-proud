@@ -32,15 +32,19 @@ export function StoryHeader() {
 
   return (
     <div className="space-y-3">
-      <Image
-        src="/logo-color-h.webp"
-        alt="Orgulho da Nutri"
-        width={1332}
-        height={281}
-        priority
-        unoptimized
-        className="h-8 w-auto drop-shadow-md mx-auto"
-      />
+      <div className="flex justify-center">
+        <div className="inline-flex items-center px-5 py-2.5 rounded-2xl bg-glass-light-3 backdrop-blur-md border border-white/60 shadow-sm">
+          <Image
+            src="/logo-color-h.webp"
+            alt="Orgulho da Nutri"
+            width={1332}
+            height={281}
+            priority
+            unoptimized
+            className="h-7 w-auto"
+          />
+        </div>
+      </div>
 
       <div className="flex items-start justify-between">
         <div>
