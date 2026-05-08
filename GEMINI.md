@@ -208,6 +208,23 @@ Execute a validação após **qualquer** modificação nos arquivos:
 ```bash
 npm run validate
 ```
+
+### Protocolo de Validação e Versionamento Automático (Git)
+O novo Protocolo de "Definition of Done (DoD)" dita estritamente a seguinte ordem:
+1. Executar `npm run validate`.
+2. Ler o terminal e resolver de forma autônoma qualquer erro (TypeScript, Lint, etc) até ficar Verde.
+3. Se a validação passar sem erros, executar o versionamento no Git antes de dar a tarefa como concluída.
+
 - 🟢 **Passou (Sem erros):** A tarefa está concluída.
 - 🔴 **Falhou (Com erros):** NÃO dê a tarefa como concluída. Leia os logs, corrija (TS, ESLint ou Vitest) de forma autônoma e rode novamente. Repita até ficar verde.
 - Nenhum `no-unused-vars` deve restar. Se tocou no BD, não esqueça de rodar `npx prisma generate`.
+
+Quando a validação for um sucesso, você DEVE executar os comandos de versionamento no terminal do projeto:
+1. `git add .`
+2. `git commit -m '<tipo>(<escopo>): <descrição da tarefa e das mudanças realizadas>'`
+
+**Tipos válidos de commit:**
+- **feat:** Nova funcionalidade ou página.
+- **fix:** Correção de bug.
+- **refactor:** Refatoração ou melhoria de lógica/UI sem mudar o comportamento.
+- **chore:** Atualização de pacotes ou configurações de workflow.

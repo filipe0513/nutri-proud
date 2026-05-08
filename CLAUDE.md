@@ -241,10 +241,26 @@ npx prisma generate
 npm run validate
 ```
 
+### Automatic Versioning Protocol (Git)
+The new "Definition of Done (DoD)" protocol strictly dictates the following order:
+1. Run `npm run validate`.
+2. Read the terminal and autonomously resolve any error (TypeScript, Lint, etc) until it is Green.
+3. If the validation passes without errors, execute Git versioning before marking the task as completed.
+
 > `npm run validate` runs sequentially: `typecheck && lint && test && build`. The `build` step is what Vercel executes — if it fails here it will fail in production.
 
 - 🟢 **All pass** → Task is done. Code is tested, compiled, and deploy-ready.
 - 🔴 **Any step fails** → Do NOT report completion. Read the error, fix autonomously, re-run both commands. Repeat until green.
+
+When the validation is successful, you MUST execute the versioning commands in the project terminal:
+1. `git add .`
+2. `git commit -m '<type>(<scope>): <description of task and changes>'`
+
+**Valid commit types:**
+- **feat:** New feature or page.
+- **fix:** Bug fix.
+- **refactor:** Refactoring or logic/UI improvement without changing behavior.
+- **chore:** Package updates or workflow configuration changes.
 
 **Specific error guidance:**
 

@@ -11,9 +11,10 @@ import {
   ProfileSettingsForm,
 } from "@/schemas/profileSchema";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import packageInfo from "../../../../package.json";
 
 export default function SettingsPage() {
@@ -268,7 +269,21 @@ export default function SettingsPage() {
         </div>
       </form>
 
-      <div className="mt-8 text-center">
+      <div className="pt-4 border-t border-white/20 mt-8 mb-4">
+        <Button
+          variant="ghost"
+          onClick={async () => {
+            useAppStore.getState().resetData();
+            await signOut({ callbackUrl: "/welcome" });
+          }}
+          className="w-full h-14 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-2xl font-bold text-button-1 flex items-center justify-center space-x-2 border border-red-500/20 backdrop-blur-md"
+        >
+          <LogOut size={20} />
+          <span>Sair da Conta</span>
+        </Button>
+      </div>
+
+      <div className="mt-8 text-center pb-8">
         <p className="text-caption-1 text-neutral-400">
           Orgulho da Nutri • Versão {appVersion}
           <span className="text-neutral-300 ml-1 text-xs">({environment})</span>

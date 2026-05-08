@@ -1,6 +1,6 @@
 {
   "name": "Orgulho da Nutri",
-  "short_name": "NutriProud",
+  "short_name": "Orgulho da Nutri",
   "description": "Cumprir as metas da nutri agora ficou fácil e divertido!",
   "start_url": "/",
   "display": "standalone",
@@ -8,15 +8,15 @@
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "/hero.png",
+      "src": "/icon-192.webp",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/webp",
       "purpose": "any maskable"
     },
     {
-      "src": "/hero.png",
+      "src": "/icon-512.webp",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/webp"
     }
   ]
 }

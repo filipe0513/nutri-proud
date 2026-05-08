@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   description:
     "Registre sua água, alimentação, sono e treinos com zero atrito. Transforme sua saúde em um jogo.",
   icons: {
-    icon: "/hero.png",
-    apple: "/hero.png",
+    icon: "/icon-192.webp",
+    apple: "/icon-192.webp",
   },
   appleWebApp: {
     capable: true,
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#fcf9f8",
+  themeColor: "#F5F5F7",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body
-        className={`${inter.variable} font-sans antialiased bg-mesh-sunset text-neutral-500`}
+        className={`${inter.variable} font-sans antialiased bg-bg-surface text-neutral-500`}
       >
         <RootProvider>{children}</RootProvider>
       </body>

@@ -7,7 +7,7 @@ export default function MainLayout({
 }) {
   return (
     <>
-      <main className="pb-24">
+      <main className="min-h-screen pb-24 bg-mesh-sunset">
         {children}
       </main>
       <BottomNav />

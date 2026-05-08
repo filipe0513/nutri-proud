@@ -1,47 +1,75 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
 
 interface StoryCircleProps {
   label: string;
   icon: LucideIcon;
   value: number; // 0 to 100
+  color: string; // hex color for the ring
   active?: boolean;
   onClick?: () => void;
 }
 
-export function StoryCircle({ label, icon: Icon, value, active, onClick }: StoryCircleProps) {
-  const getBorderColor = (v: number) => {
-    if (v === 0) return 'border-white/40';
-    if (v < 50) return 'border-notify-error';
-    if (v < 75) return 'border-notify-warning';
-    return 'border-notify-success';
-  };
+const RADIUS = 26;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+const SIZE = 64;
+const CENTER = SIZE / 2;
+
+export function StoryCircle({ label, icon: Icon, value, color, active, onClick }: StoryCircleProps) {
+  const offset = CIRCUMFERENCE - (value / 100) * CIRCUMFERENCE;
 
   return (
     <div className="flex flex-col items-center space-y-2 cursor-pointer" onClick={onClick}>
       <motion.div
         whileTap={{ scale: 0.9 }}
-        className={cn(
-          "relative w-16 h-16 rounded-full border-[3px] p-1 flex items-center justify-center bg-glass-light-1 backdrop-blur-sm transition-colors shadow-sm",
-          getBorderColor(value),
-          active && "ring-2 ring-brand-500 ring-offset-2"
-        )}
+        className={`relative w-16 h-16 flex items-center justify-center ${
+          active ? 'ring-2 ring-brand-500 ring-offset-2 rounded-full' : ''
+        }`}
       >
-        <div className="w-full h-full rounded-full bg-glass-light-2 backdrop-blur-md flex items-center justify-center text-neutral-500">
-          <Icon className="h-7 w-7" />
+        {/* SVG Progress Ring */}
+        <svg
+          width={SIZE}
+          height={SIZE}
+          viewBox={`0 0 ${SIZE} ${SIZE}`}
+          className="absolute inset-0"
+        >
+          {/* Background ring */}
+          <circle
+            cx={CENTER}
+            cy={CENTER}
+            r={RADIUS}
+            fill="none"
+            stroke="var(--color-ring-bg)"
+            strokeWidth="4"
+          />
+          {/* Progress ring */}
+          {value > 0 && (
+            <circle
+              cx={CENTER}
+              cy={CENTER}
+              r={RADIUS}
+              fill="none"
+              stroke={color}
+              strokeWidth="4"
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={offset}
+              strokeLinecap="round"
+              transform={`rotate(-90 ${CENTER} ${CENTER})`}
+              style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+            />
+          )}
+        </svg>
+
+        {/* Icon center */}
+        <div className="relative z-10 flex items-center justify-center">
+          <Icon className="h-6 w-6" style={{ color }} />
         </div>
-        
-        {/* Simple Progress Indicator (could be more advanced with SVG) */}
-        {value > 0 && (
-           <div className="absolute inset-[-3px] rounded-full overflow-hidden">
-             {/* We could add a more complex SVG ring here for better visual */}
-           </div>
-        )}
       </motion.div>
-      <span className="text-caption-1 font-semibold text-neutral-500/80 uppercase tracking-tight">{label}</span>
+      <span className="text-caption-1 font-medium text-neutral-400 tracking-tight">
+        {label}
+      </span>
     </div>
   );
 }

@@ -62,19 +62,22 @@ function WelcomeContent() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-between min-h-screen p-6 text-neutral-500 bg-mesh-sunset relative">
-      <div className="flex-1 flex flex-col items-center justify-center space-y-8 max-w-sm w-full text-center mt-8">
+    <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-flow overflow-hidden">
+      <div className="absolute inset-0 bg-black/20" />
+      <div className="relative z-10 flex flex-col items-center justify-between min-h-screen p-6 w-full">
+        <div className="flex-1 flex flex-col items-center justify-center space-y-8 max-w-sm w-full text-center mt-8">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="relative w-32 h-32"
+          className="w-3/4 max-w-sm"
         >
           <Image
-            src="/hero.png"
+            src="/logo-white.webp"
             alt="Logo Orgulho da Nutri"
-            fill
-            className="object-contain"
+            width={600}
+            height={200}
+            className="w-full h-auto animate-splash drop-shadow-2xl"
             priority
           />
         </motion.div>
@@ -83,12 +86,8 @@ function WelcomeContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
-          className="space-y-3"
         >
-          <h1 className="text-title-1 font-bold text-neutral-600">
-            Orgulho da Nutri
-          </h1>
-          <p className="text-body-1 text-neutral-500/80 font-medium px-4">
+          <p className="text-body-1 text-white/90 font-medium px-4">
             Cumprir as metas da nutri agora ficou fácil e divertido!
           </p>
         </motion.div>
@@ -165,6 +164,7 @@ function WelcomeContent() {
           </Button>
         )}
       </motion.div>
+      </div>
     </div>
   );
 }
@@ -173,7 +173,7 @@ export default function WelcomePage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-mesh-sunset flex items-center justify-center text-white">
+        <div className="min-h-screen bg-gradient-flow flex items-center justify-center text-white">
           Carregando...
         </div>
       }

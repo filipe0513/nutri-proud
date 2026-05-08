@@ -18,12 +18,12 @@ export function BottomNav() {
       href: '/',
     },
     {
-      label: 'Diário',
+      label: 'Histórico',
       icon: History,
       href: '/history',
     },
     {
-      label: 'Ajustes',
+      label: 'Config',
       icon: Settings,
       href: '/settings',
     },
@@ -46,8 +46,12 @@ export function BottomNav() {
             )}
           >
             <item.icon className={cn("h-6 w-6", isActive && "stroke-[2.5px]")} />
-            {/* Optional label for accessibility/clarity, currently hidden to keep it minimal as requested, or we can show it */}
-            <span className="sr-only">{item.label}</span>
+            <span className={cn(
+              "text-caption-2 mt-0.5",
+              isActive ? "font-bold" : "font-medium"
+            )}>
+              {item.label}
+            </span>
           </Link>
         );
       })}
