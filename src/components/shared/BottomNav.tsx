@@ -13,14 +13,14 @@ export function BottomNav() {
 
   const navItems = [
     {
-      label: 'Início',
-      icon: Home,
-      href: '/',
-    },
-    {
       label: 'Histórico',
       icon: History,
       href: '/history',
+    },
+    {
+      label: 'Início',
+      icon: Home,
+      href: '/',
     },
     {
       label: 'Config',

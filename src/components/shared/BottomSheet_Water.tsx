@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/store';
 import { useHistoryStore } from '@/store/historyStore';
 import { toast } from 'sonner';
-import { Droplet, Trophy } from 'lucide-react';
+import { Droplet, Trophy, Trash2 } from 'lucide-react';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
 
@@ -25,7 +25,9 @@ export function BottomSheet_Water({
 }) {
   const addLog = useAppStore(state => state.addLog);
   const updateLog = useAppStore(state => state.updateLog);
+  const removeLog = useAppStore(state => state.removeLog);
   const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
+  const deleteLogHistory = useHistoryStore(state => state.deleteLogHistory);
   const setWaterToTarget = useAppStore(state => state.setWaterToTarget);
   const userProfile = useAppStore(state => state.user_profile);
   
@@ -57,10 +59,11 @@ export function BottomSheet_Water({
   }, [initialData]);
 
   const handleSave = async (ml: number) => {
+    const score = Math.min(100, Math.round((ml / targetMl) * 100));
     const logData = {
       event_time: new Date(selectedDate).toISOString(),
       category: 'water' as const,
-      primary_value: 100,
+      primary_value: score,
       details: { quantity_ml: ml }
     };
 
@@ -77,6 +80,16 @@ export function BottomSheet_Water({
       });
     }
     
+    closeDrawer();
+  };
+
+  const handleDelete = async () => {
+    if (!initialData) return;
+    await removeLog(initialData.id);
+    deleteLogHistory(initialData.id);
+    toast.success('Registro apagado!', {
+      className: 'bg-blue-500 text-white border-transparent'
+    });
     closeDrawer();
   };
 
@@ -199,20 +212,31 @@ export function BottomSheet_Water({
           </div>
         ) : (
           <div className="flex flex-col mt-4 space-y-6">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 min-w-0">
               <input 
                 type="number" 
                 inputMode="numeric"
-                className="flex-1 h-16 rounded-2xl border border-blue-200 bg-white/50 backdrop-blur-sm px-6 text-title-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 text-blue-950"
+                className="min-w-0 flex-1 h-16 rounded-2xl border border-blue-200 bg-white/50 backdrop-blur-sm px-4 text-title-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 text-blue-950"
                 placeholder="0"
                 value={customValue}
                 onChange={(e) => setCustomValue(e.target.value)}
                 autoFocus
               />
-              <span className="text-title-2 text-blue-900/80">ml</span>
+              <span className="text-title-2 text-blue-900/80 flex-shrink-0">ml</span>
             </div>
             
-            <div className="flex space-x-3">
+            <div className="flex space-x-2">
+              {initialData && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-14 w-14 rounded-2xl border border-blue-200 bg-white/50 text-blue-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50 flex-shrink-0"
+                  onClick={handleDelete}
+                  title="Apagar registro"
+                >
+                  <Trash2 size={18} />
+                </Button>
+              )}
               {!initialData && (
                 <Button 
                   variant="outline"

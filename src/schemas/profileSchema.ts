@@ -8,6 +8,7 @@ export const profileSettingsSchema = z.object({
   water_target_ml: z.number().min(1000).max(8000),
   sleep_target_hours: z.number().min(4).max(12),
   weekly_workouts: z.number().min(3, 'Mínimo 3 dias').max(7, 'Máximo 7 dias'),
+  meals_per_day: z.number().min(1, 'Mínimo 1 refeição').max(10, 'Máximo 10 refeições'),
 });
 
 export type ProfileSettingsForm = z.infer<typeof profileSettingsSchema>;

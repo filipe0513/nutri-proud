@@ -113,7 +113,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       },
 
       removeLog: async (id) => {
-        // Futuro: await api.deleteActivityLog(id);
+        await api.deleteActivityLog(id);
         set((state) => ({
           activity_logs: state.activity_logs.filter((log) => log.id !== id)
         }));

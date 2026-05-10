@@ -9,7 +9,7 @@ import { Slider } from '@/components/ui/slider';
 import { useAppStore } from '@/store/store';
 import { useHistoryStore } from '@/store/historyStore';
 import { toast } from 'sonner';
-import { Moon, Minus, Plus } from 'lucide-react';
+import { Moon, Minus, Plus, Trash2 } from 'lucide-react';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
 
@@ -26,7 +26,11 @@ export function BottomSheet_Sleep({
 }) {
   const addLog = useAppStore(state => state.addLog);
   const updateLog = useAppStore(state => state.updateLog);
+  const removeLog = useAppStore(state => state.removeLog);
   const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
+  const deleteLogHistory = useHistoryStore(state => state.deleteLogHistory);
+  const userProfile = useAppStore(state => state.user_profile);
+  const sleepTarget = userProfile?.targets?.sleep_hours_per_night || 8;
   
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = open !== undefined;
@@ -79,10 +83,20 @@ export function BottomSheet_Sleep({
       return;
     }
 
-    // Basic primary_value logic: 100 if > 7h and normal/revigorado
-    let score = 50;
-    if (duration >= 7 && quality !== 'cansado') score = 100;
-    if (duration < 5 || quality === 'cansado') score = 30;
+    // Base score: proportional to sleep target (capped at 100)
+    let score = Math.min(100, Math.round((duration / sleepTarget) * 100));
+
+    // Awoke times penalty
+    if (awokeTimes === 1) score -= 5;
+    else if (awokeTimes === 2) score -= 10;
+    else if (awokeTimes >= 3) score -= 20;
+
+    // Quality bonus/penalty
+    if (quality === 'cansado') score -= 10;
+    else if (quality === 'revigorado') score += 10;
+
+    // Clamp to [0, 100]
+    score = Math.max(0, Math.min(100, score));
 
     const logData = {
       event_time: new Date(selectedDate).toISOString(),
@@ -110,6 +124,16 @@ export function BottomSheet_Sleep({
     }
     
     setTimeout(resetState, 300);
+  };
+
+  const handleDelete = async () => {
+    if (!initialData) return;
+    await removeLog(initialData.id);
+    deleteLogHistory(initialData.id);
+    toast.success('Registro apagado!', {
+      className: 'bg-indigo-500 text-white border-transparent'
+    });
+    if (isControlled && onOpenChange) onOpenChange(false);
   };
 
   return (
@@ -213,12 +237,23 @@ export function BottomSheet_Sleep({
           </div>
 
           {initialData ? (
-            <Button 
-              className="h-14 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white border-transparent w-full text-button-1 shadow-md"
-              onClick={handleSave}
-            >
-              Salvar
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-14 w-14 rounded-2xl border border-indigo-200 bg-white/50 text-indigo-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50 flex-shrink-0"
+                onClick={handleDelete}
+                title="Apagar registro"
+              >
+                <Trash2 size={18} />
+              </Button>
+              <Button 
+                className="h-14 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white border-transparent flex-1 text-button-1 shadow-md"
+                onClick={handleSave}
+              >
+                Salvar
+              </Button>
+            </div>
           ) : (
             <DrawerClose asChild>
               <Button 

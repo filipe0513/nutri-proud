@@ -18,6 +18,7 @@ interface HistoryState {
   applyFilters: (filters: FilterState) => Promise<void>;
   resetHistory: () => void;
   updateLogHistory: (id: string, updatedLog: Partial<ActivityLog>) => void;
+  deleteLogHistory: (id: string) => void;
   isEmptyFilters: () => boolean;
 }
 
@@ -94,6 +95,12 @@ export const useHistoryStore = create<HistoryState>()((set, get) => ({
       logs: state.logs.map((log) => 
         log.id === id ? { ...log, ...updatedLog } as ActivityLog : log
       )
+    }));
+  },
+
+  deleteLogHistory: (id) => {
+    set((state) => ({
+      logs: state.logs.filter((log) => log.id !== id)
     }));
   },
 

@@ -6,7 +6,7 @@ import { useInView } from "react-intersection-observer";
 import { useHistoryStore } from "@/store/historyStore";
 import { FilterDrawer } from "@/components/shared/FilterDrawer";
 import { Card, CardContent } from "@/components/ui/card";
-import { format, isToday, isYesterday, parseISO } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ActivityLog } from "@/store/types";
 import { BottomSheet_Water } from "@/components/shared/BottomSheet_Water";
@@ -31,11 +31,23 @@ const CATEGORY_NAMES: Record<string, string> = {
   poop: "Intestino",
 };
 
-const formatGroupDate = (dateString: string) => {
-  const date = parseISO(dateString);
+const formatGroupDate = (dateKey: string) => {
+  // dateKey is already in local YYYY-MM-DD format
+  const [year, month, day] = dateKey.split('-').map(Number);
+  // Build a local date at noon to avoid DST edge cases
+  const date = new Date(year, month - 1, day, 12, 0, 0);
   if (isToday(date)) return "Hoje";
   if (isYesterday(date)) return "Ontem";
   return format(date, "d 'de' MMMM", { locale: ptBR });
+};
+
+/** Returns the local date key (YYYY-MM-DD) for an ISO timestamp using browser timezone */
+const getLocalDateKey = (isoString: string): string => {
+  const d = new Date(isoString);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 export default function HistoryPage() {
@@ -71,10 +83,10 @@ export default function HistoryPage() {
     }
   }, [inView, hasMore, isFetching, fetchNextPage]);
 
-  // Group logs by date
+  // Group logs by LOCAL date (not UTC date)
   const groupedLogs = logs.reduce(
     (acc, log) => {
-      const dateKey = log.event_time.split("T")[0];
+      const dateKey = getLocalDateKey(log.event_time);
       if (!acc[dateKey]) acc[dateKey] = [];
       acc[dateKey].push(log);
       return acc;
@@ -135,7 +147,7 @@ export default function HistoryPage() {
                             {CATEGORY_NAMES[log.category] || log.category}
                           </p>
                           <p className="text-caption-1 text-neutral-400">
-                            {format(parseISO(log.event_time), "HH:mm")} •
+                            {format(new Date(log.event_time), "HH:mm")} •
                             Pontuação: {log.primary_value}
                           </p>
                         </div>

@@ -89,3 +89,16 @@ export const updateActivityLog = async (id: string, log: ActivityLog): Promise<v
     console.error('Falha ao atualizar log', await res.text());
   }
 };
+
+/**
+ * Remove um registro de atividade no servidor
+ */
+export const deleteActivityLog = async (id: string): Promise<void> => {
+  const res = await fetch(`/api/logs/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    console.error('Falha ao apagar log', await res.text());
+  }
+};
+

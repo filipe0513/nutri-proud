@@ -53,11 +53,17 @@ export const logService = {
       }
     });
 
-    // TODO: Re-calculate streaks (Task 19) -> Need to add streak service logic here?
-    // Wait, the instructions say "Após uma edição bem-sucedida, garantir que o motor de streaks (Task 19) seja notificado ou re-executado".
-    // Let's check streak engine if there is one.
-
     return updatedLog;
-  }
+  },
+
+  async deleteDailyLog(logId: string, userId: string) {
+    await prisma.dailyLog.delete({
+      where: {
+        id: logId,
+        userId, // ensure user owns it
+      },
+    });
+  },
 };
+
 

@@ -40,6 +40,7 @@ export default function SettingsPage() {
         water_target_ml: user_profile.targets?.water_ml_per_day || 2000,
         sleep_target_hours: user_profile.targets?.sleep_hours_per_night || 8,
         weekly_workouts: user_profile.targets?.weekly_workouts ?? 3,
+        meals_per_day: user_profile.targets?.meals_per_day || 4,
       });
     }
   }, [user_profile, reset]);
@@ -61,6 +62,7 @@ export default function SettingsPage() {
         water_ml_per_day: data.water_target_ml,
         sleep_hours_per_night: data.sleep_target_hours,
         weekly_workouts: data.weekly_workouts,
+        meals_per_day: data.meals_per_day,
       },
     });
 
@@ -253,6 +255,24 @@ export default function SettingsPage() {
               {errors.weekly_workouts && (
                 <p className="text-caption-2 text-notify-error">
                   {errors.weekly_workouts.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <label className="text-caption-1 font-medium text-neutral-500/80">
+                Número de refeições por dia (1–10)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                {...register("meals_per_day", { valueAsNumber: true })}
+                className="w-full h-14 bg-white/50 border border-white/40 rounded-2xl px-4 text-input-1 text-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+              {errors.meals_per_day && (
+                <p className="text-caption-2 text-notify-error">
+                  {errors.meals_per_day.message}
                 </p>
               )}
             </div>

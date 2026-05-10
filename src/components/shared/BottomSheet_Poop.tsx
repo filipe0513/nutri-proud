@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAppStore } from '@/store/store';
 import { useHistoryStore } from '@/store/historyStore';
 import { toast } from 'sonner';
-import { Smile } from 'lucide-react';
+import { Smile, Trash2 } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
@@ -24,7 +24,9 @@ export function BottomSheet_Poop({
 }) {
   const addLog = useAppStore(state => state.addLog);
   const updateLog = useAppStore(state => state.updateLog);
+  const removeLog = useAppStore(state => state.removeLog);
   const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
+  const deleteLogHistory = useHistoryStore(state => state.deleteLogHistory);
   
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = open !== undefined;
@@ -91,6 +93,16 @@ export function BottomSheet_Poop({
     }
   };
 
+  const handleDelete = async () => {
+    if (!initialData) return;
+    await removeLog(initialData.id);
+    deleteLogHistory(initialData.id);
+    toast.success('Registro apagado!', {
+      className: 'bg-amber-500 text-white border-transparent'
+    });
+    if (isControlled && onOpenChange) onOpenChange(false);
+  };
+
   return (
     <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
       {!isControlled && (
@@ -125,9 +137,10 @@ export function BottomSheet_Poop({
 
         <div className="flex flex-col mt-4 space-y-3">
           {[
-            { id: 'hard', label: '🧱 Ressecado / Difícil', pv: 25 },
+            { id: 'hard', label: '🧱 Ressecado / Difícil', pv: 80 },
             { id: 'normal', label: '😌 Suave / Normal', pv: 100 },
-            { id: 'liquid', label: '💦 Solto / Líquido', pv: 25 },
+            { id: 'liquid', label: '💦 Solto / Líquido', pv: 80 },
+            { id: 'gas', label: '💨 Gases / Desconforto', pv: 80 },
           ].map(opt => (
             <button
               key={opt.id}
@@ -141,6 +154,19 @@ export function BottomSheet_Poop({
               {opt.label}
             </button>
           ))}
+          {initialData && (
+            <div className="flex justify-start pt-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-11 w-11 rounded-2xl border border-amber-200 bg-white/50 text-amber-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50"
+                onClick={handleDelete}
+                title="Apagar registro"
+              >
+                <Trash2 size={16} />
+              </Button>
+            </div>
+          )}
           <DrawerClose ref={closeRef} className="hidden" />
         </div>
       </DrawerContent>

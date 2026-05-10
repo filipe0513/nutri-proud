@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/store';
 import { useHistoryStore } from '@/store/historyStore';
 import { toast } from 'sonner';
-import { Utensils } from 'lucide-react';
+import { Utensils, Trash2 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
@@ -35,7 +35,9 @@ export function MealEqualizerDrawer({
 }) {
   const addLog = useAppStore(state => state.addLog);
   const updateLog = useAppStore(state => state.updateLog);
+  const removeLog = useAppStore(state => state.removeLog);
   const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
+  const deleteLogHistory = useHistoryStore(state => state.deleteLogHistory);
   
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = open !== undefined;
@@ -129,6 +131,14 @@ export function MealEqualizerDrawer({
 
     // Slight delay to allow drawer close animation before reset
     setTimeout(resetState, 300);
+  };
+
+  const handleDelete = async () => {
+    if (!initialData) return;
+    await removeLog(initialData.id);
+    deleteLogHistory(initialData.id);
+    toast.success('Refeição apagada!');
+    if (isControlled && onOpenChange) onOpenChange(false);
   };
 
   return (
@@ -225,7 +235,18 @@ export function MealEqualizerDrawer({
               </div>
             </div>
 
-            <div className="flex space-x-3">
+            <div className="flex space-x-2">
+              {initialData && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-14 w-14 rounded-2xl border border-green-200 bg-white/50 text-green-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50 flex-shrink-0"
+                  onClick={handleDelete}
+                  title="Apagar registro"
+                >
+                  <Trash2 size={18} />
+                </Button>
+              )}
               {!initialData && (
                 <Button 
                   variant="outline"

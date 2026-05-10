@@ -82,19 +82,27 @@ function DashboardContent() {
 
   const getProgress = (catId: string) => {
     const catLogs = todayLogs.filter(log => log.category === catId);
+    if (catLogs.length === 0) return 0;
 
     if (catId === 'water') {
+      // Proportional to daily water target
       const total = catLogs.reduce((acc, log) => acc + (log.details?.quantity_ml || 0), 0);
-      return Math.min(100, (total / (user_profile?.targets?.water_ml_per_day || 2000)) * 100);
+      return Math.min(100, Math.round((total / (user_profile?.targets?.water_ml_per_day || 2000)) * 100));
     }
+
     if (catId === 'food') {
-      return Math.min(100, (catLogs.length / (user_profile?.targets?.meals_per_day || 4)) * 100);
+      // Average quality of logged meals × proportion of meals target met
+      const mealsTarget = user_profile?.targets?.meals_per_day || 4;
+      const avgQuality = catLogs.reduce((acc, log) => acc + log.primary_value, 0) / catLogs.length;
+      const mealsProportion = Math.min(1, catLogs.length / mealsTarget);
+      return Math.min(100, Math.round(avgQuality * mealsProportion));
     }
-    if (catId === 'workout') return catLogs.length > 0 ? 100 : 0;
-    if (catId === 'sleep') return catLogs.length > 0 ? 100 : 0;
-    if (catId === 'poop') return catLogs.length > 0 ? 100 : 0;
-    return 0;
+
+    // sleep, workout, poop: average of primary_value (already computed in each drawer)
+    const avg = catLogs.reduce((acc, log) => acc + log.primary_value, 0) / catLogs.length;
+    return Math.min(100, Math.round(avg));
   };
+
 
   const renderActionItem = (action: typeof ACTION_LIST[number], trigger: React.ReactNode) => {
     return (

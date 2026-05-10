@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/store';
 import { useHistoryStore } from '@/store/historyStore';
 import { toast } from 'sonner';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell, Trash2 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
@@ -26,7 +26,9 @@ export function WorkoutEqualizerDrawer({
 }) {
   const addLog = useAppStore(state => state.addLog);
   const updateLog = useAppStore(state => state.updateLog);
+  const removeLog = useAppStore(state => state.removeLog);
   const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
+  const deleteLogHistory = useHistoryStore(state => state.deleteLogHistory);
   
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = open !== undefined;
@@ -105,6 +107,14 @@ export function WorkoutEqualizerDrawer({
     setTimeout(resetState, 300);
   };
 
+  const handleDelete = async () => {
+    if (!initialData) return;
+    await removeLog(initialData.id);
+    deleteLogHistory(initialData.id);
+    toast.success('Treino apagado!');
+    if (isControlled && onOpenChange) onOpenChange(false);
+  };
+
   return (
     <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
       {!isControlled && (
@@ -162,12 +172,23 @@ export function WorkoutEqualizerDrawer({
           </div>
 
           {initialData ? (
-            <Button 
-              className="h-14 rounded-2xl bg-red-500 hover:bg-red-600 text-white border-transparent w-full text-button-1 shadow-md"
-              onClick={handleSave}
-            >
-              Salvar
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-14 w-14 rounded-2xl border border-red-200 bg-white/50 text-red-400 hover:text-red-600 hover:border-red-400 hover:bg-red-50 flex-shrink-0"
+                onClick={handleDelete}
+                title="Apagar registro"
+              >
+                <Trash2 size={18} />
+              </Button>
+              <Button 
+                className="h-14 rounded-2xl bg-red-500 hover:bg-red-600 text-white border-transparent flex-1 text-button-1 shadow-md"
+                onClick={handleSave}
+              >
+                Salvar
+              </Button>
+            </div>
           ) : (
             <DrawerClose asChild>
               <Button 
