@@ -123,28 +123,35 @@ O coração do app. Fundo `bg-slate-50`.
 
 ---
 
-## 🤖 Instruções de Execução para o Agente (Passo a Passo)
+## 🚀 Status e Contexto Atual do Projeto (Último Update: Maio 2026)
 
-Agente, ao ler este arquivo, siga ESTRITAMENTE a ordem abaixo. Confirme a conclusão de cada etapa antes de avançar para a próxima.
+O projeto já passou da fase de setup e está em pleno desenvolvimento. As seguintes áreas já estão construídas e funcionais:
 
-1. **Setup Inicial:**
-   - Rode `npx create-next-app@latest .` (Use TypeScript, Tailwind, App Router e alias `@/*`).
-2. **Setup do Shadcn UI:**
-   - Rode `npx shadcn-ui@latest init` (Estilo padrão, cor base 'Slate', variáveis CSS ativadas).
-   - Instale os componentes base: `npx shadcn-ui@latest add button card drawer input toast`.
-3. **Setup de Estado (Zustand):**
-   - Instale `npm install zustand uuid` e `npm install -D @types/uuid`.
-   - Crie o arquivo `src/store/useAppStore.ts`. Implemente a Store com as tipagens acima e use o `persist` para conectar ao LocalStorage.
-4. **Construção da UI:**
-   - Comece pela tela `/welcome` e `/onboarding`.
-   - Após salvar o perfil, desenvolva a `Home` focando no layout de Stories (bordas coloridas).
-   - Crie o `Drawer` genérico para as ações rápidas.
+1. **Branding e PWA:**
+   - O app agora chama-se **"Orgulho da Nutri"**.
+   - É um PWA instalável (`manifest.ts` configurado, metadata de mobile-web-app aplicada).
+   - A identidade visual trocou logos em texto por SVGs horizontais (`logo-white-h.webp`).
 
-**Regras de Código:**
-- Use `snake_case` apenas para os nomes das chaves no LocalStorage/JSON.
-- Use `camelCase` para variáveis e funções TypeScript.
-- Use `PascalCase` para componentes React.
-- Mantenha os componentes o mais modulares possível (componentize os Stories e Cards).
+2. **Dashboard (Home) & UI:**
+   - Tela principal redesenhada no estilo Apple/Nubank: Lista vertical de ações rápidas, anéis de progresso SVG dinâmicos, e "Score Card" com gradient mesh animado.
+   - Menu reordenado com FAB (Floating Action Button).
+   - Drawers e Modais padronizados para editar logs sem sair da página.
+   - Cores e contrastes ajustados para melhorar a acessibilidade e legibilidade contra os fundos mesh.
+
+3. **Fluxos de Usuário e Autenticação:**
+   - Fluxo consolidado: Visitantes iniciam como anônimos (limitados por tempo e registros).
+   - Funcionalidade completa de **Conversão de Conta** via Google e Magic Link (Auth.js), fundindo o ID temporário num perfil permanente (corrigido para não quebrar com `user_profile` nulo).
+   - Configurações na interface (`/settings`) com botão de Logout funcional e ajuste de parâmetros detalhados (como "refeições por dia").
+
+4. **Tratamento de Dados (Backend):**
+   - Lógica de cálculo de notas dos pilares normalizada.
+   - Fusos horários (Timezones) corrigidos no histórico de logs.
+   - Exclusão e edição de atividades funcionais.
+
+**Regras de Código Atualizadas:**
+- Use `snake_case` apenas para comunicação legada, mas prefira tipagens estritas em `camelCase` e schemas em Zod atualizados.
+- Mantenha componentes modulares.
+- Lembre-se: NÃO estamos mais usando o LocalStorage como "fonte da verdade", mas sim o PostgreSQL (via Prisma) junto da API Next.js. O Zustand guarda apenas UI State e cópia da sessão temporária!
 
 ## Arquitetura de Dados e Backend (Full-Stack Next.js)
 Mudamos de um modelo LocalStorage para um Backend real embutido no Next.js.
