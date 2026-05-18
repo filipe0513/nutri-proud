@@ -88,9 +88,11 @@ export const useAppStore = create<AppState>()((set, get) => ({
         // 1. Chama a API
         await api.saveActivityLog(newLog);
 
-        // 2. Atualiza estado global
+        // 2. Atualiza estado global (mantém ordem decrescente por event_time)
         set((state) => ({
-          activity_logs: [...state.activity_logs, newLog]
+          activity_logs: [...state.activity_logs, newLog].sort(
+            (a, b) => new Date(b.event_time).getTime() - new Date(a.event_time).getTime()
+          ),
         }));
       },
 

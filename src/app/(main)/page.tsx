@@ -18,7 +18,6 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, Drawer
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { LimitWarningDrawer } from '@/components/shared/LimitWarningDrawer';
-import Link from 'next/link';
 
 const CATEGORY_COLORS: Record<string, string> = {
   water: 'var(--color-cat-water)',
@@ -26,6 +25,15 @@ const CATEGORY_COLORS: Record<string, string> = {
   workout: 'var(--color-cat-workout)',
   sleep: 'var(--color-cat-sleep)',
   poop: 'var(--color-cat-poop)',
+};
+
+// Maps story category id → drawer id
+const STORY_TO_DRAWER: Record<string, 'water' | 'meal' | 'workout' | 'sleep' | 'poop'> = {
+  water: 'water',
+  food: 'meal',
+  workout: 'workout',
+  sleep: 'sleep',
+  poop: 'poop',
 };
 
 const PROGRESS_CATEGORIES = [
@@ -77,7 +85,9 @@ function DashboardContent() {
   const todayLogs = useMemo(() => {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
-    return activity_logs.filter(log => new Date(log.event_time) >= startOfDay);
+    return activity_logs
+      .filter(log => new Date(log.event_time) >= startOfDay)
+      .sort((a, b) => new Date(b.event_time).getTime() - new Date(a.event_time).getTime());
   }, [activity_logs]);
 
   const getProgress = (catId: string) => {
@@ -149,14 +159,28 @@ function DashboardContent() {
         </p>
         <div className="flex justify-between overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
           {PROGRESS_CATEGORIES.map((cat) => (
-            <Link key={cat.id} href={`/pillar/${cat.id}`}>
+            <button
+              key={cat.id}
+              type="button"
+              aria-label={`Registrar ${cat.label}`}
+              className="flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-full"
+              onClick={() => {
+                const drawerId = STORY_TO_DRAWER[cat.id];
+                if (isLimitReached) {
+                  setPendingAction(drawerId);
+                  setIsWarningOpen(true);
+                } else {
+                  setOpenDrawer(drawerId);
+                }
+              }}
+            >
               <StoryCircle
                 label={cat.label}
                 icon={cat.icon}
                 value={getProgress(cat.id)}
                 color={CATEGORY_COLORS[cat.id]}
               />
-            </Link>
+            </button>
           ))}
         </div>
       </div>
