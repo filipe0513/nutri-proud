@@ -31,3 +31,49 @@ test('Deve criar um usuário anônimo corretamente', async () => {
   });
   expect(result.id).toBe('123');
 });
+
+// --- Testes para checkHasCompletedOnboarding ---
+
+test('checkHasCompletedOnboarding: retorna false se o usuário não for encontrado', async () => {
+  // Arrange
+  prismaMock.user.findUnique.mockResolvedValue(null);
+
+  // Act
+  const result = await userService.checkHasCompletedOnboarding('user-404');
+
+  // Assert
+  expect(result).toBe(false);
+});
+
+test('checkHasCompletedOnboarding: retorna false se profile for nulo', async () => {
+  // Arrange
+  prismaMock.user.findUnique.mockResolvedValue({ profile: null } as unknown as ReturnType<typeof prismaMock.user.findUnique> extends Promise<infer U> ? U : never);
+
+  // Act
+  const result = await userService.checkHasCompletedOnboarding('user-no-profile');
+
+  // Assert
+  expect(result).toBe(false);
+});
+
+test('checkHasCompletedOnboarding: retorna false se profile existir mas não tiver main_goal', async () => {
+  // Arrange
+  prismaMock.user.findUnique.mockResolvedValue({ profile: { weight_kg: 70 } } as unknown as ReturnType<typeof prismaMock.user.findUnique> extends Promise<infer U> ? U : never);
+
+  // Act
+  const result = await userService.checkHasCompletedOnboarding('user-incomplete');
+
+  // Assert
+  expect(result).toBe(false);
+});
+
+test('checkHasCompletedOnboarding: retorna true se profile tiver main_goal preenchido', async () => {
+  // Arrange
+  prismaMock.user.findUnique.mockResolvedValue({ profile: { main_goal: 'fat_loss', weight_kg: 80 } } as unknown as ReturnType<typeof prismaMock.user.findUnique> extends Promise<infer U> ? U : never);
+
+  // Act
+  const result = await userService.checkHasCompletedOnboarding('user-complete');
+
+  // Assert
+  expect(result).toBe(true);
+});
