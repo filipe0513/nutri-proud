@@ -10,7 +10,8 @@ export interface UserProfile {
   };
   targets: {
     water_ml_per_day: number;
-    meals_per_day: number;
+    /** List of meal IDs the user plans to have each day */
+    planned_meals: string[];
     sleep_hours_per_night: number;
     weekly_workouts: number;
   };
@@ -25,7 +26,7 @@ export interface ActivityLog {
   category: Category;
   primary_value: number; // 0 to 100
   details: {
-    meal_type?: 'breakfast' | 'lunch' | 'snack' | 'dinner';
+    meal_type?: string;
     quantity_ml?: number;
     factors?: unknown;
     notes?: string;

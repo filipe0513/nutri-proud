@@ -102,7 +102,9 @@ function DashboardContent() {
 
     if (catId === 'food') {
       // Average quality of logged meals × proportion of meals target met
-      const mealsTarget = user_profile?.targets?.meals_per_day || 4;
+      const rawTargets = user_profile?.targets as Record<string, unknown> | undefined;
+      const plannedMeals = Array.isArray(rawTargets?.planned_meals) ? rawTargets.planned_meals : [];
+      const mealsTarget = plannedMeals.length || 4;
       const avgQuality = catLogs.reduce((acc, log) => acc + log.primary_value, 0) / catLogs.length;
       const mealsProportion = Math.min(1, catLogs.length / mealsTarget);
       return Math.min(100, Math.round(avgQuality * mealsProportion));

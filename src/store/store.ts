@@ -44,11 +44,12 @@ export const useAppStore = create<AppState>()((set, get) => ({
         
         // Regras de Negócio: Cálculo de metas
         const waterTarget = Math.round(weight * 35);
-        let mealsTarget = 4;
 
-        if (goal === 'muscle_gain') {
-          mealsTarget = 6;
-        }
+        // Default planned meals based on goal
+        const defaultPlannedMeals =
+          goal === 'muscle_gain'
+            ? ['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'pre_workout', 'dinner']
+            : ['breakfast', 'lunch', 'afternoon_snack', 'dinner', 'supper'];
         
         const profile: UserProfile = {
           name,
@@ -60,7 +61,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
           },
           targets: {
             water_ml_per_day: waterTarget,
-            meals_per_day: mealsTarget,
+            planned_meals: defaultPlannedMeals,
             sleep_hours_per_night: 7.5,
             weekly_workouts: weeklyWorkouts,
           },

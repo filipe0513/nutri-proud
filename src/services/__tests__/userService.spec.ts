@@ -16,6 +16,7 @@ test('Deve criar um usuário anônimo corretamente', async () => {
   const result = await userService.createAnonymousUser();
 
   // Assert: Verifica se a função tentou salvar com a flag certa e os defaults
+  // Desde a Task 32, as metas de refeição são um array de IDs (planned_meals)
   expect(prismaMock.user.create).toHaveBeenCalledWith({
     data: {
       is_anonymous: true,
@@ -23,7 +24,7 @@ test('Deve criar um usuário anônimo corretamente', async () => {
       profile: {},
       targets: {
         water_ml_per_day: 2000,
-        meals_per_day: 4,
+        planned_meals: ['breakfast', 'lunch', 'afternoon_snack', 'dinner'],
         sleep_hours_per_night: 8,
         weekly_workouts: 3
       }
