@@ -27,14 +27,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   poop: 'var(--color-cat-poop)',
 };
 
-// Maps story category id → drawer id
-const STORY_TO_DRAWER: Record<string, 'water' | 'meal' | 'workout' | 'sleep' | 'poop'> = {
-  water: 'water',
-  food: 'meal',
-  workout: 'workout',
-  sleep: 'sleep',
-  poop: 'poop',
-};
+
 
 const PROGRESS_CATEGORIES = [
   { id: 'water', label: 'Água', icon: Droplets },
@@ -168,12 +161,11 @@ function DashboardContent() {
               aria-label={`Registrar ${cat.label}`}
               className="flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-full"
               onClick={() => {
-                const drawerId = STORY_TO_DRAWER[cat.id];
                 if (isLimitReached) {
-                  setPendingAction(drawerId);
+                  setPendingAction(null);
                   setIsWarningOpen(true);
                 } else {
-                  setOpenDrawer(drawerId);
+                  router.push(`/pillar/${cat.id}`);
                 }
               }}
             >
