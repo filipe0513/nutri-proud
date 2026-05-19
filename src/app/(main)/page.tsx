@@ -10,6 +10,11 @@ import { InsightsBanner } from '@/components/shared/InsightsBanner';
 import { Sparkles, ChevronRight } from 'lucide-react';
 import { Droplets, Utensils, Dumbbell, Moon, Smile, StickyNote } from 'lucide-react';
 import { JacadaDrawer } from '@/components/shared/JacadaDrawer';
+import { BottomSheet_Water } from '@/components/shared/BottomSheet_Water';
+import { MealEqualizerDrawer } from '@/components/shared/MealEqualizerDrawer';
+import { WorkoutEqualizerDrawer } from '@/components/shared/WorkoutEqualizerDrawer';
+import { BottomSheet_Sleep } from '@/components/shared/BottomSheet_Sleep';
+import { BottomSheet_Poop } from '@/components/shared/BottomSheet_Poop';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -228,6 +233,26 @@ function DashboardContent() {
         </div>
       </div>
 
+      <BottomSheet_Water
+        open={openDrawer === 'water'}
+        onOpenChange={(o) => !o && setOpenDrawer(null)}
+      />
+      <MealEqualizerDrawer
+        open={openDrawer === 'meal'}
+        onOpenChange={(o) => !o && setOpenDrawer(null)}
+      />
+      <WorkoutEqualizerDrawer
+        open={openDrawer === 'workout'}
+        onOpenChange={(o) => !o && setOpenDrawer(null)}
+      />
+      <BottomSheet_Sleep
+        open={openDrawer === 'sleep'}
+        onOpenChange={(o) => !o && setOpenDrawer(null)}
+      />
+      <BottomSheet_Poop
+        open={openDrawer === 'poop'}
+        onOpenChange={(o) => !o && setOpenDrawer(null)}
+      />
       <JacadaDrawer
         open={openDrawer === 'jacada'}
         onOpenChange={(o) => o ? setOpenDrawer('jacada') : setOpenDrawer(null)}
