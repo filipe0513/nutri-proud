@@ -1,0 +1,18 @@
+=== CHECKLIST DE INFRAESTRUTURA: NOTIFICAÇÕES E CRON ===
+
+1. Variável de Segurança na Vercel (Cron Secret):
+   - Acesse o painel da Vercel -> Projeto nutri-proud -> Settings -> Environment Variables.
+   - Adicione uma variável com o nome: CRON_SECRET
+   - O valor pode ser qualquer senha segura (Ex: minha_senha_secreta_123).
+   - (A Vercel usará isso para provar que é ela quem está chamando a sua API).
+
+2. Atualizar o Banco de Dados de Produção (Supabase/Neon):
+   - Como a tabela "Notification" é nova, o banco real precisa saber dela.
+   - Abra o terminal do seu computador, na pasta do projeto, e rode:
+     npx prisma db push
+   - (Ou npx prisma migrate deploy, se estiver usando migrations).
+
+3. Verificar os Logs da Vercel (Após o envio do código):
+   - Acesse o painel da Vercel, clique na aba "Cron Jobs".
+   - Você verá a sua rota /api/cron/triggers listada lá.
+   - Clique no botão "Run" para testar manualmente e verificar se funcionou sem erros.

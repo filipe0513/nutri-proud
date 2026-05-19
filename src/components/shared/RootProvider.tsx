@@ -20,7 +20,8 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
   }, [initializeData]);
 
   useEffect(() => {
-    if (!mounted) return;
+    // Don't make routing decisions until data is fully loaded
+    if (!mounted || loadingData) return;
 
     const isSetupPage = pathname === '/welcome' || pathname === '/onboarding';
     
@@ -32,7 +33,7 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
     } else if (userProfile && isSetupPage && !isForceLogin) {
       router.push('/');
     }
-  }, [mounted, userProfile, pathname, router]);
+  }, [mounted, loadingData, userProfile, pathname, router]);
 
   if (!mounted || loadingData) return null;
 
