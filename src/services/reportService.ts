@@ -172,7 +172,9 @@ export const reportService = {
     }
 
     lines.push('---');
-    lines.push('Gerado pelo app Orgulho da Nutri 💚');
+    lines.push(
+      'Acompanhe minha evolução diária! Baixe o Orgulho da Nutri em: https://nutri-proud-8d41.vercel.app/'
+    );
 
     return {
       text: lines.join('\n'),
