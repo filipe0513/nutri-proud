@@ -139,7 +139,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
         if (!profile) return;
 
         const targetMl = profile.targets?.water_ml_per_day || 2000;
-        const targetDate = date ?? new Date().toISOString().split('T')[0];
+        const eventTime = date ? new Date(date).toISOString() : new Date().toISOString();
+        const targetDate = eventTime.split('T')[0];
 
         // Filter out existing water logs for the target date
         const filteredLogs = state.activity_logs.filter(log => {
@@ -151,7 +152,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
         const newLog: ActivityLog = {
           id: uuidv4(),
           created_at: new Date().toISOString(),
-          event_time: `${targetDate}T12:00:00.000Z`,
+          event_time: eventTime,
           category: 'water',
           primary_value: 100, // fully met
           details: { quantity_ml: targetMl }
