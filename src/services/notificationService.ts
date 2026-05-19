@@ -19,12 +19,12 @@ export async function markAsRead(notificationId: string, userId: string) {
 }
 
 export async function triggerWaterReminders() {
-  // Only trigger between 14:00 and 17:00 local time
+  // Only trigger in the evening (around 20:00 local time) for daily summary/reminder
   // Vercel UTC vs local time might be an issue. Assuming Brazil time for Vercel Cron.
-  // Actually, we can check if it's afternoon in Brazil (UTC-3).
+  // Actually, we can check if it's evening in Brazil (UTC-3).
   const brazilHour = (new Date().getUTCHours() - 3 + 24) % 24;
   
-  if (brazilHour < 14 || brazilHour > 17) {
+  if (brazilHour < 19 || brazilHour > 21) {
     return { success: true, message: 'Not in time window for water reminders' };
   }
 

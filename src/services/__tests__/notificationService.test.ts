@@ -41,10 +41,10 @@ describe('notificationService', () => {
   });
 
   it('should trigger water reminders within time window', async () => {
-    // Mock hour to be 15 (Brazil time)
+    // Mock hour to be 20 (Brazil time)
     vi.useFakeTimers();
     const date = new Date();
-    date.setUTCHours(18); // 18 - 3 = 15 local Brazil time
+    date.setUTCHours(23); // 23 - 3 = 20 local Brazil time
     vi.setSystemTime(date);
 
     prismaMock.user.findMany.mockResolvedValue([{ id: 'user1' }] as any);
@@ -59,10 +59,10 @@ describe('notificationService', () => {
   });
 
   it('should not trigger water reminders outside time window', async () => {
-    // Mock hour to be 10 (Brazil time)
+    // Mock hour to be 15 (Brazil time)
     vi.useFakeTimers();
     const date = new Date();
-    date.setUTCHours(13); // 13 - 3 = 10 local Brazil time
+    date.setUTCHours(18); // 18 - 3 = 15 local Brazil time
     vi.setSystemTime(date);
 
     const result = await triggerWaterReminders();
