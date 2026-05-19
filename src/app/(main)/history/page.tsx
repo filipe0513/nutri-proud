@@ -79,7 +79,7 @@ export default function HistoryPage() {
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
 
   const toggleDay = (date: string) => {
-    setExpandedDays(prev => ({ ...prev, [date]: !prev[date] }));
+    setExpandedDays(prev => ({ ...prev, [date]: prev[date] === false ? true : false }));
   };
 
   const handleEdit = (log: ActivityLog) => {
