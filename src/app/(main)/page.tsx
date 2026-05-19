@@ -64,8 +64,9 @@ function DashboardContent() {
 
   const isLimitReached = user_profile?.is_anonymous && activity_logs.length >= 11;
 
-  // We need state to programmatically open the drawers after "Criar depois"
-  const [openDrawer, setOpenDrawer] = useState<'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | null>(null);
+  // We use global state to allow the FAB in BottomNav to open drawers programmatically
+  const openDrawer = useAppStore(state => state.activeDrawer);
+  const setOpenDrawer = useAppStore(state => state.setActiveDrawer);
 
   // Detecta redirecionamento pós-conversão de conta anônima → real
   useEffect(() => {

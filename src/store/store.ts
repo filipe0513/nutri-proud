@@ -25,11 +25,22 @@ interface AppState {
   setWaterToTarget: (date?: string) => Promise<void>;
   initializeData: () => Promise<void>;
   resetData: () => void;
+  
+  // UI State
+  isAddLogOpen: boolean;
+  setAddLogOpen: (isOpen: boolean) => void;
+  activeDrawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | null;
+  setActiveDrawer: (drawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | null) => void;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
       user_profile: null,
       activity_logs: [],
+      
+      isAddLogOpen: false,
+      setAddLogOpen: (isOpen) => set({ isAddLogOpen: isOpen }),
+      activeDrawer: null,
+      setActiveDrawer: (drawer) => set({ activeDrawer: drawer }),
 
       initializeData: async () => {
         const [profile, logs] = await Promise.all([
