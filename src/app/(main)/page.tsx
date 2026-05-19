@@ -9,16 +9,11 @@ import { ScoreCard } from '@/components/shared/ScoreCard';
 import { InsightsBanner } from '@/components/shared/InsightsBanner';
 import { Sparkles, ChevronRight } from 'lucide-react';
 import { Droplets, Utensils, Dumbbell, Moon, Smile, StickyNote } from 'lucide-react';
-import { MealEqualizerDrawer } from '@/components/shared/MealEqualizerDrawer';
-import { WorkoutEqualizerDrawer } from '@/components/shared/WorkoutEqualizerDrawer';
-import { BottomSheet_Water } from '@/components/shared/BottomSheet_Water';
-import { BottomSheet_Sleep } from '@/components/shared/BottomSheet_Sleep';
-import { BottomSheet_Poop } from '@/components/shared/BottomSheet_Poop';
+import { JacadaDrawer } from '@/components/shared/JacadaDrawer';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { LimitWarningDrawer } from '@/components/shared/LimitWarningDrawer';
-import Link from 'next/link';
 
 const CATEGORY_COLORS: Record<string, string> = {
   water: 'var(--color-cat-water)',
@@ -27,6 +22,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   sleep: 'var(--color-cat-sleep)',
   poop: 'var(--color-cat-poop)',
 };
+
+
 
 const PROGRESS_CATEGORIES = [
   { id: 'water', label: 'Água', icon: Droplets },
@@ -37,11 +34,6 @@ const PROGRESS_CATEGORIES = [
 ];
 
 const ACTION_LIST = [
-  { id: 'water', label: 'Registrar água', icon: Droplets, color: 'var(--color-cat-water)', bg: 'bg-blue-50' },
-  { id: 'meal', label: 'Registrar refeição', icon: Utensils, color: 'var(--color-cat-food)', bg: 'bg-green-50' },
-  { id: 'workout', label: 'Registrar treino', icon: Dumbbell, color: 'var(--color-cat-workout)', bg: 'bg-red-50' },
-  { id: 'sleep', label: 'Registrar sono', icon: Moon, color: 'var(--color-cat-sleep)', bg: 'bg-slate-100' },
-  { id: 'poop', label: 'Registrar intestino', icon: Smile, color: 'var(--color-cat-poop)', bg: 'bg-amber-50' },
   { id: 'note', label: 'Adicionar nota', icon: StickyNote, color: 'var(--color-highlight-300)', bg: 'bg-yellow-50' },
 ];
 
@@ -56,8 +48,9 @@ function DashboardContent() {
 
   const isLimitReached = user_profile?.is_anonymous && activity_logs.length >= 11;
 
-  // We need state to programmatically open the drawers after "Criar depois"
-  const [openDrawer, setOpenDrawer] = useState<'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | null>(null);
+  // We use global state to allow the FAB in BottomNav to open drawers programmatically
+  const openDrawer = useAppStore(state => state.activeDrawer);
+  const setOpenDrawer = useAppStore(state => state.setActiveDrawer);
 
   // Detecta redirecionamento pós-conversão de conta anônima → real
   useEffect(() => {
@@ -77,7 +70,9 @@ function DashboardContent() {
   const todayLogs = useMemo(() => {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
-    return activity_logs.filter(log => new Date(log.event_time) >= startOfDay);
+    return activity_logs
+      .filter(log => new Date(log.event_time) >= startOfDay)
+      .sort((a, b) => new Date(b.event_time).getTime() - new Date(a.event_time).getTime());
   }, [activity_logs]);
 
   const getProgress = (catId: string) => {
@@ -92,7 +87,9 @@ function DashboardContent() {
 
     if (catId === 'food') {
       // Average quality of logged meals × proportion of meals target met
-      const mealsTarget = user_profile?.targets?.meals_per_day || 4;
+      const rawTargets = user_profile?.targets as Record<string, unknown> | undefined;
+      const plannedMeals = Array.isArray(rawTargets?.planned_meals) ? rawTargets.planned_meals : [];
+      const mealsTarget = plannedMeals.length || 4;
       const avgQuality = catLogs.reduce((acc, log) => acc + log.primary_value, 0) / catLogs.length;
       const mealsProportion = Math.min(1, catLogs.length / mealsTarget);
       return Math.min(100, Math.round(avgQuality * mealsProportion));
@@ -149,14 +146,27 @@ function DashboardContent() {
         </p>
         <div className="flex justify-between overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
           {PROGRESS_CATEGORIES.map((cat) => (
-            <Link key={cat.id} href={`/pillar/${cat.id}`}>
+            <button
+              key={cat.id}
+              type="button"
+              aria-label={`Registrar ${cat.label}`}
+              className="flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-full"
+              onClick={() => {
+                if (isLimitReached) {
+                  setPendingAction(null);
+                  setIsWarningOpen(true);
+                } else {
+                  router.push(`/pillar/${cat.id}`);
+                }
+              }}
+            >
               <StoryCircle
                 label={cat.label}
                 icon={cat.icon}
                 value={getProgress(cat.id)}
                 color={CATEGORY_COLORS[cat.id]}
               />
-            </Link>
+            </button>
           ))}
         </div>
       </div>
@@ -174,56 +184,11 @@ function DashboardContent() {
         </div>
 
         <div className="space-y-3">
-          {/* Water */}
-          {renderActionItem(ACTION_LIST[0], (
-            <BottomSheet_Water
-              open={openDrawer === 'water' ? true : undefined}
-              onOpenChange={(o) => o ? setOpenDrawer('water') : setOpenDrawer(null)}
-              customTrigger={actionTrigger(ACTION_LIST[0])}
-            />
-          ))}
-
-          {/* Meal */}
-          {renderActionItem(ACTION_LIST[1], (
-            <MealEqualizerDrawer
-              open={openDrawer === 'meal' ? true : undefined}
-              onOpenChange={(o) => o ? setOpenDrawer('meal') : setOpenDrawer(null)}
-              customTrigger={actionTrigger(ACTION_LIST[1])}
-            />
-          ))}
-
-          {/* Workout */}
-          {renderActionItem(ACTION_LIST[2], (
-            <WorkoutEqualizerDrawer
-              open={openDrawer === 'workout' ? true : undefined}
-              onOpenChange={(o) => o ? setOpenDrawer('workout') : setOpenDrawer(null)}
-              customTrigger={actionTrigger(ACTION_LIST[2])}
-            />
-          ))}
-
-          {/* Sleep */}
-          {renderActionItem(ACTION_LIST[3], (
-            <BottomSheet_Sleep
-              open={openDrawer === 'sleep' ? true : undefined}
-              onOpenChange={(o) => o ? setOpenDrawer('sleep') : setOpenDrawer(null)}
-              customTrigger={actionTrigger(ACTION_LIST[3])}
-            />
-          ))}
-
-          {/* Poop */}
-          {renderActionItem(ACTION_LIST[4], (
-            <BottomSheet_Poop
-              open={openDrawer === 'poop' ? true : undefined}
-              onOpenChange={(o) => o ? setOpenDrawer('poop') : setOpenDrawer(null)}
-              customTrigger={actionTrigger(ACTION_LIST[4])}
-            />
-          ))}
-
           {/* Note */}
-          {renderActionItem(ACTION_LIST[5], (
+          {renderActionItem(ACTION_LIST[0], (
             <Drawer open={openDrawer === 'note' || undefined} onOpenChange={(o) => o ? setOpenDrawer('note') : setOpenDrawer(null)}>
               <DrawerTrigger asChild>
-                {actionTrigger(ACTION_LIST[5])}
+                {actionTrigger(ACTION_LIST[0])}
               </DrawerTrigger>
               <DrawerContent className="!bg-white/95 backdrop-blur-2xl border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
                 <DrawerHeader className="px-0">
@@ -262,6 +227,11 @@ function DashboardContent() {
           ))}
         </div>
       </div>
+
+      <JacadaDrawer
+        open={openDrawer === 'jacada'}
+        onOpenChange={(o) => o ? setOpenDrawer('jacada') : setOpenDrawer(null)}
+      />
 
       <LimitWarningDrawer 
         isOpen={isWarningOpen} 

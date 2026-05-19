@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/set-state-in-effect */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,15 +12,10 @@ import { Utensils, Trash2 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
+import { ALL_MEALS } from '@/schemas/profileSchema';
 
-const MEALS = [
-  { id: 'breakfast', label: 'Café da manhã' },
-  { id: 'morning_snack', label: 'Lanche da manhã' },
-  { id: 'lunch', label: 'Almoço' },
-  { id: 'dessert', label: 'Sobremesa' },
-  { id: 'afternoon_snack', label: 'Lanche da tarde' },
-  { id: 'dinner', label: 'Jantar' }
-];
+/** Fallback set when the user has no planned_meals configured yet */
+const FALLBACK_MEAL_IDS = ['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'dinner', 'supper'];
 
 export function MealEqualizerDrawer({ 
   customTrigger,
@@ -36,6 +31,8 @@ export function MealEqualizerDrawer({
   const addLog = useAppStore(state => state.addLog);
   const updateLog = useAppStore(state => state.updateLog);
   const removeLog = useAppStore(state => state.removeLog);
+  const activityLogs = useAppStore(state => state.activity_logs);
+  const userProfile = useAppStore(state => state.user_profile);
   const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
   const deleteLogHistory = useHistoryStore(state => state.deleteLogHistory);
   
@@ -64,6 +61,45 @@ export function MealEqualizerDrawer({
   const [carbs, setCarbs] = useState(0);
   const [fats, setFats] = useState(0);
   const [fiber, setFiber] = useState(0);
+
+  /**
+   * Derive the list of meals to show in the drawer from the user's planned_meals target.
+   * Falls back to the hardcoded legacy list when the profile is not yet loaded.
+   */
+  const plannedMealIds: string[] = useMemo(() => {
+    const raw = (userProfile?.targets as Record<string, unknown> | undefined)?.planned_meals;
+    if (Array.isArray(raw) && raw.length > 0) return raw as string[];
+    return FALLBACK_MEAL_IDS;
+  }, [userProfile]);
+
+  const plannedMeals = useMemo(
+    () => plannedMealIds.map(id => ALL_MEALS.find(m => m.id === id)).filter(Boolean) as typeof ALL_MEALS[number][],
+    [plannedMealIds]
+  );
+
+  /**
+   * Compute the proportional score for one meal log.
+   * 
+   * Each planned meal is worth (100 / totalPlanned) points.
+   * The macro quality multiplier (0–1) is derived from average absolute deviation on sliders.
+   * 
+   * E.g. 5 planned meals → each meal is worth 20 points at best.
+   */
+  const computeProportionalScore = (
+    proteinVal: number,
+    carbsVal: number,
+    fatsVal: number,
+    fiberVal: number
+  ): number => {
+    const totalPlanned = plannedMealIds.length || 1;
+    const maxPerMeal = Math.round(100 / totalPlanned);
+
+    // Quality 0–1: how close sliders are to centre (0 = perfect)
+    const avgDeviation = (Math.abs(proteinVal) + Math.abs(carbsVal) + Math.abs(fatsVal) + Math.abs(fiberVal)) / 4;
+    const qualityMultiplier = Math.max(0, 1 - avgDeviation / 50);
+
+    return Math.round(maxPerMeal * qualityMultiplier);
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -104,8 +140,7 @@ export function MealEqualizerDrawer({
   const handleSave = async () => {
     if (!selectedMeal) return;
 
-    const avgDeviation = (Math.abs(protein) + Math.abs(carbs) + Math.abs(fats) + Math.abs(fiber)) / 4;
-    const score = Math.max(0, Math.round(100 - (avgDeviation / 50) * 100));
+    const score = computeProportionalScore(protein, carbs, fats, fiber);
 
     const logData = {
       event_time: new Date(selectedDate).toISOString(),
@@ -117,7 +152,7 @@ export function MealEqualizerDrawer({
       }
     };
 
-    const mealName = MEALS.find(m => m.id === selectedMeal)?.label;
+    const mealName = plannedMeals.find(m => m.id === selectedMeal)?.label ?? selectedMeal;
 
     if (initialData) {
       await updateLog(initialData.id, logData);
@@ -141,6 +176,21 @@ export function MealEqualizerDrawer({
     if (isControlled && onOpenChange) onOpenChange(false);
   };
 
+  /**
+   * Meals already logged today for the selected date (exclude the current edit).
+   */
+  const alreadyLoggedToday = useMemo(() => {
+    const targetDate = selectedDate.slice(0, 10);
+    return activityLogs
+      .filter(l => {
+        if (l.category !== 'food') return false;
+        if (initialData && l.id === initialData.id) return false;
+        const logDate = new Date(l.event_time).toISOString().slice(0, 10);
+        return logDate === targetDate;
+      })
+      .map(l => l.details.meal_type);
+  }, [activityLogs, selectedDate, initialData]);
+
   return (
     <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
       {!isControlled && (
@@ -162,7 +212,7 @@ export function MealEqualizerDrawer({
         <DrawerHeader className="px-0">
           <div className="flex items-center justify-between">
             <DrawerTitle className="text-title-2 text-green-950">
-              {initialData ? 'Editar Refeição' : (!selectedMeal ? 'Adicionar Refeição 🥗' : `Como foi o ${MEALS.find(m => m.id === selectedMeal)?.label}?`)}
+              {initialData ? 'Editar Refeição' : (!selectedMeal ? 'Adicionar Refeição 🥗' : `Como foi o ${plannedMeals.find(m => m.id === selectedMeal)?.label}?`)}
             </DrawerTitle>
             <DatePickerInput
               value={selectedDate}
@@ -179,16 +229,26 @@ export function MealEqualizerDrawer({
         {!selectedMeal && !initialData ? (
           <div className="flex flex-col mt-4 space-y-6">
             <div className="grid grid-cols-2 gap-4">
-              {MEALS.map((meal) => (
-                <Button 
-                  key={meal.id}
-                  variant="outline" 
-                  className="h-16 rounded-2xl border border-green-200 bg-white/50 backdrop-blur-sm hover:border-green-500 hover:bg-white/80 text-green-950 flex flex-col items-center justify-center"
-                  onClick={() => setSelectedMeal(meal.id)}
-                >
-                  <span className="text-button-1">{meal.label}</span>
-                </Button>
-              ))}
+              {plannedMeals.map((meal) => {
+                const alreadyLogged = alreadyLoggedToday.includes(meal.id);
+                return (
+                  <Button 
+                    key={meal.id}
+                    variant="outline" 
+                    className={`h-16 rounded-2xl border bg-white/50 backdrop-blur-sm text-green-950 flex flex-col items-center justify-center transition-all ${
+                      alreadyLogged
+                        ? 'border-green-400 bg-green-50/60 opacity-60'
+                        : 'border-green-200 hover:border-green-500 hover:bg-white/80'
+                    }`}
+                    onClick={() => setSelectedMeal(meal.id)}
+                  >
+                    <span className="text-button-1">{meal.label}</span>
+                    {alreadyLogged && (
+                      <span className="text-xs text-green-600 mt-0.5">✓ Registrado</span>
+                    )}
+                  </Button>
+                );
+              })}
             </div>
           </div>
         ) : (

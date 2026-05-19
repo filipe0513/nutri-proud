@@ -64,6 +64,62 @@ export const logService = {
       },
     });
   },
+
+  async registerJacada(userId: string, data: { sugar: number; fat: number; alcohol: number }) {
+    await userService.checkUserPermissions(userId);
+
+    const penalty = (data.sugar + data.fat + data.alcohol) * 10;
+    if (penalty === 0) return { penalty, updatedCount: 0 };
+
+    // Pegar o início e o fim do dia atual (no fuso do servidor, o que pode precisar de ajuste,
+    // mas usando o mesmo padrão do `toSafeEventTime` ajuda a alinhar os fusos).
+    // Para simplificar, consideramos "hoje" como a data de hoje.
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStart = new Date(`${todayStr}T00:00:00.000Z`);
+    const todayEnd = new Date(`${todayStr}T23:59:59.999Z`);
+
+    const foodLogs = await prisma.dailyLog.findMany({
+      where: {
+        userId,
+        category: 'food',
+        eventTime: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
+      },
+      orderBy: { eventTime: 'asc' },
+    });
+
+    let remainingPenalty = penalty;
+    const updates: { id: string; primaryValue: number }[] = [];
+
+    for (const log of foodLogs) {
+      if (remainingPenalty <= 0) break;
+
+      if (log.primaryValue > 0) {
+        const deduct = Math.min(log.primaryValue, remainingPenalty);
+        updates.push({
+          id: log.id,
+          primaryValue: log.primaryValue - deduct,
+        });
+        remainingPenalty -= deduct;
+      }
+    }
+
+    if (updates.length > 0) {
+      // Execute in a transaction
+      await prisma.$transaction(
+        updates.map((u) =>
+          prisma.dailyLog.update({
+            where: { id: u.id },
+            data: { primaryValue: u.primaryValue },
+          })
+        )
+      );
+    }
+
+    return { penalty, updatedCount: updates.length };
+  },
 };
 
 

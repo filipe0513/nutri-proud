@@ -10,7 +10,7 @@ export const fetchUserProfile = async (): Promise<UserProfile | null> => {
       if (!data.profile.targets) {
         data.profile.targets = {
           water_ml_per_day: 2000,
-          meals_per_day: 4,
+          planned_meals: ['breakfast', 'lunch', 'afternoon_snack', 'dinner'],
           sleep_hours_per_night: 8,
           weekly_workouts: 3,
         };

@@ -25,11 +25,22 @@ interface AppState {
   setWaterToTarget: (date?: string) => Promise<void>;
   initializeData: () => Promise<void>;
   resetData: () => void;
+  
+  // UI State
+  isAddLogOpen: boolean;
+  setAddLogOpen: (isOpen: boolean) => void;
+  activeDrawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | 'jacada' | null;
+  setActiveDrawer: (drawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | 'jacada' | null) => void;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
       user_profile: null,
       activity_logs: [],
+      
+      isAddLogOpen: false,
+      setAddLogOpen: (isOpen) => set({ isAddLogOpen: isOpen }),
+      activeDrawer: null,
+      setActiveDrawer: (drawer) => set({ activeDrawer: drawer }),
 
       initializeData: async () => {
         const [profile, logs] = await Promise.all([
@@ -44,11 +55,12 @@ export const useAppStore = create<AppState>()((set, get) => ({
         
         // Regras de Negócio: Cálculo de metas
         const waterTarget = Math.round(weight * 35);
-        let mealsTarget = 4;
 
-        if (goal === 'muscle_gain') {
-          mealsTarget = 6;
-        }
+        // Default planned meals based on goal
+        const defaultPlannedMeals =
+          goal === 'muscle_gain'
+            ? ['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'pre_workout', 'dinner']
+            : ['breakfast', 'lunch', 'afternoon_snack', 'dinner', 'supper'];
         
         const profile: UserProfile = {
           name,
@@ -60,7 +72,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
           },
           targets: {
             water_ml_per_day: waterTarget,
-            meals_per_day: mealsTarget,
+            planned_meals: defaultPlannedMeals,
             sleep_hours_per_night: 7.5,
             weekly_workouts: weeklyWorkouts,
           },
@@ -88,9 +100,11 @@ export const useAppStore = create<AppState>()((set, get) => ({
         // 1. Chama a API
         await api.saveActivityLog(newLog);
 
-        // 2. Atualiza estado global
+        // 2. Atualiza estado global (mantém ordem decrescente por event_time)
         set((state) => ({
-          activity_logs: [...state.activity_logs, newLog]
+          activity_logs: [...state.activity_logs, newLog].sort(
+            (a, b) => new Date(b.event_time).getTime() - new Date(a.event_time).getTime()
+          ),
         }));
       },
 

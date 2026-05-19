@@ -44,7 +44,9 @@ export function ScoreCard() {
       }
 
       if (catId === 'food') {
-        const target = user_profile?.targets?.meals_per_day || 4;
+        const rawTargets = user_profile?.targets as Record<string, unknown> | undefined;
+        const plannedMeals = Array.isArray(rawTargets?.planned_meals) ? rawTargets.planned_meals : [];
+        const target = plannedMeals.length || 4;
         return Math.min(100, (catLogs.length / target) * 100);
       }
 

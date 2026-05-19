@@ -33,3 +33,10 @@ export const logSchema = z.object({
     })
     .optional(),
 });
+
+// Schema para os detalhes da Jacada
+export const jacadaSchema = z.object({
+  sugar: z.number().min(0).max(5),
+  fat: z.number().min(0).max(5),
+  alcohol: z.number().min(0).max(5),
+});

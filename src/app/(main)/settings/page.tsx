@@ -1,14 +1,16 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAppStore } from "@/store/store";
 import {
   profileSettingsSchema,
   ProfileSettingsForm,
+  ALL_MEALS,
 } from "@/schemas/profileSchema";
 import { toast } from "sonner";
 import { ArrowLeft, LogOut } from "lucide-react";
@@ -25,6 +27,7 @@ export default function SettingsPage() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<ProfileSettingsForm>({
     resolver: zodResolver(profileSettingsSchema),
@@ -32,6 +35,13 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (user_profile) {
+      const rawTargets = user_profile.targets as Record<string, unknown>;
+      // Support legacy profiles that still have meals_per_day (number) stored
+      const plannedMeals: string[] =
+        Array.isArray(rawTargets?.planned_meals) && rawTargets.planned_meals.length > 0
+          ? (rawTargets.planned_meals as string[])
+          : ['breakfast', 'lunch', 'afternoon_snack', 'dinner'];
+
       reset({
         name: user_profile.name,
         weight_kg: user_profile.profile?.weight_kg || 70,
@@ -40,7 +50,7 @@ export default function SettingsPage() {
         water_target_ml: user_profile.targets?.water_ml_per_day || 2000,
         sleep_target_hours: user_profile.targets?.sleep_hours_per_night || 8,
         weekly_workouts: user_profile.targets?.weekly_workouts ?? 3,
-        meals_per_day: user_profile.targets?.meals_per_day || 4,
+        planned_meals: plannedMeals,
       });
     }
   }, [user_profile, reset]);
@@ -62,7 +72,7 @@ export default function SettingsPage() {
         water_ml_per_day: data.water_target_ml,
         sleep_hours_per_night: data.sleep_target_hours,
         weekly_workouts: data.weekly_workouts,
-        meals_per_day: data.meals_per_day,
+        planned_meals: data.planned_meals,
       },
     });
 
@@ -138,7 +148,7 @@ export default function SettingsPage() {
         <Card className="bg-glass-light-2 backdrop-blur-md border-white/40 shadow-sm rounded-3xl overflow-hidden">
           <CardContent className="p-6 space-y-4">
             <h2 className="text-title-3 font-bold text-neutral-500">
-              Corpo & Objetivo
+              Corpo &amp; Objetivo
             </h2>
 
             <div className="grid grid-cols-2 gap-4">
@@ -258,24 +268,66 @@ export default function SettingsPage() {
                 </p>
               )}
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="space-y-2 pt-2">
-              <label className="text-caption-1 font-medium text-neutral-500/80">
-                Número de refeições por dia (1–10)
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="10"
-                {...register("meals_per_day", { valueAsNumber: true })}
-                className="w-full h-14 bg-white/50 border border-white/40 rounded-2xl px-4 text-input-1 text-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              {errors.meals_per_day && (
-                <p className="text-caption-2 text-notify-error">
-                  {errors.meals_per_day.message}
-                </p>
-              )}
+        {/* Seção 4: Minhas Refeições */}
+        <Card className="bg-glass-light-2 backdrop-blur-md border-white/40 shadow-sm rounded-3xl overflow-hidden">
+          <CardContent className="p-6 space-y-4">
+            <div>
+              <h2 className="text-title-3 font-bold text-neutral-500">
+                Minhas Refeições
+              </h2>
+              <p className="text-caption-1 text-neutral-400 mt-1">
+                Quais refeições fazem parte da sua rotina diária?
+              </p>
             </div>
+
+            <Controller
+              name="planned_meals"
+              control={control}
+              defaultValue={[]}
+              render={({ field }) => (
+                <div className="grid grid-cols-2 gap-3">
+                  {ALL_MEALS.map((meal) => {
+                    const checked = field.value.includes(meal.id);
+                    return (
+                      <label
+                        key={meal.id}
+                        htmlFor={`meal-${meal.id}`}
+                        className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-all ${
+                          checked
+                            ? 'bg-orange-50 border-orange-300'
+                            : 'bg-white/40 border-white/40 hover:bg-white/60'
+                        }`}
+                      >
+                        <Checkbox
+                          id={`meal-${meal.id}`}
+                          checked={checked}
+                          onCheckedChange={(checkedState) => {
+                            const current = field.value;
+                            if (checkedState) {
+                              field.onChange([...current, meal.id]);
+                            } else {
+                              field.onChange(current.filter((m: string) => m !== meal.id));
+                            }
+                          }}
+                          className="border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                        />
+                        <span className={`text-caption-1 font-medium leading-tight ${checked ? 'text-orange-800' : 'text-neutral-500'}`}>
+                          {meal.label}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            />
+            {errors.planned_meals && (
+              <p className="text-caption-2 text-notify-error">
+                {errors.planned_meals.message}
+              </p>
+            )}
           </CardContent>
         </Card>
 

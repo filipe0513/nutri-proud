@@ -44,6 +44,20 @@ export const userService = {
     return true;
   },
 
+  async checkHasCompletedOnboarding(userId: string): Promise<boolean> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { profile: true },
+    });
+
+    if (!user) return false;
+
+    const profile = user.profile as Record<string, unknown> | null;
+    if (!profile) return false;
+
+    return typeof profile.main_goal === 'string' && profile.main_goal.length > 0;
+  },
+
   async createAnonymousUser() {
     return await prisma.user.create({
       data: {
@@ -52,7 +66,7 @@ export const userService = {
         profile: {}, // defaults
         targets: {
             water_ml_per_day: 2000,
-            meals_per_day: 4,
+            planned_meals: ['breakfast', 'lunch', 'afternoon_snack', 'dinner'],
             sleep_hours_per_night: 8,
             weekly_workouts: 3
         }

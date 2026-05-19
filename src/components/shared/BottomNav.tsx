@@ -2,54 +2,111 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, History, Settings } from 'lucide-react';
+import { Home, History, Settings, Share2, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function BottomNav() {
+interface BottomNavProps {
+  onShareClick?: () => void;
+  onAddLogClick?: () => void;
+}
+
+export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
   const pathname = usePathname();
 
   // Hide nav when inside a Story/Pillar screen or Settings
-  if (pathname.startsWith('/pillar') || pathname.startsWith('/settings') || pathname.startsWith('/profile')) return null;
+  if (
+    pathname.startsWith('/pillar') ||
+    pathname.startsWith('/settings') ||
+    pathname.startsWith('/profile')
+  )
+    return null;
 
-  const navItems = [
-    {
-      label: 'Histórico',
-      icon: History,
-      href: '/history',
-    },
-    {
-      label: 'Início',
-      icon: Home,
-      href: '/',
-    },
-    {
-      label: 'Config',
-      icon: Settings,
-      href: '/settings',
-    },
+  const leftItems = [
+    { label: 'Início', icon: Home, href: '/' },
+    { label: 'Histórico', icon: History, href: '/history' },
+  ];
+
+  const rightItems = [
+    { label: 'Nutri', icon: Share2, href: null as null, onClick: onShareClick },
+    { label: 'Config', icon: Settings, href: '/settings' },
   ];
 
   return (
-    <nav className="fixed bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[400px] h-20 bg-glass-light-2 backdrop-blur-md border border-white/40 shadow-xl rounded-full flex items-center justify-around px-6 z-50">
-      {navItems.map((item) => {
+    <nav
+      className="fixed bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[480px] h-[68px] bg-glass-light-2 backdrop-blur-md border border-white/40 shadow-xl rounded-full flex items-center justify-around px-2 z-50"
+      aria-label="Navegação principal"
+    >
+      {/* Left: Home + Histórico */}
+      {leftItems.map((item) => {
         const isActive = pathname === item.href;
-        
         return (
           <Link
             key={item.href}
             href={item.href}
+            aria-label={item.label}
             className={cn(
-              "flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all duration-300",
-              isActive 
-                ? "bg-glass-light-3 border border-white/40 text-brand-500 scale-110 shadow-sm" 
-                : "text-neutral-500/80 hover:text-brand-400 hover:bg-glass-light-1"
+              'flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300',
+              isActive
+                ? 'bg-glass-light-3 border border-white/40 text-brand-500 scale-110 shadow-sm'
+                : 'text-neutral-500/80 hover:text-brand-400 hover:bg-glass-light-1',
             )}
           >
-            <item.icon className={cn("h-6 w-6", isActive && "stroke-[2.5px]")} />
-            <span className={cn(
-              "text-caption-2 mt-0.5",
-              isActive ? "font-bold" : "font-medium"
-            )}>
+            <item.icon className={cn('h-5 w-5', isActive && 'stroke-[2.5px]')} />
+            <span className={cn('text-caption-2 mt-0.5', isActive ? 'font-bold' : 'font-medium')}>
+              {item.label}
+            </span>
+          </Link>
+        );
+      })}
+
+      {/* Centre: FAB "+" */}
+      <button
+        type="button"
+        id="btn-fab-add-log"
+        aria-label="Registrar atividade"
+        onClick={onAddLogClick}
+        className="relative flex flex-col items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-brand-500 to-brand-400 shadow-lg shadow-brand-500/40 text-white hover:from-brand-400 hover:to-brand-300 active:scale-95 transition-all duration-200 -translate-y-4 ring-4 ring-white/60"
+      >
+        <Plus className="h-7 w-7 stroke-[2.5px]" />
+      </button>
+
+      {/* Right: Compartilhar + Config */}
+      {rightItems.map((item) => {
+        const isActive = item.href ? pathname === item.href : false;
+
+        if (!item.href) {
+          return (
+            <button
+              key={item.label}
+              type="button"
+              id="btn-share-nutri"
+              aria-label={item.label}
+              onClick={item.onClick}
+              className={cn(
+                'flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300',
+                'text-neutral-500/80 hover:text-brand-400 hover:bg-glass-light-1',
+              )}
+            >
+              <item.icon className="h-5 w-5" />
+              <span className="text-caption-2 mt-0.5 font-medium">{item.label}</span>
+            </button>
+          );
+        }
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-label={item.label}
+            className={cn(
+              'flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300',
+              isActive
+                ? 'bg-glass-light-3 border border-white/40 text-brand-500 scale-110 shadow-sm'
+                : 'text-neutral-500/80 hover:text-brand-400 hover:bg-glass-light-1',
+            )}
+          >
+            <item.icon className={cn('h-5 w-5', isActive && 'stroke-[2.5px]')} />
+            <span className={cn('text-caption-2 mt-0.5', isActive ? 'font-bold' : 'font-medium')}>
               {item.label}
             </span>
           </Link>

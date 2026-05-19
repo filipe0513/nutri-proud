@@ -81,7 +81,11 @@ export default function PillarInsightsPage() {
   const targetText = useMemo(() => {
     if (!user_profile) return '';
     if (catKey === 'water') return `Meta: ${user_profile.targets?.water_ml_per_day || 2000}ml / dia`;
-    if (catKey === 'food') return `Meta: ${user_profile.targets?.meals_per_day || 4} refs / dia`;
+    if (catKey === 'food') {
+      const rawTargets = user_profile.targets as Record<string, unknown>;
+      const plannedMeals = Array.isArray(rawTargets?.planned_meals) ? rawTargets.planned_meals : [];
+      return `Meta: ${plannedMeals.length || 4} refs / dia`;
+    }
     if (catKey === 'sleep') return `Meta: ${user_profile.targets?.sleep_hours_per_night || 8}h / noite`;
     if (catKey === 'workout') {
       const targetValue = typeof user_profile.targets?.weekly_workouts === 'object' 
@@ -113,7 +117,9 @@ export default function PillarInsightsPage() {
       unitLabel = 'ml';
     } else if (catKey === 'food') {
       current = todayLogs.length;
-      target = user_profile.targets?.meals_per_day || 4;
+      const rawTargets = user_profile.targets as Record<string, unknown>;
+      const plannedMeals = Array.isArray(rawTargets?.planned_meals) ? rawTargets.planned_meals : [];
+      target = plannedMeals.length || 4;
       unitLabel = 'ref';
     } else if (catKey === 'workout') {
       current = todayLogs.length;
