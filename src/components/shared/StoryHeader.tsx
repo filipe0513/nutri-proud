@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useAppStore } from "@/store/store";
 import { Flame } from "lucide-react";
+import { NotificationsSheet } from "./NotificationsSheet";
 
 export function StoryHeader() {
   const { user_profile } = useAppStore();
@@ -63,6 +64,9 @@ export function StoryHeader() {
             <span className="text-caption-1 font-medium">dias</span>
           </div>
         )}
+      </div>
+      <div className="absolute top-4 right-4">
+        <NotificationsSheet />
       </div>
     </div>
   );

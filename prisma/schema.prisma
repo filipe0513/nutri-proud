@@ -23,6 +23,7 @@ model User {
   logs          DailyLog[]
   accounts      Account[]
   sessions      Session[]
+  notifications Notification[]
 }
 
 model Account {
@@ -70,4 +71,16 @@ model DailyLog {
   
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  message     String
+  isRead      Boolean  @default(false) @map("is_read")
+  category    String   // "REMINDER", "ACHIEVEMENT", "SYSTEM", "ALERT"
+  actionType  String?  @map("action_type")
+  createdAt   DateTime @default(now()) @map("created_at")
 }
