@@ -10,6 +10,7 @@ vi.mock('@/lib/prisma', () => ({
     dailyLog: {
       findMany: vi.fn(),
       update: vi.fn(),
+      create: vi.fn(),
     },
     $transaction: vi.fn(),
   },

@@ -21,7 +21,7 @@ export const sleepDetailsSchema = z.object({
 
 // Schema Principal do Log
 export const logSchema = z.object({
-  category: z.enum(['water', 'sleep', 'poop', 'food', 'workout', 'note']),
+  category: z.enum(['water', 'sleep', 'poop', 'food', 'workout', 'note', 'jacada']),
   primary_value: z.number().min(0).max(100),
   details: z.any(),
   // event_time is optional; when provided it must not be in the future

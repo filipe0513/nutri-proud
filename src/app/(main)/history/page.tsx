@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ActivityLog } from "@/store/types";
+import { useAppStore } from "@/store/store";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { BottomSheet_Water } from "@/components/shared/BottomSheet_Water";
 import { BottomSheet_Sleep } from "@/components/shared/BottomSheet_Sleep";
 import { BottomSheet_Poop } from "@/components/shared/BottomSheet_Poop";
@@ -21,6 +23,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   workout: "🏋️",
   sleep: "🌙",
   poop: "💩",
+  jacada: "🍩",
 };
 
 const CATEGORY_NAMES: Record<string, string> = {
@@ -29,6 +32,7 @@ const CATEGORY_NAMES: Record<string, string> = {
   workout: "Treino",
   sleep: "Sono",
   poop: "Intestino",
+  jacada: "Jacada",
 };
 
 const formatGroupDate = (dateKey: string) => {
@@ -50,6 +54,15 @@ const getLocalDateKey = (isoString: string): string => {
   return `${year}-${month}-${day}`;
 };
 
+function getScoreColorClass(score: number) {
+  if (score <= 50) return 'bg-gradient-to-r from-purple-500/20 to-purple-600/20 border-purple-400 text-purple-600';
+  if (score <= 60) return 'bg-gradient-to-r from-red-500/20 to-red-600/20 border-red-400 text-red-600';
+  if (score <= 70) return 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 border-orange-400 text-orange-600';
+  if (score <= 80) return 'bg-gradient-to-r from-yellow-400/20 to-yellow-500/20 border-yellow-400 text-yellow-600';
+  if (score <= 90) return 'bg-gradient-to-r from-green-500/20 to-green-600/20 border-green-400 text-green-600';
+  return 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 border-blue-400 text-blue-600';
+}
+
 export default function HistoryPage() {
   const {
     logs,
@@ -59,9 +72,15 @@ export default function HistoryPage() {
     resetHistory,
     isEmptyFilters,
   } = useHistoryStore();
+  const { user_profile } = useAppStore();
   const { ref, inView } = useInView();
 
   const [editingLog, setEditingLog] = useState<ActivityLog | null>(null);
+  const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
+
+  const toggleDay = (date: string) => {
+    setExpandedDays(prev => ({ ...prev, [date]: !prev[date] }));
+  };
 
   const handleEdit = (log: ActivityLog) => {
     setEditingLog(log);
@@ -94,6 +113,36 @@ export default function HistoryPage() {
     {} as Record<string, typeof logs>,
   );
 
+  const calculateDayScore = (dayLogs: typeof logs) => {
+    const CATEGORIES = ['water', 'food', 'workout', 'sleep', 'poop'] as const;
+    const categoryScores = CATEGORIES.map((catId) => {
+      const catLogs = dayLogs.filter((log) => log.category === catId);
+
+      if (catId === 'water') {
+        const total = catLogs.reduce((acc, log) => acc + (log.details?.quantity_ml || 0), 0);
+        const target = user_profile?.targets?.water_ml_per_day || 2000;
+        return Math.min(100, (total / target) * 100);
+      }
+
+      if (catId === 'food') {
+        const rawTargets = user_profile?.targets as Record<string, unknown> | undefined;
+        const plannedMeals = Array.isArray(rawTargets?.planned_meals) ? rawTargets.planned_meals : [];
+        const target = plannedMeals.length || 4;
+        if (catLogs.length === 0) return 0;
+        const avgQuality = catLogs.reduce((acc, log) => acc + log.primary_value, 0) / catLogs.length;
+        const mealsProportion = Math.min(1, catLogs.length / target);
+        return Math.min(100, Math.round(avgQuality * mealsProportion));
+      }
+
+      if (catLogs.length === 0) return 0;
+      const avg = catLogs.reduce((acc, log) => acc + log.primary_value, 0) / catLogs.length;
+      return Math.min(100, Math.round(avg));
+    });
+
+    const total = categoryScores.reduce((acc, s) => acc + s, 0);
+    return Math.round(total / CATEGORIES.length);
+  };
+
   return (
     <div className="pb-24 pt-8 px-6 max-w-lg mx-auto space-y-6">
       <div className="flex justify-center mb-2">
@@ -124,40 +173,60 @@ export default function HistoryPage() {
         </div>
       ) : (
         <div className="space-y-8">
-          {Object.entries(groupedLogs).map(([date, dayLogs]) => (
-            <div key={date} className="space-y-3">
-              <h2 className="text-title-3 font-bold text-neutral-400 capitalize">
-                {formatGroupDate(date)}
-              </h2>
+          {Object.entries(groupedLogs).map(([date, dayLogs]) => {
+            const dayScore = calculateDayScore(dayLogs);
+            const isExpanded = expandedDays[date] !== false; // true by default
 
-              <div className="space-y-3">
-                {dayLogs.map((log) => (
-                  <Card
-                    key={log.id}
-                    className="bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm rounded-2xl cursor-pointer hover:bg-glass-light-2 transition-colors active:scale-[0.98]"
-                    onClick={() => handleEdit(log as ActivityLog)}
-                  >
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="h-12 w-12 rounded-full bg-white/60 flex items-center justify-center text-2xl shadow-inner">
-                          {CATEGORY_ICONS[log.category] || "📌"}
-                        </div>
-                        <div>
-                          <p className="font-bold text-body-1 text-neutral-500">
-                            {CATEGORY_NAMES[log.category] || log.category}
-                          </p>
-                          <p className="text-caption-1 text-neutral-400">
-                            {format(new Date(log.event_time), "HH:mm")} •
-                            Pontuação: {log.primary_value}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+            return (
+              <div key={date} className="space-y-3">
+                <div 
+                  className="flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform select-none"
+                  onClick={() => toggleDay(date)}
+                >
+                  <div className="flex items-center space-x-3">
+                    <h2 className="text-title-3 font-bold text-neutral-400 capitalize">
+                      {formatGroupDate(date)}
+                    </h2>
+                    <span className={`text-caption-1 font-bold px-3 py-1 rounded-full border backdrop-blur-md shadow-sm ${getScoreColorClass(dayScore)}`}>
+                      Score: {dayScore}
+                    </span>
+                  </div>
+                  <div className="p-1 rounded-full hover:bg-neutral-200/50 text-neutral-400 transition-colors">
+                    {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </div>
+                </div>
+
+                {isExpanded && (
+                  <div className="space-y-3">
+                    {dayLogs.map((log) => (
+                      <Card
+                        key={log.id}
+                        className="bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm rounded-2xl cursor-pointer hover:bg-glass-light-2 transition-colors active:scale-[0.98]"
+                        onClick={() => handleEdit(log as ActivityLog)}
+                      >
+                        <CardContent className="p-4 flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="h-12 w-12 rounded-full bg-white/60 flex items-center justify-center text-2xl shadow-inner">
+                              {CATEGORY_ICONS[log.category] || "📌"}
+                            </div>
+                            <div>
+                              <p className="font-bold text-body-1 text-neutral-500">
+                                {CATEGORY_NAMES[log.category] || log.category}
+                              </p>
+                              <p className="text-caption-1 text-neutral-400">
+                                {format(new Date(log.event_time), "HH:mm")} •
+                                Pontuação: {log.primary_value}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

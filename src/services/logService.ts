@@ -71,6 +71,16 @@ export const logService = {
     const penalty = (data.sugar + data.fat + data.alcohol) * 10;
     if (penalty === 0) return { penalty, updatedCount: 0 };
 
+    await prisma.dailyLog.create({
+      data: {
+        userId,
+        category: 'jacada',
+        primaryValue: penalty, // ou 0, pois a punição é aplicada na comida, mas salva o valor de penalty
+        details: data,
+        eventTime: new Date(),
+      }
+    });
+
     // Pegar o início e o fim do dia atual (no fuso do servidor, o que pode precisar de ajuste,
     // mas usando o mesmo padrão do `toSafeEventTime` ajuda a alinhar os fusos).
     // Para simplificar, consideramos "hoje" como a data de hoje.
