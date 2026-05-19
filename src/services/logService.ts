@@ -68,7 +68,23 @@ export const logService = {
   async registerJacada(userId: string, data: { sugar: number; fat: number; alcohol: number }) {
     await userService.checkUserPermissions(userId);
 
-    const penalty = (data.sugar + data.fat + data.alcohol) * 10;
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { targets: true },
+    });
+
+    let targetMealsCount = 4; // default
+    if (user?.targets && typeof user.targets === 'object') {
+      const targetsObj = user.targets as { planned_meals?: string[] };
+      if (Array.isArray(targetsObj.planned_meals) && targetsObj.planned_meals.length > 0) {
+        targetMealsCount = targetsObj.planned_meals.length;
+      }
+    }
+
+    const baseMealValue = 100 / targetMealsCount;
+    const sliderSum = data.sugar + data.fat + data.alcohol;
+    const penalty = Math.round((sliderSum / 10) * baseMealValue);
+
     if (penalty === 0) return { penalty, updatedCount: 0 };
 
     await prisma.dailyLog.create({
