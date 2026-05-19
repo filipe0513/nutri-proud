@@ -15,7 +15,7 @@ import { ActivityLog } from '@/store/types';
 import { ALL_MEALS } from '@/schemas/profileSchema';
 
 /** Fallback set when the user has no planned_meals configured yet */
-const FALLBACK_MEAL_IDS = ['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'dinner', 'dinner'];
+const FALLBACK_MEAL_IDS = ['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'dinner', 'supper'];
 
 export function MealEqualizerDrawer({ 
   customTrigger,
