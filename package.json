@@ -3,7 +3,7 @@
   "version": "1.6.0",
   "description": "Cumprir as metas da nutri agora ficou fácil e divertido!",
   "productName": "Orgulho da Nutri",
-  "author": "Filipe Magalhaes <filipe0513@gmail.com>",
+  "author": "Filipe Magalhaes <[EMAIL_ADDRESS]>",
   "private": true,
   "scripts": {
     "dev": "next dev",
