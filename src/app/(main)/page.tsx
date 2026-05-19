@@ -9,11 +9,6 @@ import { ScoreCard } from '@/components/shared/ScoreCard';
 import { InsightsBanner } from '@/components/shared/InsightsBanner';
 import { Sparkles, ChevronRight } from 'lucide-react';
 import { Droplets, Utensils, Dumbbell, Moon, Smile, StickyNote } from 'lucide-react';
-import { MealEqualizerDrawer } from '@/components/shared/MealEqualizerDrawer';
-import { WorkoutEqualizerDrawer } from '@/components/shared/WorkoutEqualizerDrawer';
-import { BottomSheet_Water } from '@/components/shared/BottomSheet_Water';
-import { BottomSheet_Sleep } from '@/components/shared/BottomSheet_Sleep';
-import { BottomSheet_Poop } from '@/components/shared/BottomSheet_Poop';
 import { JacadaDrawer } from '@/components/shared/JacadaDrawer';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -39,11 +34,6 @@ const PROGRESS_CATEGORIES = [
 ];
 
 const ACTION_LIST = [
-  { id: 'water', label: 'Registrar água', icon: Droplets, color: 'var(--color-cat-water)', bg: 'bg-blue-50' },
-  { id: 'meal', label: 'Registrar refeição', icon: Utensils, color: 'var(--color-cat-food)', bg: 'bg-green-50' },
-  { id: 'workout', label: 'Registrar treino', icon: Dumbbell, color: 'var(--color-cat-workout)', bg: 'bg-red-50' },
-  { id: 'sleep', label: 'Registrar sono', icon: Moon, color: 'var(--color-cat-sleep)', bg: 'bg-slate-100' },
-  { id: 'poop', label: 'Registrar intestino', icon: Smile, color: 'var(--color-cat-poop)', bg: 'bg-amber-50' },
   { id: 'note', label: 'Adicionar nota', icon: StickyNote, color: 'var(--color-highlight-300)', bg: 'bg-yellow-50' },
 ];
 
@@ -194,56 +184,11 @@ function DashboardContent() {
         </div>
 
         <div className="space-y-3">
-          {/* Water */}
-          {renderActionItem(ACTION_LIST[0], (
-            <BottomSheet_Water
-              open={openDrawer === 'water' ? true : undefined}
-              onOpenChange={(o) => o ? setOpenDrawer('water') : setOpenDrawer(null)}
-              customTrigger={actionTrigger(ACTION_LIST[0])}
-            />
-          ))}
-
-          {/* Meal */}
-          {renderActionItem(ACTION_LIST[1], (
-            <MealEqualizerDrawer
-              open={openDrawer === 'meal' ? true : undefined}
-              onOpenChange={(o) => o ? setOpenDrawer('meal') : setOpenDrawer(null)}
-              customTrigger={actionTrigger(ACTION_LIST[1])}
-            />
-          ))}
-
-          {/* Workout */}
-          {renderActionItem(ACTION_LIST[2], (
-            <WorkoutEqualizerDrawer
-              open={openDrawer === 'workout' ? true : undefined}
-              onOpenChange={(o) => o ? setOpenDrawer('workout') : setOpenDrawer(null)}
-              customTrigger={actionTrigger(ACTION_LIST[2])}
-            />
-          ))}
-
-          {/* Sleep */}
-          {renderActionItem(ACTION_LIST[3], (
-            <BottomSheet_Sleep
-              open={openDrawer === 'sleep' ? true : undefined}
-              onOpenChange={(o) => o ? setOpenDrawer('sleep') : setOpenDrawer(null)}
-              customTrigger={actionTrigger(ACTION_LIST[3])}
-            />
-          ))}
-
-          {/* Poop */}
-          {renderActionItem(ACTION_LIST[4], (
-            <BottomSheet_Poop
-              open={openDrawer === 'poop' ? true : undefined}
-              onOpenChange={(o) => o ? setOpenDrawer('poop') : setOpenDrawer(null)}
-              customTrigger={actionTrigger(ACTION_LIST[4])}
-            />
-          ))}
-
           {/* Note */}
-          {renderActionItem(ACTION_LIST[5], (
+          {renderActionItem(ACTION_LIST[0], (
             <Drawer open={openDrawer === 'note' || undefined} onOpenChange={(o) => o ? setOpenDrawer('note') : setOpenDrawer(null)}>
               <DrawerTrigger asChild>
-                {actionTrigger(ACTION_LIST[5])}
+                {actionTrigger(ACTION_LIST[0])}
               </DrawerTrigger>
               <DrawerContent className="!bg-white/95 backdrop-blur-2xl border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
                 <DrawerHeader className="px-0">
