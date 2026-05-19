@@ -11,7 +11,7 @@ import {
 interface AddLogOptionsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectPillar: (pillar: 'water' | 'meal' | 'workout' | 'sleep' | 'poop') => void;
+  onSelectPillar: (pillar: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'jacada') => void;
 }
 
 const PILLARS = [
@@ -65,6 +65,16 @@ const PILLARS = [
     border: 'border-amber-200/60',
     hoverBg: 'hover:bg-amber-100/80',
   },
+  {
+    id: 'jacada' as const,
+    label: 'Jacada',
+    emoji: '🍺🍔🍩',
+    icon: Utensils,
+    color: 'var(--color-cat-food)',
+    bg: 'bg-orange-50',
+    border: 'border-orange-200/60',
+    hoverBg: 'hover:bg-orange-100/80',
+  },
 ] as const;
 
 export function AddLogOptionsDrawer({
@@ -72,7 +82,7 @@ export function AddLogOptionsDrawer({
   onOpenChange,
   onSelectPillar,
 }: AddLogOptionsDrawerProps) {
-  const handleSelect = (pillarId: 'water' | 'meal' | 'workout' | 'sleep' | 'poop') => {
+  const handleSelect = (pillarId: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'jacada') => {
     onOpenChange(false);
     // Small delay so the first drawer closes before the second opens
     setTimeout(() => onSelectPillar(pillarId), 180);
@@ -89,7 +99,7 @@ export function AddLogOptionsDrawer({
 
         {/* 2-column grid — ergonomic layout for thumb reach */}
         <div className="grid grid-cols-2 gap-3 mt-2">
-          {PILLARS.slice(0, 4).map((pillar) => (
+          {PILLARS.map((pillar) => (
             <button
               key={pillar.id}
               type="button"
@@ -104,23 +114,6 @@ export function AddLogOptionsDrawer({
               </span>
             </button>
           ))}
-
-          {/* 5th item — full width */}
-          {PILLARS[4] && (
-            <button
-              key={PILLARS[4].id}
-              type="button"
-              id={`btn-add-log-${PILLARS[4].id}`}
-              aria-label={`Registrar ${PILLARS[4].label}`}
-              onClick={() => handleSelect(PILLARS[4].id)}
-              className={`col-span-2 flex flex-row items-center justify-center gap-3 h-16 rounded-2xl ${PILLARS[4].bg} ${PILLARS[4].border} ${PILLARS[4].hoverBg} border transition-all duration-200 active:scale-95 group`}
-            >
-              <span className="text-2xl leading-none select-none">{PILLARS[4].emoji}</span>
-              <span className="text-body-1 font-semibold text-neutral-500 group-active:text-neutral-600">
-                {PILLARS[4].label}
-              </span>
-            </button>
-          )}
         </div>
       </DrawerContent>
     </Drawer>

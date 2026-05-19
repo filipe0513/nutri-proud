@@ -29,8 +29,8 @@ interface AppState {
   // UI State
   isAddLogOpen: boolean;
   setAddLogOpen: (isOpen: boolean) => void;
-  activeDrawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | null;
-  setActiveDrawer: (drawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | null) => void;
+  activeDrawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | 'jacada' | null;
+  setActiveDrawer: (drawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | 'jacada' | null) => void;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({

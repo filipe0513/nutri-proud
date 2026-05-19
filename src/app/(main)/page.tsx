@@ -14,6 +14,7 @@ import { WorkoutEqualizerDrawer } from '@/components/shared/WorkoutEqualizerDraw
 import { BottomSheet_Water } from '@/components/shared/BottomSheet_Water';
 import { BottomSheet_Sleep } from '@/components/shared/BottomSheet_Sleep';
 import { BottomSheet_Poop } from '@/components/shared/BottomSheet_Poop';
+import { JacadaDrawer } from '@/components/shared/JacadaDrawer';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -281,6 +282,11 @@ function DashboardContent() {
           ))}
         </div>
       </div>
+
+      <JacadaDrawer
+        open={openDrawer === 'jacada'}
+        onOpenChange={(o) => o ? setOpenDrawer('jacada') : setOpenDrawer(null)}
+      />
 
       <LimitWarningDrawer 
         isOpen={isWarningOpen} 
