@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { userService } from '@/services/userService';
-import { BottomNav } from '@/components/shared/BottomNav';
+import { NavWithShare } from '@/components/shared/NavWithShare';
 
 export default async function MainLayout({
   children,
@@ -25,7 +25,7 @@ export default async function MainLayout({
       <main className="min-h-screen pb-24 bg-mesh-sunset">
         {children}
       </main>
-      <BottomNav />
+      <NavWithShare />
     </>
   );
 }
