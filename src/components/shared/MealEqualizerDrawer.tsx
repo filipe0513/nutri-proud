@@ -86,14 +86,11 @@ export function MealEqualizerDrawer({
     fatsVal: number,
     fiberVal: number
   ): number => {
-    const totalPlanned = mealOptions.length || 1;
-    const maxPerMeal = Math.round(100 / totalPlanned);
-
     // Quality 0–1: how close sliders are to centre (0 = perfect)
     const avgDeviation = (Math.abs(proteinVal) + Math.abs(carbsVal) + Math.abs(fatsVal) + Math.abs(fiberVal)) / 4;
     const qualityMultiplier = Math.max(0, 1 - avgDeviation / 50);
 
-    return Math.round(maxPerMeal * qualityMultiplier);
+    return Math.round(100 * qualityMultiplier);
   };
 
   useEffect(() => {

@@ -48,8 +48,8 @@ export function ScoreCard() {
         const plannedMeals = Array.isArray(rawTargets?.planned_meals) ? rawTargets.planned_meals : [];
         const totalMeals = plannedMeals.length || 3;
         const somaReal = catLogs.reduce((acc, log) => acc + (log.primary_value || 0), 0);
-        const pontuacaoMaxima = totalMeals * 100;
-        const percentage = Math.round((somaReal / pontuacaoMaxima) * 100);
+        const maxPossibleScore = totalMeals * 100;
+        const percentage = Math.round((somaReal / maxPossibleScore) * 100);
         return Math.max(0, Math.min(100, percentage));
       }
 
