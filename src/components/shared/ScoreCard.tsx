@@ -46,8 +46,11 @@ export function ScoreCard() {
       if (catId === 'food') {
         const rawTargets = user_profile?.targets as Record<string, unknown> | undefined;
         const plannedMeals = Array.isArray(rawTargets?.planned_meals) ? rawTargets.planned_meals : [];
-        const target = plannedMeals.length || 4;
-        return Math.min(100, (catLogs.length / target) * 100);
+        const totalMeals = plannedMeals.length || 3;
+        const somaReal = catLogs.reduce((acc, log) => acc + (log.primary_value || 0), 0);
+        const pontuacaoMaxima = totalMeals * 100;
+        const percentage = Math.round((somaReal / pontuacaoMaxima) * 100);
+        return Math.max(0, Math.min(100, percentage));
       }
 
       if (catId === 'workout') {

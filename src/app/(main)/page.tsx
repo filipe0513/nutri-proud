@@ -91,13 +91,13 @@ function DashboardContent() {
     }
 
     if (catId === 'food') {
-      // Average quality of logged meals × proportion of meals target met
       const rawTargets = user_profile?.targets as Record<string, unknown> | undefined;
       const plannedMeals = Array.isArray(rawTargets?.planned_meals) ? rawTargets.planned_meals : [];
-      const mealsTarget = plannedMeals.length || 4;
-      const avgQuality = catLogs.reduce((acc, log) => acc + log.primary_value, 0) / catLogs.length;
-      const mealsProportion = Math.min(1, catLogs.length / mealsTarget);
-      return Math.min(100, Math.round(avgQuality * mealsProportion));
+      const totalMeals = plannedMeals.length || 3;
+      const somaReal = catLogs.reduce((acc, log) => acc + (log.primary_value || 0), 0);
+      const pontuacaoMaxima = totalMeals * 100;
+      const percentage = Math.round((somaReal / pontuacaoMaxima) * 100);
+      return Math.max(0, Math.min(100, percentage));
     }
 
     // sleep, workout, poop: average of primary_value (already computed in each drawer)
