@@ -16,6 +16,7 @@ import { BottomSheet_Sleep } from "@/components/shared/BottomSheet_Sleep";
 import { BottomSheet_Poop } from "@/components/shared/BottomSheet_Poop";
 import { MealEqualizerDrawer } from "@/components/shared/MealEqualizerDrawer";
 import { WorkoutEqualizerDrawer } from "@/components/shared/WorkoutEqualizerDrawer";
+import { historyService } from "@/services/historyService";
 
 const CATEGORY_ICONS: Record<string, string> = {
   water: "💧",
@@ -114,33 +115,7 @@ export default function HistoryPage() {
   );
 
   const calculateDayScore = (dayLogs: typeof logs) => {
-    const CATEGORIES = ['water', 'food', 'workout', 'sleep', 'poop'] as const;
-    const categoryScores = CATEGORIES.map((catId) => {
-      const catLogs = dayLogs.filter((log) => log.category === catId);
-
-      if (catId === 'water') {
-        const total = catLogs.reduce((acc, log) => acc + (log.details?.quantity_ml || 0), 0);
-        const target = user_profile?.targets?.water_ml_per_day || 2000;
-        return Math.min(100, (total / target) * 100);
-      }
-
-      if (catId === 'food') {
-        const rawTargets = user_profile?.targets as Record<string, unknown> | undefined;
-        const plannedMeals = Array.isArray(rawTargets?.planned_meals) ? rawTargets.planned_meals : [];
-        const target = plannedMeals.length || 4;
-        if (catLogs.length === 0) return 0;
-        const avgQuality = catLogs.reduce((acc, log) => acc + log.primary_value, 0) / catLogs.length;
-        const mealsProportion = Math.min(1, catLogs.length / target);
-        return Math.min(100, Math.round(avgQuality * mealsProportion));
-      }
-
-      if (catLogs.length === 0) return 0;
-      const avg = catLogs.reduce((acc, log) => acc + log.primary_value, 0) / catLogs.length;
-      return Math.min(100, Math.round(avg));
-    });
-
-    const total = categoryScores.reduce((acc, s) => acc + s, 0);
-    return Math.round(total / CATEGORIES.length);
+    return historyService.calculateDayScore(dayLogs, user_profile);
   };
 
   return (
@@ -188,7 +163,7 @@ export default function HistoryPage() {
                       {formatGroupDate(date)}
                     </h2>
                     <span className={`text-caption-1 font-bold px-3 py-1 rounded-full border backdrop-blur-md shadow-sm ${getScoreColorClass(dayScore)}`}>
-                      Score: {dayScore}
+                      Score: {Math.min(100, dayScore)}%
                     </span>
                   </div>
                   <div className="p-1 rounded-full hover:bg-neutral-200/50 text-neutral-400 transition-colors">

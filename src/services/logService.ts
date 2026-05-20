@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { userService } from './userService';
+import { historyService } from './historyService';
 
 /**
  * Converts a date string to a safe DateTime for the DB.
@@ -149,13 +150,7 @@ export const logService = {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   calculateFoodScore(logs: any[], targets: any): number {
-    const plannedMeals = targets?.planned_meals;
-    const totalMeals = plannedMeals?.length || 3;
-    const foodLogs = logs.filter((log) => log.category?.toLowerCase() === 'food');
-    const somaReal = foodLogs.reduce((acc, log) => acc + (log.primaryValue ?? log.primary_value ?? 0), 0);
-    const pontuacaoMaxima = totalMeals * 100;
-    const percentage = Math.round((somaReal / pontuacaoMaxima) * 100);
-    return Math.max(0, Math.min(100, percentage));
+    return historyService.calculateFoodScore(logs, targets);
   },
 };
 
