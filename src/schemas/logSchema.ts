@@ -2,20 +2,7 @@ import { z } from 'zod';
 
 // Schema para os detalhes de Comida (JSONB)
 export const foodDetailsSchema = z.object({
-  meal_type: z.enum([
-    'breakfast',
-    'morning_snack',
-    'lunch',
-    'afternoon_snack',
-    'afternoon_snack2',
-    'dinner',
-    'supper',
-    'pre_workout',
-    'post_workout',
-    'extra_snack',
-    'snack',
-    'dessert'
-  ]),
+  meal_type: z.string().min(1, 'Tipo de refeição é obrigatório'),
   factors: z.object({
     carbs: z.number().min(-50).max(50),
     protein: z.number().min(-50).max(50),

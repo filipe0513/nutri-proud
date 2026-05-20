@@ -15,7 +15,7 @@ import { ActivityLog } from '@/store/types';
 import { ALL_MEALS } from '@/schemas/profileSchema';
 
 /** Fallback set when the user has no planned_meals configured yet */
-const FALLBACK_MEAL_IDS = ['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'dinner', 'supper'];
+const FALLBACK_MEAL_IDS = ['Café da Manhã', 'Almoço', 'Jantar'];
 
 export function MealEqualizerDrawer({ 
   customTrigger,
@@ -66,16 +66,11 @@ export function MealEqualizerDrawer({
    * Derive the list of meals to show in the drawer from the user's planned_meals target.
    * Falls back to the hardcoded legacy list when the profile is not yet loaded.
    */
-  const plannedMealIds: string[] = useMemo(() => {
+  const mealOptions = useMemo(() => {
     const raw = (userProfile?.targets as Record<string, unknown> | undefined)?.planned_meals;
     if (Array.isArray(raw) && raw.length > 0) return raw as string[];
     return FALLBACK_MEAL_IDS;
   }, [userProfile]);
-
-  const plannedMeals = useMemo(
-    () => plannedMealIds.map(id => ALL_MEALS.find(m => m.id === id)).filter(Boolean) as typeof ALL_MEALS[number][],
-    [plannedMealIds]
-  );
 
   /**
    * Compute the proportional score for one meal log.
@@ -91,7 +86,7 @@ export function MealEqualizerDrawer({
     fatsVal: number,
     fiberVal: number
   ): number => {
-    const totalPlanned = plannedMealIds.length || 1;
+    const totalPlanned = mealOptions.length || 1;
     const maxPerMeal = Math.round(100 / totalPlanned);
 
     // Quality 0–1: how close sliders are to centre (0 = perfect)
@@ -152,7 +147,7 @@ export function MealEqualizerDrawer({
       }
     };
 
-    const mealName = plannedMeals.find(m => m.id === selectedMeal)?.label ?? selectedMeal;
+    const mealName = ALL_MEALS.find(m => m.id === selectedMeal)?.label || selectedMeal;
 
     if (initialData) {
       await updateLog(initialData.id, logData);
@@ -212,7 +207,7 @@ export function MealEqualizerDrawer({
         <DrawerHeader className="px-0">
           <div className="flex items-center justify-between">
             <DrawerTitle className="text-title-2 text-green-950">
-              {initialData ? 'Editar Refeição' : (!selectedMeal ? 'Adicionar Refeição 🥗' : `Como foi o ${plannedMeals.find(m => m.id === selectedMeal)?.label}?`)}
+              {initialData ? 'Editar Refeição' : (!selectedMeal ? 'Adicionar Refeição 🥗' : `Como foi o ${ALL_MEALS.find(m => m.id === selectedMeal)?.label || selectedMeal}?`)}
             </DrawerTitle>
             <DatePickerInput
               value={selectedDate}
@@ -229,20 +224,21 @@ export function MealEqualizerDrawer({
         {!selectedMeal && !initialData ? (
           <div className="flex flex-col mt-4 space-y-6">
             <div className="grid grid-cols-2 gap-4">
-              {plannedMeals.map((meal) => {
-                const alreadyLogged = alreadyLoggedToday.includes(meal.id);
+              {mealOptions.map((meal) => {
+                const alreadyLogged = alreadyLoggedToday.includes(meal);
+                const mealLabel = ALL_MEALS.find(m => m.id === meal)?.label || meal;
                 return (
                   <Button 
-                    key={meal.id}
+                    key={meal}
                     variant="outline" 
                     className={`h-16 rounded-2xl border bg-white/50 backdrop-blur-sm text-green-950 flex flex-col items-center justify-center transition-all ${
                       alreadyLogged
                         ? 'border-green-400 bg-green-50/60 opacity-60'
                         : 'border-green-200 hover:border-green-500 hover:bg-white/80'
                     }`}
-                    onClick={() => setSelectedMeal(meal.id)}
+                    onClick={() => setSelectedMeal(meal)}
                   >
-                    <span className="text-button-1">{meal.label}</span>
+                    <span className="text-button-1">{mealLabel}</span>
                     {alreadyLogged && (
                       <span className="text-xs text-green-600 mt-0.5">✓ Registrado</span>
                     )}
