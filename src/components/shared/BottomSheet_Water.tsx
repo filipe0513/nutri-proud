@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Droplet, Trophy, Trash2 } from 'lucide-react';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
+import { toLocalISOString } from '@/lib/utils';
 
 export function BottomSheet_Water({ 
   customTrigger, 
@@ -61,7 +62,7 @@ export function BottomSheet_Water({
   const handleSave = async (ml: number) => {
     const score = Math.min(100, Math.round((ml / targetMl) * 100));
     const logData = {
-      event_time: new Date(selectedDate).toISOString(),
+      event_time: toLocalISOString(new Date(selectedDate)),
       category: 'water' as const,
       primary_value: score,
       details: { quantity_ml: ml }

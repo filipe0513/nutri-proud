@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { UserProfile, ActivityLog } from './types';
 import * as api from './api';
+import { toLocalISOString } from '@/lib/utils';
 
 interface OnboardingData {
   name: string;
@@ -139,13 +140,13 @@ export const useAppStore = create<AppState>()((set, get) => ({
         if (!profile) return;
 
         const targetMl = profile.targets?.water_ml_per_day || 2000;
-        const eventTime = date ? new Date(date).toISOString() : new Date().toISOString();
+        const eventTime = date ? toLocalISOString(new Date(date)) : toLocalISOString(new Date());
         const targetDate = eventTime.split('T')[0];
 
         // Filter out existing water logs for the target date
         const filteredLogs = state.activity_logs.filter(log => {
           if (log.category !== 'water') return true;
-          const logDate = new Date(log.event_time).toISOString().split('T')[0];
+          const logDate = log.event_time.split('T')[0];
           return logDate !== targetDate;
         });
 

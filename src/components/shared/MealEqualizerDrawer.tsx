@@ -13,6 +13,7 @@ import { Slider } from '@/components/ui/slider';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
 import { ALL_MEALS } from '@/schemas/profileSchema';
+import { toLocalISOString } from '@/lib/utils';
 
 /** Fallback set when the user has no planned_meals configured yet */
 const FALLBACK_MEAL_IDS = ['Café da Manhã', 'Almoço', 'Jantar'];
@@ -135,7 +136,7 @@ export function MealEqualizerDrawer({
     const score = computeProportionalScore(protein, carbs, fats, fiber);
 
     const logData = {
-      event_time: new Date(selectedDate).toISOString(),
+      event_time: toLocalISOString(new Date(selectedDate)),
       category: 'food' as const,
       primary_value: score,
       details: { 

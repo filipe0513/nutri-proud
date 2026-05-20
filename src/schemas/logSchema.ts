@@ -39,4 +39,11 @@ export const jacadaSchema = z.object({
   sugar: z.number().min(0).max(5),
   fat: z.number().min(0).max(5),
   alcohol: z.number().min(0).max(5),
+  event_time: z
+    .string()
+    .datetime({ offset: true, message: 'event_time deve ser uma data ISO válida.' })
+    .refine((val) => new Date(val) <= new Date(), {
+      message: 'Não é possível registrar eventos em datas futuras.',
+    })
+    .optional(),
 });

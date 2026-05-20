@@ -12,8 +12,18 @@ function getISOWeek(date: Date): string {
 }
 
 function toDateString(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return date.toLocaleDateString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).split('/').reverse().join('-');
 }
+
+function getLocalDateInBrazil(date: Date): Date {
+  return new Date(date.getTime() - 3 * 3600 * 1000);
+}
+
 
 /**
  * Calculates weekly streak for WORKOUT category.
@@ -37,13 +47,14 @@ export async function calculateWorkoutWeeklyStreak(
   // Group logs by ISO week
   const weekMap = new Map<string, number>();
   for (const log of logs) {
-    const week = getISOWeek(new Date(log.eventTime));
+    const week = getISOWeek(getLocalDateInBrazil(new Date(log.eventTime)));
     weekMap.set(week, (weekMap.get(week) ?? 0) + 1);
   }
 
   // Build sorted list of unique weeks (descending), skip current (possibly incomplete) week
   const today = new Date();
-  const currentWeek = getISOWeek(today);
+  const currentWeek = getISOWeek(getLocalDateInBrazil(today));
+
   const completedWeeks = Array.from(weekMap.keys())
     .filter((w) => w !== currentWeek)
     .sort()
@@ -112,10 +123,11 @@ export async function calculateDailyStreak(
 
   // Walk backwards from yesterday (today may be incomplete)
   let streak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const nowInBrazil = getLocalDateInBrazil(new Date());
+  const today = new Date(Date.UTC(nowInBrazil.getUTCFullYear(), nowInBrazil.getUTCMonth(), nowInBrazil.getUTCDate()));
 
   const checkDate = new Date(today);
+
   checkDate.setDate(checkDate.getDate() - 1); // start from yesterday
 
   while (true) {

@@ -6,8 +6,9 @@ import { DailyLog } from '@prisma/client';
 
 import { auth } from '@/auth';
 import { cookies } from 'next/headers';
-import { logService } from '@/services/logService';
+import { logService, getLocalDayInterval } from '@/services/logService';
 import { PermissionError } from '@/services/userService';
+
 
 async function getUserId() {
   const session = await auth();
@@ -65,9 +66,10 @@ export async function GET(request: Request) {
 
     if (startDateParam || endDateParam) {
       where.eventTime = {};
-      if (startDateParam) where.eventTime.gte = new Date(startDateParam);
-      if (endDateParam) where.eventTime.lte = new Date(endDateParam);
+      if (startDateParam) where.eventTime.gte = getLocalDayInterval(startDateParam).start;
+      if (endDateParam) where.eventTime.lte = getLocalDayInterval(endDateParam).end;
     }
+
 
     const logs = await prisma.dailyLog.findMany({
       where,

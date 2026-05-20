@@ -19,6 +19,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, Drawer
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { LimitWarningDrawer } from '@/components/shared/LimitWarningDrawer';
+import { toLocalISOString } from '@/lib/utils';
 
 const CATEGORY_COLORS: Record<string, string> = {
   water: 'var(--color-cat-water)',
@@ -212,7 +213,7 @@ function DashboardContent() {
                       onClick={() => {
                         if (!noteText.trim()) return;
                         addLog({
-                          event_time: new Date().toISOString(),
+                          event_time: toLocalISOString(new Date()),
                           category: 'note',
                           primary_value: 100,
                           details: { notes: noteText }

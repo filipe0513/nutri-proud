@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { DailyLog } from '@prisma/client';
+import { getLocalDayInterval } from './logService';
+
 
 const CATEGORY_EMOJI: Record<string, string> = {
   water: '💧',
@@ -41,8 +43,9 @@ export const reportService = {
     endDate: string
   ): Promise<ReportResult> {
     // Expand endDate to include the full day
-    const start = new Date(`${startDate}T00:00:00.000Z`);
-    const end = new Date(`${endDate}T23:59:59.999Z`);
+    const start = getLocalDayInterval(startDate).start;
+    const end = getLocalDayInterval(endDate).end;
+
 
     const logs: DailyLog[] = await prisma.dailyLog.findMany({
       where: {

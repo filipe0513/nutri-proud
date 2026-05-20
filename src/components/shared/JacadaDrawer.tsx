@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Utensils } from 'lucide-react';
+import { toLocalISOString } from '@/lib/utils';
 import {
   Drawer,
   DrawerContent,
@@ -32,7 +33,7 @@ export function JacadaDrawer({
       const res = await fetch('/api/logs/jacada', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sugar, fat, alcohol }),
+        body: JSON.stringify({ sugar, fat, alcohol, event_time: toLocalISOString(new Date()) }),
       });
 
       if (!res.ok) {

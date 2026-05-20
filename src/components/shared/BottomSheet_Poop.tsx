@@ -11,6 +11,7 @@ import { Smile, Trash2 } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
+import { toLocalISOString } from '@/lib/utils';
 
 export function BottomSheet_Poop({ 
   customTrigger,
@@ -68,7 +69,7 @@ export function BottomSheet_Poop({
 
   const handleSave = async (state: string, primaryValue: number) => {
     const logData = {
-      event_time: new Date(selectedDate).toISOString(),
+      event_time: toLocalISOString(new Date(selectedDate)),
       category: 'poop' as const,
       primary_value: primaryValue,
       details: { state }

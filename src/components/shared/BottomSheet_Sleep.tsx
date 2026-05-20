@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Moon, Minus, Plus, Trash2 } from 'lucide-react';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
+import { toLocalISOString } from '@/lib/utils';
 
 export function BottomSheet_Sleep({ 
   customTrigger,
@@ -103,7 +104,7 @@ export function BottomSheet_Sleep({
       score = Math.max(0, Math.min(100, score));
 
       const logData = {
-        event_time: new Date(selectedDate).toISOString(),
+        event_time: toLocalISOString(new Date(selectedDate)),
         category: 'sleep' as const,
         primary_value: score,
         details: { 

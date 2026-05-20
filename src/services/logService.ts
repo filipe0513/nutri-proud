@@ -2,6 +2,36 @@ import { prisma } from '@/lib/prisma';
 import { userService } from './userService';
 import { historyService } from './historyService';
 
+export function getLocalDayInterval(eventTimeStr: string): { start: Date; end: Date } {
+  const tIndex = eventTimeStr.indexOf('T');
+  if (tIndex === -1) {
+    const dateStr = eventTimeStr;
+    // default to America/Sao_Paulo (UTC-3)
+    const start = new Date(`${dateStr}T03:00:00.000Z`);
+    const end = new Date(`${dateStr}T02:59:59.999Z`);
+    end.setDate(end.getDate() + 1);
+    return { start, end };
+  }
+
+  const localDateStr = eventTimeStr.slice(0, tIndex);
+  let offsetMinutes = -180; // default UTC-3
+  const remaining = eventTimeStr.slice(tIndex);
+  const offsetMatch = remaining.match(/([+-])(\d{2}):?(\d{2})$/);
+  if (offsetMatch) {
+    const sign = offsetMatch[1] === '+' ? 1 : -1;
+    const hours = parseInt(offsetMatch[2], 10);
+    const minutes = parseInt(offsetMatch[3], 10);
+    offsetMinutes = sign * (hours * 60 + minutes);
+  } else if (remaining.endsWith('Z')) {
+    offsetMinutes = 0;
+  }
+
+  const start = new Date(new Date(`${localDateStr}T00:00:00.000Z`).getTime() - offsetMinutes * 60000);
+  const end = new Date(new Date(`${localDateStr}T23:59:59.999Z`).getTime() - offsetMinutes * 60000);
+  
+  return { start, end };
+}
+
 /**
  * Converts a date string to a safe DateTime for the DB.
  * If the string is YYYY-MM-DD (date-only) it sets the time to 12:00 UTC
@@ -16,6 +46,7 @@ function toSafeEventTime(dateInput: string | undefined): Date {
   // Date-only string → pin to 12:00 UTC
   return new Date(`${dateInput}T12:00:00.000Z`);
 }
+
 
 export const logService = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,7 +97,7 @@ export const logService = {
     });
   },
 
-  async registerJacada(userId: string, data: { sugar: number; fat: number; alcohol: number }) {
+  async registerJacada(userId: string, data: { sugar: number; fat: number; alcohol: number; event_time?: string }) {
     await userService.checkUserPermissions(userId);
 
     const user = await prisma.user.findUnique({
@@ -93,17 +124,14 @@ export const logService = {
         userId,
         category: 'jacada',
         primaryValue: penalty, // ou 0, pois a punição é aplicada na comida, mas salva o valor de penalty
-        details: data,
-        eventTime: new Date(),
+        details: { sugar: data.sugar, fat: data.fat, alcohol: data.alcohol },
+        eventTime: toSafeEventTime(data.event_time),
       }
     });
 
-    // Pegar o início e o fim do dia atual (no fuso do servidor, o que pode precisar de ajuste,
-    // mas usando o mesmo padrão do `toSafeEventTime` ajuda a alinhar os fusos).
-    // Para simplificar, consideramos "hoje" como a data de hoje.
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayStart = new Date(`${todayStr}T00:00:00.000Z`);
-    const todayEnd = new Date(`${todayStr}T23:59:59.999Z`);
+    // Pegar o início e o fim do dia atual no fuso do cliente
+    const eventTimeStr = data.event_time || new Date().toISOString();
+    const { start: todayStart, end: todayEnd } = getLocalDayInterval(eventTimeStr);
 
     const foodLogs = await prisma.dailyLog.findMany({
       where: {
