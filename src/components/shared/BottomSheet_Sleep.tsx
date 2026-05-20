@@ -38,7 +38,7 @@ export function BottomSheet_Sleep({
 
   const [duration, setDuration] = useState(8);
   const [awokeTimes, setAwokeTimes] = useState(0);
-  const [quality, setQuality] = useState<'cansado' | 'normal' | 'revigorado' | null>(null);
+  const [quality, setQuality] = useState<'cansado' | 'normal' | 'revigorado' | null>('normal');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
     if (initialData?.event_time) {
@@ -61,7 +61,7 @@ export function BottomSheet_Sleep({
     if (!initialData) {
       setDuration(8);
       setAwokeTimes(0);
-      setQuality(null);
+      setQuality('normal');
       const now = new Date();
       setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
     }

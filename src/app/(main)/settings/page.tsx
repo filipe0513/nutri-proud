@@ -86,7 +86,7 @@ export default function SettingsPage() {
   const environment = process.env.NODE_ENV;
 
   return (
-    <div className="pb-24 pt-8 px-6 max-w-lg mx-auto space-y-8">
+    <div className="pb-40 pt-8 px-6 max-w-lg mx-auto space-y-8">
       <div className="flex items-center space-x-4">
         <Link
           href="/"
@@ -331,10 +331,10 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <div className="fixed bottom-6 left-0 right-0 px-6 max-w-lg mx-auto pointer-events-none">
+        <div className="fixed bottom-0 left-0 right-0 pb-6 pt-4 px-6 max-w-lg mx-auto bg-glass-light-3 backdrop-blur-lg border-t border-white/40 z-40">
           <Button
             type="submit"
-            className="w-full h-14 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-button-1 shadow-lg pointer-events-auto"
+            className="w-full h-14 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-button-1 shadow-lg"
           >
             Salvar Alterações
           </Button>
