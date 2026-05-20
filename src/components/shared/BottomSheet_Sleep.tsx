@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -39,6 +39,7 @@ export function BottomSheet_Sleep({
   const [duration, setDuration] = useState(8);
   const [awokeTimes, setAwokeTimes] = useState(0);
   const [quality, setQuality] = useState<'cansado' | 'normal' | 'revigorado' | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
     if (initialData?.event_time) {
       return new Date(initialData.event_time).toISOString().slice(0, 16);
@@ -83,57 +84,79 @@ export function BottomSheet_Sleep({
       return;
     }
 
-    // Base score: proportional to sleep target (capped at 100)
-    let score = Math.min(100, Math.round((duration / sleepTarget) * 100));
+    try {
+      setIsSubmitting(true);
 
-    // Awoke times penalty
-    if (awokeTimes === 1) score -= 5;
-    else if (awokeTimes === 2) score -= 10;
-    else if (awokeTimes >= 3) score -= 20;
+      // Base score: proportional to sleep target (capped at 100)
+      let score = Math.min(100, Math.round((duration / sleepTarget) * 100));
 
-    // Quality bonus/penalty
-    if (quality === 'cansado') score -= 10;
-    else if (quality === 'revigorado') score += 10;
+      // Awoke times penalty
+      if (awokeTimes === 1) score -= 5;
+      else if (awokeTimes === 2) score -= 10;
+      else if (awokeTimes >= 3) score -= 20;
 
-    // Clamp to [0, 100]
-    score = Math.max(0, Math.min(100, score));
+      // Quality bonus/penalty
+      if (quality === 'cansado') score -= 10;
+      else if (quality === 'revigorado') score += 10;
 
-    const logData = {
-      event_time: new Date(selectedDate).toISOString(),
-      category: 'sleep' as const,
-      primary_value: score,
-      details: { 
-        duration_hours: duration,
-        awoke_times: awokeTimes,
-        quality_feeling: quality
+      // Clamp to [0, 100]
+      score = Math.max(0, Math.min(100, score));
+
+      const logData = {
+        event_time: new Date(selectedDate).toISOString(),
+        category: 'sleep' as const,
+        primary_value: score,
+        details: { 
+          duration_hours: duration,
+          awoke_times: awokeTimes,
+          quality_feeling: quality
+        }
+      };
+
+      if (initialData) {
+        await updateLog(initialData.id, logData);
+        updateLogHistory(initialData.id, logData);
+        toast.success('Sono atualizado!', {
+          className: 'bg-indigo-500 text-white border-transparent'
+        });
+        if (isControlled && onOpenChange) onOpenChange(false);
+      } else {
+        await addLog(logData);
+        toast.success('Sono registrado!', {
+          className: 'bg-indigo-500 text-white border-transparent'
+        });
+        if (isControlled && onOpenChange) {
+          onOpenChange(false);
+        } else {
+          setInternalOpen(false);
+        }
       }
-    };
-
-    if (initialData) {
-      await updateLog(initialData.id, logData);
-      updateLogHistory(initialData.id, logData);
-      toast.success('Sono atualizado!', {
-        className: 'bg-indigo-500 text-white border-transparent'
-      });
-      if (isControlled && onOpenChange) onOpenChange(false);
-    } else {
-      await addLog(logData);
-      toast.success('Sono registrado!', {
-        className: 'bg-indigo-500 text-white border-transparent'
-      });
+      
+      setTimeout(resetState, 300);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao salvar registro.');
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setTimeout(resetState, 300);
   };
 
   const handleDelete = async () => {
-    if (!initialData) return;
-    await removeLog(initialData.id);
-    deleteLogHistory(initialData.id);
-    toast.success('Registro apagado!', {
-      className: 'bg-indigo-500 text-white border-transparent'
-    });
-    if (isControlled && onOpenChange) onOpenChange(false);
+    if (!initialData || isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      await removeLog(initialData.id);
+      deleteLogHistory(initialData.id);
+      toast.success('Registro apagado!', {
+        className: 'bg-indigo-500 text-white border-transparent'
+      });
+      if (isControlled && onOpenChange) onOpenChange(false);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao apagar registro.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -244,25 +267,26 @@ export function BottomSheet_Sleep({
                 className="h-14 w-14 rounded-2xl border border-indigo-200 bg-white/50 text-indigo-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50 flex-shrink-0"
                 onClick={handleDelete}
                 title="Apagar registro"
+                disabled={isSubmitting}
               >
                 <Trash2 size={18} />
               </Button>
               <Button 
                 className="h-14 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white border-transparent flex-1 text-button-1 shadow-md"
                 onClick={handleSave}
+                disabled={!quality || isSubmitting}
               >
-                Salvar
+                {isSubmitting ? 'Salvando...' : 'Salvar'}
               </Button>
             </div>
           ) : (
-            <DrawerClose asChild>
-              <Button 
-                className="h-14 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white border-transparent w-full text-button-1 shadow-md"
-                onClick={handleSave}
-              >
-                Salvar Sono
-              </Button>
-            </DrawerClose>
+            <Button 
+              className="h-14 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white border-transparent w-full text-button-1 shadow-md"
+              onClick={handleSave}
+              disabled={!quality || isSubmitting}
+            >
+              {isSubmitting ? 'Salvando...' : 'Salvar Sono'}
+            </Button>
           )}
         </div>
       </DrawerContent>
