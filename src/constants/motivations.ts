@@ -1,0 +1,22 @@
+export const MOTIVATIONAL_PHRASES = [
+  "Cada copo d'água é uma vitória! 💧",
+  "A consistência bate a perfeição. Vamos lá! 💪",
+  "Um dia ruim não estraga uma semana boa! ✨",
+  "Seu corpo é seu único lar. Cuide bem dele! 🏡",
+  "Pequenos hábitos, grandes resultados. 🚀",
+  "Hoje é um excelente dia para se cuidar! ☀️",
+  "Hidrate-se! Suas células agradecem. 💦",
+  "Comida de verdade nutre o corpo e a mente. 🍎",
+  "Dormir bem é o segredo do sucesso de amanhã. 😴",
+  "Mova-se por amor ao seu corpo, não por punição. 🏃‍♂️",
+  "Cada escolha saudável é um voto para o seu futuro. 🗳️",
+  "A saúde é uma jornada, não um destino. Aproveite o caminho! 🗺️",
+  "Progresso, não perfeição. Celebre suas pequenas vitórias! 🎉",
+  "Mais do que metas, crie um estilo de vida que você ama. ❤️",
+  "Sua nutri tem muito orgulho da sua dedicação hoje! 🥰",
+  "Nutrir-se bem é um ato de respeito por si mesmo. 🥗",
+  "Escute o seu corpo e dê a ele o descanso que merece. 🛌",
+  "O segredo da saúde mental e física começa no prato. 🥑",
+  "Beba água agora e garanta mais foco e energia! ⚡",
+  "Cada passo de hoje constrói a sua melhor versão de amanhã. 🌟"
+];

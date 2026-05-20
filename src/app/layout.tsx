@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { RootProvider } from "@/components/shared/RootProvider";
+import { SplashScreen } from "@/components/shared/SplashScreen";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -43,9 +44,11 @@ export default function RootLayout({
       <body
         className={`${inter.variable} font-sans antialiased bg-bg-surface text-neutral-500`}
       >
+        <SplashScreen />
         <RootProvider>{children}</RootProvider>
         <SpeedInsights />
       </body>
     </html>
   );
 }
+
