@@ -86,7 +86,7 @@ export default function SettingsPage() {
   const environment = process.env.NODE_ENV;
 
   return (
-    <div className="pb-40 pt-8 px-6 max-w-lg mx-auto space-y-8">
+    <div className="py-8 px-6 max-w-lg mx-auto space-y-8">
       <div className="flex items-center space-x-4">
         <Link
           href="/"
@@ -295,11 +295,10 @@ export default function SettingsPage() {
                       <label
                         key={meal.id}
                         htmlFor={`meal-${meal.id}`}
-                        className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-all ${
-                          checked
-                            ? 'bg-orange-50 border-orange-300'
-                            : 'bg-white/40 border-white/40 hover:bg-white/60'
-                        }`}
+                        className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-all ${checked
+                          ? 'bg-orange-50 border-orange-300'
+                          : 'bg-white/40 border-white/40 hover:bg-white/60'
+                          }`}
                       >
                         <Checkbox
                           id={`meal-${meal.id}`}
@@ -331,7 +330,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <div className="fixed bottom-0 left-0 right-0 pb-6 pt-4 px-6 max-w-lg mx-auto bg-glass-light-3 backdrop-blur-lg border-t border-white/40 z-40">
+        <div className="fixed bottom-0 left-0 right-0 pb-6 pt-4 px-6 max-w-lg mx-auto backdrop-blur-lg z-40">
           <Button
             type="submit"
             className="w-full h-14 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-button-1 shadow-lg"
@@ -358,7 +357,7 @@ export default function SettingsPage() {
       <div className="mt-8 text-center pb-8">
         <p className="text-caption-1 text-neutral-400">
           Orgulho da Nutri • Versão {appVersion}
-          <span className="text-neutral-300 ml-1 text-xs">({environment})</span>
+          {environment !== "production" && (<span className=" ml-1 text-xs">({environment})</span>)}
         </p>
       </div>
     </div>
