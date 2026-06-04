@@ -24,6 +24,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   notifications Notification[]
+  aiInsights    AiInsight[]
 }
 
 model Account {
@@ -83,4 +84,13 @@ model Notification {
   category    String   // "REMINDER", "ACHIEVEMENT", "SYSTEM", "ALERT"
   actionType  String?  @map("action_type")
   createdAt   DateTime @default(now()) @map("created_at")
+}
+
+model AiInsight {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

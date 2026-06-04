@@ -1,0 +1,14 @@
+💡 O Truque Mágico para a Task do Cron (Para você humano configurar)
+Para a ideia das Notificações Anti-Tédio, o agente não precisa mudar a lógica, nós só precisamos chamar a rota que ele já criou várias vezes ao dia.
+
+Faça o seguinte quando for configurar:
+
+Crie uma conta gratuita em cron-job.org.
+
+Adicione um novo Cronjob apontando para a URL da sua API de triggers na Vercel: https://[seu-site].vercel.app/api/cron/triggers.
+
+Adicione o seu CRON_SECRET no cabeçalho (Header) da requisição lá na configuração do cron-job.org (Authentication: Authorization: Bearer sua_senha).
+
+Configure para rodar a cada 3 horas.
+
+Pronto! Você burlou a limitação da Vercel, não gastou 1 centavo, e o app agora tem um sistema de inteligência artificial proativo que reage, salva o usuário e envia notificações! O Antigravity vai fazer a festa com essas tasks. Pode mandar rodar!
