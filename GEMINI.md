@@ -218,6 +218,11 @@ npm run validate
 
 ### Protocolo de Validação e Versionamento Automático (Git)
 O novo Protocolo de "Definition of Done (DoD)" dita estritamente a seguinte ordem:
+
+> [!IMPORTANT]
+> **Restrição de Branch (Git Flow):**
+> O agente está terminantemente proibido de realizar commits ou fazer push nas branches `main` e `stage`. Todo o desenvolvimento de novas features, correções de bugs e automações feitas pelo agente devem ocorrer **exclusivamente na branch `dev`**. O comando padrão de versionamento automático deve garantir isso (ex: `git checkout dev` antes de realizar add e commit).
+
 1. Executar `npm run validate`.
 2. Ler o terminal e resolver de forma autônoma qualquer erro (TypeScript, Lint, etc) até ficar Verde.
 3. Se a validação passar sem erros, executar o versionamento no Git antes de dar a tarefa como concluída.
