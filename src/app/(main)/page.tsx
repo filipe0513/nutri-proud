@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/store/store';
 import { StoryHeader } from '@/components/shared/StoryHeader';
@@ -19,7 +19,9 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, Drawer
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { LimitWarningDrawer } from '@/components/shared/LimitWarningDrawer';
+import { LifesaverDrawer } from '@/components/shared/LifesaverDrawer';
 import { toLocalISOString } from '@/lib/utils';
+import { LifeBuoy } from 'lucide-react';
 
 const CATEGORY_COLORS: Record<string, string> = {
   water: 'var(--color-cat-water)',
@@ -81,7 +83,7 @@ function DashboardContent() {
       .sort((a, b) => new Date(b.event_time).getTime() - new Date(a.event_time).getTime());
   }, [activity_logs]);
 
-  const getProgress = (catId: string) => {
+  const getProgress = useCallback((catId: string) => {
     const catLogs = todayLogs.filter(log => log.category === catId);
     if (catLogs.length === 0) return 0;
 
@@ -104,7 +106,27 @@ function DashboardContent() {
     // sleep, workout, poop: average of primary_value (already computed in each drawer)
     const avg = catLogs.reduce((acc, log) => acc + log.primary_value, 0) / catLogs.length;
     return Math.min(100, Math.round(avg));
-  };
+  }, [todayLogs, user_profile]);
+
+  const scores = useMemo(() => ({
+    water: getProgress('water'),
+    food: getProgress('food'),
+    workout: getProgress('workout'),
+    sleep: getProgress('sleep'),
+    poop: getProgress('poop'),
+  }), [getProgress]);
+
+  const dailyScore = useMemo(() => {
+    return (scores.water + scores.food + scores.workout + scores.sleep + scores.poop) / 5;
+  }, [scores]);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
+  const isLifesaverTime = mounted && new Date().getHours() >= 18 && dailyScore < 50;
 
 
   const renderActionItem = (action: typeof ACTION_LIST[number], trigger: React.ReactNode) => {
@@ -190,6 +212,22 @@ function DashboardContent() {
         </div>
 
         <div className="space-y-3">
+          {/* Lifesaver Button (Conditional) */}
+          {isLifesaverTime && (
+            <div
+              className="flex items-center bg-red-50 rounded-2xl px-4 py-4 border border-red-200 shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-[0.98] group"
+              onClick={() => setOpenDrawer('lifesaver')}
+            >
+              <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <LifeBuoy className="h-5 w-5 text-red-500" />
+              </div>
+              <span className="text-body-1 font-bold text-red-700 ml-4 flex-1">
+                🆘 Como salvo meu dia?
+              </span>
+              <ChevronRight className="h-4 w-4 text-red-300" />
+            </div>
+          )}
+
           {/* Note */}
           {renderActionItem(ACTION_LIST[0], (
             <Drawer open={openDrawer === 'note' || undefined} onOpenChange={(o) => o ? setOpenDrawer('note') : setOpenDrawer(null)}>
@@ -257,6 +295,11 @@ function DashboardContent() {
       <JacadaDrawer
         open={openDrawer === 'jacada'}
         onOpenChange={(o) => o ? setOpenDrawer('jacada') : setOpenDrawer(null)}
+      />
+      <LifesaverDrawer
+        open={openDrawer === 'lifesaver'}
+        onOpenChange={(o) => o ? setOpenDrawer('lifesaver') : setOpenDrawer(null)}
+        scores={scores}
       />
 
       <LimitWarningDrawer 

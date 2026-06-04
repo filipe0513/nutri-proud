@@ -14,7 +14,7 @@ export const aiService = {
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
       // Usando o modelo rápido e de baixo custo, conforme especificado na task
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       // Combina o system prompt rigoroso com os dados dos logs
       const fullPrompt = `${prompt}\n\nDados da semana:\n${logsSummary}`;

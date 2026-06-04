@@ -13,18 +13,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const { sugar, fat, alcohol } = await request.json();
+    const { scores } = await request.json();
 
-    if (sugar === undefined || fat === undefined || alcohol === undefined) {
+    if (!scores) {
       return NextResponse.json(
-        { error: 'Os campos sugar, fat e alcohol são obrigatórios.' },
+        { error: 'Os scores são obrigatórios.' },
         { status: 400 }
       );
     }
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     
-    const prompt = `O usuário registrou um deslize na dieta com nível ${sugar}/5 de açúcar, ${fat}/5 de gordura e ${alcohol}/5 de álcool. Escreva uma única frase (máx 15 palavras) reagindo a isso com humor leve, sem ser punitivo, usando um emoji. Ex: 5 de álcool? Amanhã a garrafa d'água será sua melhor amiga! 🍺`;
+    const prompt = `O usuário está com pontuação baixa hoje. Ele tem os seguintes percentuais de meta concluídos: Água (${scores.water}%), Comida (${scores.food}%), Treino (${scores.workout}%), Sono (${scores.sleep}%), Intestino (${scores.poop}%). Dê 3 dicas ultra-rápidas, em formato de lista curta com bullets, do que ele ainda pode fazer hoje à noite para melhorar esses pontos específicos que estão baixos.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -32,9 +32,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: text });
   } catch (error) {
-    console.error('Erro ao gerar reação da jacada:', error);
+    console.error('Erro ao gerar dicas salva-vidas:', error);
     return NextResponse.json(
-      { error: 'Erro interno ao gerar reação.' },
+      { error: 'Erro interno ao gerar dicas.' },
       { status: 500 }
     );
   }
