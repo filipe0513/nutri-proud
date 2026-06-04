@@ -40,10 +40,31 @@ export function JacadaDrawer({
         throw new Error('Falha ao registrar jacada');
       }
 
-      toast.success('Jacada registrada!', {
-        description: 'Os pontos foram deduzidos da sua alimentação de hoje.',
-        className: 'bg-orange-50 border-orange-200 text-orange-900',
-      });
+      try {
+        const aiRes = await fetch('/api/ai/jacada-reaction', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sugar, fat, alcohol }),
+        });
+        
+        if (aiRes.ok) {
+          const aiData = await aiRes.json();
+          toast.success('Nutri diz:', {
+            description: aiData.message,
+            className: 'bg-orange-50 border-orange-200 text-orange-900',
+          });
+        } else {
+          toast.success('Jacada registrada!', {
+            description: 'Os pontos foram deduzidos da sua alimentação de hoje.',
+            className: 'bg-orange-50 border-orange-200 text-orange-900',
+          });
+        }
+      } catch {
+        toast.success('Jacada registrada!', {
+          description: 'Os pontos foram deduzidos da sua alimentação de hoje.',
+          className: 'bg-orange-50 border-orange-200 text-orange-900',
+        });
+      }
 
       // Reset
       setSugar(0);
