@@ -83,8 +83,8 @@ export function WorkoutEqualizerDrawer({
   };
 
   const handleSave = async () => {
-    const avgDeviation = (Math.abs(cardio) + Math.abs(carga)) / 2;
-    const score = Math.max(0, Math.round(100 - (avgDeviation / 50) * 100));
+    const calculatedScore = 100 + cardio + carga;
+    const score = Math.max(0, Math.min(100, calculatedScore));
 
     const logData = {
       event_time: toLocalISOString(new Date(selectedDate)),

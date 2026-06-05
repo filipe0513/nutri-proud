@@ -221,7 +221,7 @@ O novo Protocolo de "Definition of Done (DoD)" dita estritamente a seguinte orde
 
 > [!IMPORTANT]
 > **Restrição de Branch (Git Flow):**
-> O agente está terminantemente proibido de realizar commits ou fazer push nas branches `main` e `stage`. Todo o desenvolvimento de novas features, correções de bugs e automações feitas pelo agente devem ocorrer **exclusivamente na branch `dev`**. O comando padrão de versionamento automático deve garantir isso (ex: `git checkout dev` antes de realizar add e commit).
+>- O agente está terminantemente proibido de realizar commits ou fazer push na branch `main`. Todo o desenvolvimento de novas features, correções de bugs e automações feitas pelo agente devem ocorrer **exclusivamente na branch `dev`**. O comando padrão de versionamento automático deve garantir isso (ex: `git checkout dev` antes de realizar add e commit). A branch `dev` é usada para fazer o deploy de preview na Vercel, e `main` é para produção.
 
 1. Executar `npm run validate`.
 2. Ler o terminal e resolver de forma autônoma qualquer erro (TypeScript, Lint, etc) até ficar Verde.

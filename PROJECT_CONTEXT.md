@@ -10,11 +10,9 @@ Para garantir a integridade do código e a estabilidade dos dados em produção,
 
 ```mermaid
 graph TD
-    A[Desenvolvimento: dev branch] -->|Merge Humano| B[Homologação: stage branch]
-    B -->|Merge Humano| C[Produção: main branch]
+    A[Desenvolvimento: dev branch] -->|Merge Humano| C[Produção: main branch]
     
     style A fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
-    style B fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
     style C fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
 ```
 
@@ -22,19 +20,14 @@ graph TD
 - **Atores:** Agente de IA e Desenvolvedor Humano.
 - **Objetivo:** Criação de novas features, correções de bugs, refatorações e automações.
 - **Ambiente:** Execução e testes em ambiente local.
+- **CI/CD:** A Vercel intercepta commits na branch `dev` e gera um **Preview Deployment** apontando para um banco de dados de homologação/preview.
 - > [!IMPORTANT]
   > O agente de IA atua **exclusivamente** nesta branch. Qualquer alteração ou commit deve ser feito apenas em `dev`.
 
-### 2. Homologação (Branch `stage`)
-- **Atores:** Apenas o Desenvolvedor Humano.
-- **Objetivo:** Validação e testes em ambiente de pré-produção (Preview).
-- **Fluxo:** O desenvolvedor humano realiza o merge da branch `dev` para a branch `stage` e envia para o GitHub.
-- **CI/CD:** A Vercel intercepta commits na branch `stage` e gera um **Preview Deployment** apontando para um banco de dados de homologação isolado.
-
-### 3. Produção (Branch `main`)
+### 2. Produção (Branch `main`)
 - **Atores:** Apenas o Desenvolvedor Humano.
 - **Objetivo:** Disponibilização pública das funcionalidades validadas.
-- **Fluxo:** Após a homologação e validação no preview, o desenvolvedor humano realiza o merge de `stage` para `main` e envia para o GitHub.
+- **Fluxo:** Após a homologação e validação no preview (`dev`), o desenvolvedor humano realiza o merge de `dev` para `main` e envia para o GitHub.
 - **CI/CD:** A Vercel realiza o deploy final de produção acessível para os usuários finais.
 
 ---

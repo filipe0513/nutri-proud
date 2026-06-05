@@ -241,8 +241,9 @@ npx prisma generate
 npm run validate
 ```
 
-### Automatic Versioning Protocol (Git)
-The new "Definition of Done (DoD)" protocol strictly dictates the following order:
+> **Restrição de Branch (Git Flow):**
+> O agente está terminantemente proibido de realizar commits ou fazer push na branch `main`. Todo o desenvolvimento de novas features, correções de bugs e automações feitas pelo agente devem ocorrer **exclusivamente na branch `dev`**. O comando padrão de versionamento automático deve garantir isso (ex: `git checkout dev` antes de realizar add e commit). A branch `dev` é usada para fazer o deploy de preview na Vercel, e `main` é para produção.
+
 1. Run `npm run validate`.
 2. Read the terminal and autonomously resolve any error (TypeScript, Lint, etc) until it is Green.
 3. If the validation passes without errors, execute Git versioning before marking the task as completed.
