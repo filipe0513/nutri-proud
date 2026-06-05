@@ -162,6 +162,14 @@ Mudamos de um modelo LocalStorage para um Backend real embutido no Next.js.
   - O mesmo schema deve ser importado nas API Routes (para barrar dados ruins) e nos formulários do Frontend (para UX).
 - **API Routes:** O backend fica na pasta `src/app/api/`. Respeite a semântica RESTful (ex: `POST /api/sessions` para login, `POST /api/logs` para salvar registros).
 
+> [!CAUTION]
+> **REGRAS DE PRISMA (Obrigatório — Sem Exceções):**
+> Toda vez que você (agente) alterar o arquivo `prisma/schema.prisma` adicionando, removendo ou modificando modelos, você é **OBRIGADO** a rodar imediatamente o comando abaixo no terminal **antes de qualquer commit**:
+> ```bash
+> npx prisma migrate dev --name <nome_descritivo_da_mudanca>
+> ```
+> **Nunca faça commit de uma alteração no schema sem antes gerar a migration correspondente.** A ausência da migration causará quebra em produção na Vercel.
+
 ## 🎨 Design System, Tipografia e Glassmorphism (Regras Estritas)
 
 Para manter a consistência visual inspirada na Apple/Nubank, é PROIBIDO usar tamanhos de fonte ou opacidades arbitrárias do Tailwind em novos componentes. Use exclusivamente os tokens do `tailwind.config.ts`.
