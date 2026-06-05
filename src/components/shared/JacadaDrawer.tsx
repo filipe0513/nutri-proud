@@ -27,6 +27,38 @@ export function JacadaDrawer({
 
   const { initializeData } = useAppStore();
 
+  const fetchAIReaction = async (s: number, f: number, a: number) => {
+    const toastId = toast.loading('Nutri analisando deslize...');
+    try {
+      const aiRes = await fetch('/api/ai/jacada-reaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sugar: s, fat: f, alcohol: a }),
+      });
+      
+      if (aiRes.ok) {
+        const aiData = await aiRes.json();
+        toast.success('Nutri diz:', {
+          id: toastId,
+          description: aiData.message,
+          className: 'bg-orange-50 border-orange-200 text-orange-900',
+        });
+      } else {
+        toast.success('Jacada registrada!', {
+          id: toastId,
+          description: 'Os pontos foram deduzidos da sua alimentação de hoje.',
+          className: 'bg-orange-50 border-orange-200 text-orange-900',
+        });
+      }
+    } catch {
+      toast.success('Jacada registrada!', {
+        id: toastId,
+        description: 'Os pontos foram deduzidos da sua alimentação de hoje.',
+        className: 'bg-orange-50 border-orange-200 text-orange-900',
+      });
+    }
+  };
+
   const handleRegister = async () => {
     try {
       setLoading(true);
@@ -40,40 +72,24 @@ export function JacadaDrawer({
         throw new Error('Falha ao registrar jacada');
       }
 
-      try {
-        const aiRes = await fetch('/api/ai/jacada-reaction', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sugar, fat, alcohol }),
-        });
-        
-        if (aiRes.ok) {
-          const aiData = await aiRes.json();
-          toast.success('Nutri diz:', {
-            description: aiData.message,
-            className: 'bg-orange-50 border-orange-200 text-orange-900',
-          });
-        } else {
-          toast.success('Jacada registrada!', {
-            description: 'Os pontos foram deduzidos da sua alimentação de hoje.',
-            className: 'bg-orange-50 border-orange-200 text-orange-900',
-          });
-        }
-      } catch {
-        toast.success('Jacada registrada!', {
-          description: 'Os pontos foram deduzidos da sua alimentação de hoje.',
-          className: 'bg-orange-50 border-orange-200 text-orange-900',
-        });
-      }
+      // Save input values for the background AI reaction call
+      const savedSugar = sugar;
+      const savedFat = fat;
+      const savedAlcohol = alcohol;
 
-      // Reset
+      // Reset form states
       setSugar(0);
       setFat(0);
       setAlcohol(0);
 
+      // Close the drawer immediately to keep UX zero-friction
+      onOpenChange(false);
+
+      // Fire and forget: process AI reaction in the background
+      fetchAIReaction(savedSugar, savedFat, savedAlcohol);
+
       // Refresh data
       await initializeData();
-      onOpenChange(false);
     } catch (error) {
       toast.error('Erro ao registrar jacada. Tente novamente.');
       console.error(error);
