@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
+import { useState, useEffect, useMemo, useCallback, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/store/store';
 import { StoryHeader } from '@/components/shared/StoryHeader';
 import { StoryCircle } from '@/components/shared/StoryCircle';
 import { ScoreCard } from '@/components/shared/ScoreCard';
 import { InsightsBanner } from '@/components/shared/InsightsBanner';
+import { InsightsDrawer } from '@/components/shared/InsightsDrawer';
 import { Sparkles, ChevronRight } from 'lucide-react';
 import { Droplets, Utensils, Dumbbell, Moon, Smile, StickyNote } from 'lucide-react';
 import { JacadaDrawer } from '@/components/shared/JacadaDrawer';
@@ -22,6 +23,21 @@ import { LimitWarningDrawer } from '@/components/shared/LimitWarningDrawer';
 import { LifesaverDrawer } from '@/components/shared/LifesaverDrawer';
 import { toLocalISOString } from '@/lib/utils';
 import { LifeBuoy } from 'lucide-react';
+
+/** Modelo local do AiInsight retornado pela API */
+interface AiInsight {
+  id: string;
+  message: string;
+  cta: string | null;
+  isViewed: boolean;
+  createdAt: string;
+}
+
+/** Retorna true se o insight foi criado há menos de 4 horas */
+function isFresh(createdAt: string): boolean {
+  const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
+  return Date.now() - new Date(createdAt).getTime() < FOUR_HOURS_MS;
+}
 
 const CATEGORY_COLORS: Record<string, string> = {
   water: 'var(--color-cat-water)',
@@ -59,6 +75,60 @@ function DashboardContent() {
   // We use global state to allow the FAB in BottomNav to open drawers programmatically
   const openDrawer = useAppStore(state => state.activeDrawer);
   const setOpenDrawer = useAppStore(state => state.setActiveDrawer);
+
+  // ─── Insight Drawer state ────────────────────────────────────────────────
+  const [insightData, setInsightData] = useState<AiInsight | null>(null);
+  const insightChecked = useRef(false); // guard: run only once per mount
+
+  useEffect(() => {
+    // Guard: only run once per page mount to avoid re-triggering on re-renders
+    if (insightChecked.current) return;
+    insightChecked.current = true;
+
+    const checkAndShowInsight = async () => {
+      try {
+        // 1. Fetch the latest insight
+        const res = await fetch('/api/insights/latest');
+        if (!res.ok) return;
+        const { insight }: { insight: AiInsight | null } = await res.json();
+
+        if (insight && isFresh(insight.createdAt)) {
+          // Case A: Fresh insight already exists
+          if (insight.isViewed) {
+            // Already seen → do nothing (silent)
+            return;
+          }
+          // Not yet seen → open drawer and mark as viewed in background
+          setInsightData(insight);
+          setOpenDrawer('insights');
+          // Fire-and-forget: mark as viewed
+          fetch(`/api/insights/${insight.id}/view`, { method: 'PATCH' }).catch(() => {/* silent */});
+        } else {
+          // Case B: No insight or older than 4h → generate a new one in background
+          const localTime = toLocalISOString(new Date());
+          const genRes = await fetch('/api/insights/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ localTime }),
+          });
+          if (!genRes.ok) return;
+          const newInsight: AiInsight = await genRes.json();
+          setInsightData(newInsight);
+          setOpenDrawer('insights');
+          // Fire-and-forget: mark as viewed
+          fetch(`/api/insights/${newInsight.id}/view`, { method: 'PATCH' }).catch(() => {/* silent */});
+        }
+      } catch {
+        // Silently fail — never block the home page
+      }
+    };
+
+    // Delay slightly so the page renders first, then the drawer pops up
+    const timer = setTimeout(checkAndShowInsight, 800);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Detecta redirecionamento pós-conversão de conta anônima → real
   useEffect(() => {
@@ -300,6 +370,12 @@ function DashboardContent() {
         open={openDrawer === 'lifesaver'}
         onOpenChange={(o) => o ? setOpenDrawer('lifesaver') : setOpenDrawer(null)}
         scores={scores}
+      />
+      <InsightsDrawer
+        open={openDrawer === 'insights'}
+        onOpenChange={(o) => { if (!o) setOpenDrawer(null); }}
+        message={insightData?.message ?? null}
+        cta={insightData?.cta}
       />
 
       <LimitWarningDrawer 
