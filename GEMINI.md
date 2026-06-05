@@ -163,12 +163,43 @@ Mudamos de um modelo LocalStorage para um Backend real embutido no Next.js.
 - **API Routes:** O backend fica na pasta `src/app/api/`. Respeite a semântica RESTful (ex: `POST /api/sessions` para login, `POST /api/logs` para salvar registros).
 
 > [!CAUTION]
-> **REGRAS DE PRISMA (Obrigatório — Sem Exceções):**
-> Toda vez que você (agente) alterar o arquivo `prisma/schema.prisma` adicionando, removendo ou modificando modelos, você é **OBRIGADO** a rodar imediatamente o comando abaixo no terminal **antes de qualquer commit**:
+> **REGRAS DE PRISMA — Protocolo Completo de Migrations (Obrigatório — Sem Exceções):**
+>
+> ### ⚠️ Contexto Crítico: Dois Bancos de Dados
+> Este projeto usa **dois bancos de dados distintos**:
+> - **Dev Local:** `postgresql://postgres:pg123456@localhost:5432/nutriproud` (definido em `.env.local`, sobrescreve `.env`)
+> - **Produção/Staging:** Supabase (definido em `.env` via `DATABASE_URL` com pgbouncer e `DIRECT_URL` direto)
+>
+> O `prisma.config.ts` usa `DIRECT_URL || DATABASE_URL`, então os comandos `prisma migrate dev/deploy` operam no Supabase (`.env`), mas o **app em dev usa o banco local** (`.env.local`). Isso significa que toda migration precisa ser aplicada **nos dois bancos**.
+>
+> ### 📋 Protocolo Obrigatório ao Alterar `prisma/schema.prisma`
+>
+> **Passo 1 — Gerar a migration (aponta para Supabase via `prisma.config.ts`):**
 > ```bash
 > npx prisma migrate dev --name <nome_descritivo_da_mudanca>
 > ```
-> **Nunca faça commit de uma alteração no schema sem antes gerar a migration correspondente.** A ausência da migration causará quebra em produção na Vercel.
+>
+> **Passo 2 — Aplicar a migration no banco local (PostgreSQL local):**
+> ```bash
+> # Pegar o arquivo SQL da migration mais recente e aplicar no banco local
+> psql postgresql://postgres:pg123456@localhost:5432/nutriproud \
+>   -f prisma/migrations/<timestamp_nome_da_migration>/migration.sql
+> ```
+> > ⚠️ Se o SQL tiver constraints que já existem (ex: FK duplicada), rode apenas o `CREATE TABLE IF NOT EXISTS` manualmente via `psql -c`.
+>
+> **Passo 3 — Regenerar o Prisma Client:**
+> ```bash
+> npx prisma generate
+> ```
+>
+> **Nunca faça commit de uma alteração no schema sem executar os 3 passos acima.** A ausência da migration no banco local causa erro 500 em dev; a ausência no Supabase quebra produção na Vercel.
+>
+> ### 🚀 Produção (Vercel)
+> O script `build` em `package.json` já garante o deploy automático das migrations em produção:
+> ```json
+> "build": "prisma generate && prisma migrate deploy && next build"
+> ```
+> O `prisma migrate deploy` usa `DIRECT_URL` (Supabase) configurado nas variáveis de ambiente da Vercel. **Não altere esse script.**
 
 ## 🎨 Design System, Tipografia e Glassmorphism (Regras Estritas)
 
