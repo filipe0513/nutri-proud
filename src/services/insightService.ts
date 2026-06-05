@@ -1,19 +1,22 @@
 import { prisma } from '../lib/prisma';
 import { aiService } from './aiService';
 import { DailyLog } from '@prisma/client';
+import { AiInsightResponse } from '@/schemas/insightSchema';
 
 export const insightService = {
+  /**
+   * Insight semanal — usado na rota GET /api/insights existente.
+   * Mantido para retrocompatibilidade.
+   */
   async getWeeklyInsights(userId: string, generate: boolean = false) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // 1. Check Rate Limit (1 insight per day)
+    // 1. Check Rate Limit (1 insight por dia)
     const existingInsight = await prisma.aiInsight.findFirst({
       where: {
         userId,
-        createdAt: {
-          gte: today,
-        },
+        createdAt: { gte: today },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -25,17 +28,11 @@ export const insightService = {
     fourteenDaysAgo.setDate(today.getDate() - 14);
 
     const logsThisWeek = await prisma.dailyLog.findMany({
-      where: {
-        userId,
-        eventTime: { gte: sevenDaysAgo },
-      },
+      where: { userId, eventTime: { gte: sevenDaysAgo } },
     });
 
     const logsLastWeek = await prisma.dailyLog.findMany({
-      where: {
-        userId,
-        eventTime: { gte: fourteenDaysAgo, lt: sevenDaysAgo },
-      },
+      where: { userId, eventTime: { gte: fourteenDaysAgo, lt: sevenDaysAgo } },
     });
 
     const calculateAverages = (logs: DailyLog[]) => {
@@ -59,12 +56,18 @@ export const insightService = {
 
     const globalAvgThisWeek =
       logsThisWeek.length > 0
-        ? Math.round(logsThisWeek.reduce((acc: number, log: DailyLog) => acc + log.primaryValue, 0) / logsThisWeek.length)
+        ? Math.round(
+            logsThisWeek.reduce((acc: number, log: DailyLog) => acc + log.primaryValue, 0) /
+              logsThisWeek.length
+          )
         : 0;
 
     const globalAvgLastWeek =
       logsLastWeek.length > 0
-        ? Math.round(logsLastWeek.reduce((acc: number, log: DailyLog) => acc + log.primaryValue, 0) / logsLastWeek.length)
+        ? Math.round(
+            logsLastWeek.reduce((acc: number, log: DailyLog) => acc + log.primaryValue, 0) /
+              logsLastWeek.length
+          )
         : 0;
 
     let strongestPillar: string | null = null;
@@ -73,13 +76,12 @@ export const insightService = {
     const entries = Object.entries(averagesThisWeek);
     if (entries.length > 0) {
       entries.sort((a, b) => b[1] - a[1]);
-      strongestPillar = entries[0][0]; // highest score
-      weakestPillar = entries[entries.length - 1][0]; // lowest score
+      strongestPillar = entries[0][0];
+      weakestPillar = entries[entries.length - 1][0];
     }
 
-    let aiText = existingInsight?.content || null;
+    let aiText = existingInsight?.message || null;
 
-    // Generate new insight if not found for today and generate flag is true
     if (!aiText && generate) {
       const logsSummary = `
         Média Geral da Semana: ${globalAvgThisWeek}/100
@@ -98,10 +100,7 @@ export const insightService = {
       aiText = await aiService.generateInsightFromLogs(prompt, logsSummary);
 
       await prisma.aiInsight.create({
-        data: {
-          userId,
-          content: aiText,
-        },
+        data: { userId, message: aiText, cta: weakestPillar },
       });
     }
 
@@ -114,5 +113,105 @@ export const insightService = {
         weakestPillar,
       },
     };
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Novo sistema de Insights contextuais (Task #64)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Gera e persiste um novo insight contextual baseado na hora local do usuário
+   * e nos logs do dia, usando a IA com saída JSON forçada.
+   */
+  async generateContextualInsight(userId: string, localTime: string) {
+    // Pega logs do dia atual (UTC)
+    const dayStart = new Date();
+    dayStart.setUTCHours(0, 0, 0, 0);
+
+    const todayLogs = await prisma.dailyLog.findMany({
+      where: { userId, eventTime: { gte: dayStart } },
+    });
+
+    const ALL_CATEGORIES = ['WATER', 'FOOD', 'SLEEP', 'WORKOUT', 'POOP'];
+    const registeredCategories = [...new Set(todayLogs.map((l) => l.category.toUpperCase()))];
+    const missingCategories = ALL_CATEGORIES.filter((c) => !registeredCategories.includes(c));
+
+    const hour = new Date(localTime).getHours();
+    const periodLabel =
+      hour < 12 ? 'manhã' : hour < 18 ? 'tarde' : 'noite';
+
+    const logsSummary =
+      todayLogs.length === 0
+        ? 'Nenhum registro feito hoje ainda.'
+        : todayLogs
+            .map((l) => `- ${l.category}: score ${l.primaryValue}/100`)
+            .join('\n');
+
+    const prompt = `
+Você é a Nutri, assistente de saúde acolhedora e bem-humorada do app "Orgulho da Nutri".
+É ${periodLabel} (${hour}h) para o usuário.
+Logs de hoje:
+${logsSummary}
+Pilares ainda não registrados hoje: ${missingCategories.join(', ') || 'nenhum (parabéns!)'}
+
+Gere UMA mensagem curta (máx 2 frases), empática e motivadora cruzando a hora do dia com os hábitos faltantes.
+Use emojis com moderação. Seja direta, nunca punitiva.
+
+Responda SOMENTE com um JSON válido neste formato exato (sem markdown, sem explicações):
+{"message": "<texto da mensagem>", "cta": "<NOME_DO_HABITO_EM_MAIUSCULO_OU_null>"}
+
+Se não houver hábito prioritário para sugerir, use null em cta.
+`.trim();
+
+    const rawText = await aiService.generateRawText(prompt);
+
+    // Tenta fazer parse do JSON retornado
+    let parsed: AiInsightResponse;
+    try {
+      // Remove possíveis blocos de código markdown que a IA às vezes adiciona
+      const clean = rawText.replace(/```json|```/g, '').trim();
+      parsed = JSON.parse(clean) as AiInsightResponse;
+    } catch {
+      // Fallback: se a IA não retornou JSON válido, usa o texto bruto como message
+      parsed = { message: rawText.slice(0, 300), cta: null };
+    }
+
+    const insight = await prisma.aiInsight.create({
+      data: {
+        userId,
+        message: parsed.message,
+        cta: parsed.cta ?? null,
+        isViewed: false,
+      },
+    });
+
+    return insight;
+  },
+
+  /**
+   * Retorna o insight mais recente do usuário.
+   */
+  async getLatestInsight(userId: string) {
+    return prisma.aiInsight.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  },
+
+  /**
+   * Marca um insight como lido (is_viewed = true).
+   */
+  async markAsViewed(insightId: string, userId: string) {
+    // Garante que o insight pertence ao usuário antes de atualizar
+    const insight = await prisma.aiInsight.findFirst({
+      where: { id: insightId, userId },
+    });
+
+    if (!insight) return null;
+
+    return prisma.aiInsight.update({
+      where: { id: insightId },
+      data: { isViewed: true },
+    });
   },
 };

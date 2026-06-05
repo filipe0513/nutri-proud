@@ -27,4 +27,28 @@ export const aiService = {
       throw new Error('Falha ao gerar o veredito da IA.');
     }
   },
+
+  /**
+   * Envia um prompt completo para o Gemini e retorna o texto bruto gerado.
+   * Útil quando o prompt já está totalmente montado (ex: forçando saída JSON).
+   */
+  async generateRawText(fullPrompt: string): Promise<string> {
+    const apiKey = process.env.GEMINI_API_KEY || '';
+    if (!apiKey) {
+      console.warn('GEMINI_API_KEY não está definida. Retornando fallback.');
+      return JSON.stringify({ message: 'Continue cuidando da sua saúde! 💪', cta: null });
+    }
+
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+      const result = await model.generateContent(fullPrompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error('Erro ao gerar texto com a IA:', error);
+      throw new Error('Falha na geração de texto pela IA.');
+    }
+  },
 };

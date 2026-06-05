@@ -89,7 +89,9 @@ model Notification {
 model AiInsight {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
-  content   String   @db.Text
+  message   String   @db.Text
+  cta       String?  // Nome do hábito/pilar ou null
+  isViewed  Boolean  @default(false) @map("is_viewed")
   createdAt DateTime @default(now()) @map("created_at")
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
