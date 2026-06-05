@@ -15,7 +15,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
     Resend({
-      from: "Orgulho da Nutri <onboarding@resend.dev>",
+      apiKey: process.env.RESEND_API_KEY,
+      from: process.env.AUTH_RESEND_FROM ?? "Orgulho da Nutri <onboarding@resend.dev>",
     }),
   ],
   adapter: PrismaAdapter(prisma),

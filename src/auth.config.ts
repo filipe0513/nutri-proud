@@ -7,24 +7,17 @@ export const authConfig = {
     signIn: "/welcome",
   },
   callbacks: {
-    async session({ session, user, token }) {
-      if (session.user) {
-        if (user) {
-          session.user.id = user.id;
-          (session.user as any).role = (user as any).role;
-        } else if (token) {
-          session.user.id = token.sub as string;
-          (session.user as any).role = token.role;
-        }
+    async session({ session, user }) {
+      // Com PrismaAdapter, a sessão sempre usa "database" strategy.
+      // O objeto `user` (do BD) está disponível diretamente aqui.
+      if (session.user && user) {
+        session.user.id = user.id;
+        (session.user as any).role = (user as any).role;
       }
       return session;
     },
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = (user as any).role;
-      }
-      return token;
-    }
   },
-  session: { strategy: "jwt" }
+  // IMPORTANTE: Não definir session.strategy aqui.
+  // O PrismaAdapter em auth.ts força "database" automaticamente.
+  // Definir "jwt" + adapter = erro de Configuration no Resend/Magic Link.
 } satisfies NextAuthConfig;
