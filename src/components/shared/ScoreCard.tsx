@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useAppStore } from '@/store/store';
 import { motion } from 'framer-motion';
+import { historyService } from '@/services/historyService';
 
 function getScoreMessage(score: number): string {
   if (score === 0) return 'Bora começar o dia!';
@@ -20,8 +21,7 @@ function getScoreEmoji(score: number): string {
   return '🌟';
 }
 
-/** All 5 pillars that make up the score */
-const CATEGORIES = ['water', 'food', 'workout', 'sleep', 'poop'] as const;
+
 
 export function ScoreCard() {
   const { activity_logs, user_profile } = useAppStore();
@@ -32,45 +32,7 @@ export function ScoreCard() {
     const todayLogs = activity_logs.filter(
       (log) => new Date(log.event_time) >= startOfDay
     );
-
-    // Calculate progress for each of the 5 categories (0-100 each)
-    const categoryScores = CATEGORIES.map((catId) => {
-      const catLogs = todayLogs.filter((log) => log.category === catId);
-
-      if (catId === 'water') {
-        const total = catLogs.reduce((acc, log) => acc + (log.details?.quantity_ml || 0), 0);
-        const target = user_profile?.targets?.water_ml_per_day || 2000;
-        return Math.min(100, (total / target) * 100);
-      }
-
-      if (catId === 'food') {
-        const rawTargets = user_profile?.targets as Record<string, unknown> | undefined;
-        const plannedMeals = Array.isArray(rawTargets?.planned_meals) ? rawTargets.planned_meals : [];
-        const totalMeals = plannedMeals.length || 3;
-        const somaReal = catLogs.reduce((acc, log) => acc + (log.primary_value || 0), 0);
-        const maxPossibleScore = totalMeals * 100;
-        const percentage = Math.round((somaReal / maxPossibleScore) * 100);
-        return Math.max(0, Math.min(100, percentage));
-      }
-
-      if (catId === 'workout') {
-        return catLogs.length > 0 ? 100 : 0;
-      }
-
-      if (catId === 'sleep') {
-        return catLogs.length > 0 ? 100 : 0;
-      }
-
-      if (catId === 'poop') {
-        return catLogs.length > 0 ? 100 : 0;
-      }
-
-      return 0;
-    });
-
-    // Average across all 5 categories
-    const total = categoryScores.reduce((acc, s) => acc + s, 0);
-    return Math.round(total / CATEGORIES.length);
+    return historyService.calculateDayScore(todayLogs, user_profile);
   }, [activity_logs, user_profile]);
 
   return (
