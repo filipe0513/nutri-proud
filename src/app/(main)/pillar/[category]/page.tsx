@@ -9,6 +9,7 @@ import { Droplet, Moon, Utensils, Dumbbell, Smile, CheckCircle2, Lightbulb, Arro
 import Link from 'next/link';
 import { useAppStore } from '@/store/store';
 import { ActivityLog } from '@/store/types';
+import { getLocalStartOfDay } from '@/utils/dateUtils';
 
 // Aqui eu importo os drawers existentes, mas vou precisar controla-los de fora ou replicar a chamada.
 // Como o Drawer do Shadcn pode ser controlado por estado global ou id, vamos passar um trigger customizado.
@@ -97,8 +98,7 @@ export default function PillarInsightsPage() {
   }, [user_profile, catKey]);
 
   const todayLogs = useMemo(() => {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDay = getLocalStartOfDay();
     return activity_logs.filter(
       (log) => log.category === catKey && new Date(log.event_time) >= startOfDay
     );

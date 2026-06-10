@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '@prisma/client';
+import { getLocalStartOfDay } from '@/utils/dateUtils';
 
 export async function getUserNotifications(userId: string) {
   const notifications = await prisma.notification.findMany({
@@ -34,8 +35,7 @@ export async function triggerWaterReminders() {
   // For the sake of the MVP, we will fetch users who haven't logged ANY water today
   // Since we don't have a direct "aggregate water today" in Prisma easily across JSONB
   
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getLocalStartOfDay();
 
   const usersWithoutWater = await prisma.user.findMany({
     where: {
@@ -69,12 +69,8 @@ export async function triggerWaterReminders() {
 }
 
 export async function triggerJacadaRecovery() {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  yesterday.setHours(0, 0, 0, 0);
-  
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getLocalStartOfDay();
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
 
   const usersWithJacada = await prisma.user.findMany({
     where: {

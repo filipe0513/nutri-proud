@@ -23,6 +23,7 @@ import { LimitWarningDrawer } from '@/components/shared/LimitWarningDrawer';
 import { LifesaverDrawer } from '@/components/shared/LifesaverDrawer';
 import { toLocalISOString } from '@/lib/utils';
 import { calculateWaterScore, calculateFoodScore } from '@/utils/scoreUtils';
+import { getLocalStartOfDay } from '@/utils/dateUtils';
 import { LifeBuoy } from 'lucide-react';
 
 /** Modelo local do AiInsight retornado pela API */
@@ -147,8 +148,7 @@ function DashboardContent() {
 
   // Progress calculation for each category
   const todayLogs = useMemo(() => {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDay = getLocalStartOfDay();
     return activity_logs
       .filter(log => new Date(log.event_time) >= startOfDay)
       .sort((a, b) => new Date(b.event_time).getTime() - new Date(a.event_time).getTime());

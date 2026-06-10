@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma';
 import { aiService } from './aiService';
 import { DailyLog } from '@prisma/client';
 import { AiInsightResponse } from '@/schemas/insightSchema';
+import { getLocalStartOfDay } from '@/utils/dateUtils';
 
 export const insightService = {
   /**
@@ -9,8 +10,7 @@ export const insightService = {
    * Mantido para retrocompatibilidade.
    */
   async getWeeklyInsights(userId: string, generate: boolean = false) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getLocalStartOfDay();
 
     // 1. Check Rate Limit (1 insight por dia)
     const existingInsight = await prisma.aiInsight.findFirst({
@@ -124,9 +124,8 @@ export const insightService = {
    * e nos logs do dia, usando a IA com saída JSON forçada.
    */
   async generateContextualInsight(userId: string, localTime: string) {
-    // Pega logs do dia atual (UTC)
-    const dayStart = new Date();
-    dayStart.setUTCHours(0, 0, 0, 0);
+    // Pega logs do dia atual no fuso de São Paulo
+    const dayStart = getLocalStartOfDay();
 
     const todayLogs = await prisma.dailyLog.findMany({
       where: { userId, eventTime: { gte: dayStart } },
