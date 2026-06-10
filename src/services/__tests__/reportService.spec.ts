@@ -102,7 +102,7 @@ describe('reportService', () => {
     const { text } = result;
 
     // Check invite string
-    expect(text).toContain('Acompanhe minha evolução diária! Baixe o Orgulho da Nutri em: https://nutri-proud-8d41.vercel.app/');
+    expect(text).toContain('Acompanhe minha evolução diária! Baixe o Orgulho da Nutri em: https://nutri-proud.vercel.app');
 
     // Check categories breakdown (workout 100 → calcTrainingScore(0,0) = 100)
     expect(text).toContain('💪 Treino: 100/100');

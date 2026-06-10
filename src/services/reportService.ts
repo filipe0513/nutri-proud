@@ -257,9 +257,10 @@ export const reportService = {
       }
     }
 
+    const appUrl = process.env.NEXTAUTH_URL || 'https://nutri-proud.vercel.app';
     lines.push('---');
     lines.push(
-      'Acompanhe minha evolução diária! Baixe o Orgulho da Nutri em: https://nutri-proud-8d41.vercel.app/'
+      `Acompanhe minha evolução diária! Baixe o Orgulho da Nutri em: ${appUrl}`
     );
 
     return {
