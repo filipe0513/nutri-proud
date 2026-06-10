@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { LucideIcon } from 'lucide-react';
 import { Category } from '@/store/types';
 import { DatePickerInput } from './DatePickerInput';
+import { toLocalISOString } from '@/lib/utils';
 
 export interface ActionOption {
   label: string;
@@ -46,7 +47,7 @@ export function ActionCardWithDrawer({
   const addLog = useAppStore(state => state.addLog);
   const [customStep, setCustomStep] = useState<ActionOption | null>(null);
   const [customValue, setCustomValue] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => toLocalISOString(new Date()).slice(0, 16));
 
   const handleAction = (opt: ActionOption) => {
     if (opt.value === 'custom') {

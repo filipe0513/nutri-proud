@@ -44,10 +44,9 @@ export function BottomSheet_Sleep({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
     if (initialData?.event_time) {
-      return new Date(initialData.event_time).toISOString().slice(0, 16);
+      return toLocalISOString(new Date(initialData.event_time)).slice(0, 16);
     }
-    const now = new Date();
-    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    return toLocalISOString(new Date()).slice(0, 16);
   });
 
   useEffect(() => {
@@ -55,7 +54,7 @@ export function BottomSheet_Sleep({
       setDuration(initialData.details.duration_hours || 8);
       setAwokeTimes(initialData.details.awoke_times || 0);
       setQuality(initialData.details.quality_feeling || null);
-      setSelectedDate(new Date(initialData.event_time).toISOString().slice(0, 16));
+      setSelectedDate(toLocalISOString(new Date(initialData.event_time)).slice(0, 16));
     }
   }, [initialData]);
 
@@ -64,8 +63,7 @@ export function BottomSheet_Sleep({
       setDuration(8);
       setAwokeTimes(0);
       setQuality('normal');
-      const now = new Date();
-      setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+      setSelectedDate(toLocalISOString(new Date()).slice(0, 16));
     }
   };
 

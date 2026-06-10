@@ -42,10 +42,9 @@ export function BottomSheet_Water({
   
   const [selectedDate, setSelectedDate] = useState(() => {
     if (initialData?.event_time) {
-      return new Date(initialData.event_time).toISOString().slice(0, 16);
+      return toLocalISOString(new Date(initialData.event_time)).slice(0, 16);
     }
-    const now = new Date();
-    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    return toLocalISOString(new Date()).slice(0, 16);
   });
   
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -56,7 +55,7 @@ export function BottomSheet_Water({
     if (initialData) {
       setCustomInput(true);
       setCustomValue(String(initialData.details.quantity_ml || ''));
-      setSelectedDate(new Date(initialData.event_time).toISOString().slice(0, 16));
+      setSelectedDate(toLocalISOString(new Date(initialData.event_time)).slice(0, 16));
     }
   }, [initialData]);
 
@@ -115,8 +114,7 @@ export function BottomSheet_Water({
       if (!initialData) {
         setCustomInput(false);
         setCustomValue('');
-        const now = new Date();
-        setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+        setSelectedDate(toLocalISOString(new Date()).slice(0, 16));
       }
     }, 300);
   };
@@ -132,8 +130,7 @@ export function BottomSheet_Water({
         if (!initialData) {
           setCustomInput(false);
           setCustomValue('');
-          const now = new Date();
-          setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+          setSelectedDate(toLocalISOString(new Date()).slice(0, 16));
         }
       }, 300);
     }

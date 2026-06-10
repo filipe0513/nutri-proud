@@ -45,10 +45,9 @@ export function MealEqualizerDrawer({
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(() => {
     if (initialData?.event_time) {
-      return new Date(initialData.event_time).toISOString().slice(0, 16);
+      return toLocalISOString(new Date(initialData.event_time)).slice(0, 16);
     }
-    const now = new Date();
-    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    return toLocalISOString(new Date()).slice(0, 16);
   });
   
   const getThumbColorClass = (value: number) => {
@@ -78,7 +77,7 @@ export function MealEqualizerDrawer({
   useEffect(() => {
     if (initialData) {
       setSelectedMeal(initialData.details.meal_type || null);
-      setSelectedDate(new Date(initialData.event_time).toISOString().slice(0, 16));
+      setSelectedDate(toLocalISOString(new Date(initialData.event_time)).slice(0, 16));
       
       const factors: any = initialData.details.factors || {};
       setProtein(factors.protein || 0);
@@ -95,8 +94,7 @@ export function MealEqualizerDrawer({
       setCarbs(0);
       setFats(0);
       setFiber(0);
-      const now = new Date();
-      setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+      setSelectedDate(toLocalISOString(new Date()).slice(0, 16));
     }
   };
 
@@ -159,7 +157,7 @@ export function MealEqualizerDrawer({
       .filter(l => {
         if (l.category !== 'food') return false;
         if (initialData && l.id === initialData.id) return false;
-        const logDate = new Date(l.event_time).toISOString().slice(0, 10);
+        const logDate = toLocalISOString(new Date(l.event_time)).slice(0, 10);
         return logDate === targetDate;
       })
       .map(l => l.details.meal_type);

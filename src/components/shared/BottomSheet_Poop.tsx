@@ -38,22 +38,20 @@ export function BottomSheet_Poop({
   const closeRef = useRef<HTMLButtonElement>(null);
   const [selectedDate, setSelectedDate] = useState(() => {
     if (initialData?.event_time) {
-      return new Date(initialData.event_time).toISOString().slice(0, 16);
+      return toLocalISOString(new Date(initialData.event_time)).slice(0, 16);
     }
-    const now = new Date();
-    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    return toLocalISOString(new Date()).slice(0, 16);
   });
 
   useEffect(() => {
     if (initialData) {
-      setSelectedDate(new Date(initialData.event_time).toISOString().slice(0, 16));
+      setSelectedDate(toLocalISOString(new Date(initialData.event_time)).slice(0, 16));
     }
   }, [initialData]);
 
   const resetState = () => {
     if (!initialData) {
-      const now = new Date();
-      setSelectedDate(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+      setSelectedDate(toLocalISOString(new Date()).slice(0, 16));
     }
   };
 
