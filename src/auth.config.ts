@@ -6,13 +6,6 @@ export const authConfig = {
   pages: {
     signIn: "/welcome",
   },
-  session: {
-    // CRÍTICO: O PrismaAdapter força estratégia "database".
-    // O middleware (proxy.ts) usa uma instância leve do NextAuth sem adapter.
-    // Sem declarar explicitamente "database" aqui, o middleware tenta
-    // descriptografar o session token como JWE → erro JWEInvalid.
-    strategy: "database" as const,
-  },
   callbacks: {
     async session({ session, user }) {
       // Com PrismaAdapter, a sessão sempre usa "database" strategy.
@@ -24,4 +17,7 @@ export const authConfig = {
       return session;
     },
   },
+  // IMPORTANTE: Não definir session.strategy aqui.
+  // O PrismaAdapter em auth.ts força "database" automaticamente.
+  // Definir "jwt" + adapter = erro de Configuration no Resend/Magic Link.
 } satisfies NextAuthConfig;
