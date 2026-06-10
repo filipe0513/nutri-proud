@@ -345,6 +345,8 @@ export default function SettingsPage() {
           variant="ghost"
           onClick={async () => {
             useAppStore.getState().resetData();
+            // Limpa o cookie de usuário anônimo localmente
+            document.cookie = "anon_user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             await signOut({ callbackUrl: "/welcome" });
           }}
           className="w-full h-14 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-2xl font-bold text-button-1 flex items-center justify-center space-x-2 border border-red-500/20 backdrop-blur-md"
