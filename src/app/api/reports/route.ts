@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { cookies } from 'next/headers';
 import { reportQuerySchema } from '@/schemas/reportSchema';
 import { reportService } from '@/services/reportService';
+import { prisma } from '@/lib/prisma';
 
 async function getUserId() {
   const session = await auth();
@@ -31,10 +32,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
     }
 
+    // Fetch user targets so the report service can score pillars correctly
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { targets: true },
+    });
+
     const report = await reportService.generateReport(
       userId,
       parsed.data.startDate,
-      parsed.data.endDate
+      parsed.data.endDate,
+      user?.targets ?? undefined
     );
 
     return NextResponse.json(report, { status: 200 });

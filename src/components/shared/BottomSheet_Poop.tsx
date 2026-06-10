@@ -12,6 +12,7 @@ import { useRef, useState, useEffect } from 'react';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
 import { toLocalISOString } from '@/lib/utils';
+import { calculateGutScore } from '@/utils/scoreUtils';
 
 export function BottomSheet_Poop({ 
   customTrigger,
@@ -139,14 +140,14 @@ export function BottomSheet_Poop({
 
         <div className="flex flex-col mt-4 space-y-3">
           {[
-            { id: 'hard', label: '🧱 Ressecado / Difícil', pv: 80 },
-            { id: 'normal', label: '😌 Suave / Normal', pv: 100 },
-            { id: 'liquid', label: '💦 Solto / Líquido', pv: 80 },
-            { id: 'gas', label: '💨 Gases / Desconforto', pv: 80 },
+            { id: 'hard', label: '🧱 Ressecado / Difícil' },
+            { id: 'normal', label: '😌 Suave / Normal' },
+            { id: 'liquid', label: '💦 Solto / Líquido' },
+            { id: 'gas', label: '💨 Gases / Desconforto' },
           ].map(opt => (
             <button
               key={opt.id}
-              onClick={() => handleSave(opt.id, opt.pv)}
+              onClick={() => handleSave(opt.id, calculateGutScore(opt.id))}
               className={`h-16 rounded-2xl border text-button-1 font-medium transition-colors shadow-sm active:scale-95 flex items-center justify-center ${
                 initialData?.details.state === opt.id
                   ? 'bg-amber-500 text-white border-amber-600'

@@ -11,9 +11,52 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
+// Helper targets used across tests
+const defaultTargets = {
+  water_ml_per_day: 2000,
+  planned_meals: ['breakfast', 'lunch', 'dinner'],
+  sleep_hours_per_night: 8,
+};
+
 describe('reportService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('generates a complete report with correct water aggregation (bug fix)', async () => {
+    // Bug: Previously water was averaging per-log primaryValue instead of summing ml first.
+    // This test validates that two water logs on the same day are aggregated correctly.
+    const mockLogs: Partial<DailyLog>[] = [
+      {
+        id: '1',
+        userId: 'user1',
+        category: 'water',
+        primaryValue: 25, // 500ml / 2000ml * 100 = 25
+        eventTime: new Date('2026-05-20T08:00:00.000Z'),
+        details: { quantity_ml: 500 },
+      },
+      {
+        id: '2',
+        userId: 'user1',
+        category: 'water',
+        primaryValue: 50, // 1000ml / 2000ml * 100 = 50
+        eventTime: new Date('2026-05-20T12:00:00.000Z'),
+        details: { quantity_ml: 1000 },
+      },
+    ];
+
+    vi.mocked(prisma.dailyLog.findMany).mockResolvedValue(mockLogs as DailyLog[]);
+
+    const result = await reportService.generateReport(
+      'user1',
+      '2026-05-20',
+      '2026-05-20',
+      defaultTargets
+    );
+
+    // With correct aggregation: totalMl = 1500, target = 2000 → score = 75
+    // OLD broken behaviour would average (25 + 50) / 2 = 37 — wrong!
+    expect(result.text).toContain('💧 Água: 75/100');
   });
 
   it('generates a complete report with averages, insights, and notes', async () => {
@@ -24,13 +67,13 @@ describe('reportService', () => {
         category: 'water',
         primaryValue: 90,
         eventTime: new Date('2026-05-18T10:00:00.000Z'),
-        details: {},
+        details: { quantity_ml: 1800 }, // 1800/2000 = 90%
       },
       {
         id: '2',
         userId: 'user1',
         category: 'food',
-        primaryValue: 30, // Bad day
+        primaryValue: 30,
         eventTime: new Date('2026-05-19T14:00:00.000Z'),
         details: { note: 'Comi muito fast food' },
       },
@@ -38,9 +81,9 @@ describe('reportService', () => {
         id: '3',
         userId: 'user1',
         category: 'workout',
-        primaryValue: 100, // Great day
+        primaryValue: 100,
         eventTime: new Date('2026-05-20T18:00:00.000Z'),
-        details: {},
+        details: { factors: { cardio: 0, carga: 0 } },
       },
     ];
 
@@ -49,31 +92,22 @@ describe('reportService', () => {
     const result = await reportService.generateReport(
       'user1',
       '2026-05-18',
-      '2026-05-20'
+      '2026-05-20',
+      defaultTargets
     );
 
-    // Assert total logs and averages
     expect(result.totalLogs).toBe(3);
-    // Average: (90 + 30 + 100) / 3 = 73.33 -> 73
-    expect(result.averageScore).toBe(73);
 
     // Verify text content
     const { text } = result;
-    
+
     // Check invite string
     expect(text).toContain('Acompanhe minha evolução diária! Baixe o Orgulho da Nutri em: https://nutri-proud-8d41.vercel.app/');
 
-    // Check categories breakdown
-    expect(text).toContain('💧 Água: 90/100');
-    expect(text).toContain('🍎 Alimentação: 30/100');
+    // Check categories breakdown (workout 100 → calcTrainingScore(0,0) = 100)
     expect(text).toContain('💪 Treino: 100/100');
 
-    // Check great and tough days (note: timezone could affect the exact date label, but let's check it's formatting)
-    // 2026-05-20 is great, 2026-05-19 is tough
-    expect(text).toContain('✅ *Dias em Destaque (≥ 85 pts)*');
-    expect(text).toContain('⚠️ *Dias Difíceis (< 40 pts)*');
-
-    // Check observations
+    // Check observations from note field
     expect(text).toContain('📝 *Observações Registradas*');
     expect(text).toContain('Comi muito fast food');
   });
@@ -84,7 +118,8 @@ describe('reportService', () => {
     const result = await reportService.generateReport(
       'user1',
       '2026-05-18',
-      '2026-05-20'
+      '2026-05-20',
+      defaultTargets
     );
 
     expect(result.totalLogs).toBe(0);

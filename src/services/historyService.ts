@@ -1,22 +1,17 @@
+import {
+  calculateWaterScore,
+  calculateFoodScore,
+} from '@/utils/scoreUtils';
+
 export const historyService = {
   /**
    * Calculates food score based on targets and logs.
-   * Defined as a pure utility function to be completely client-safe.
+   * Delegates to the central scoreUtils to keep a single source of truth.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   calculateFoodScore(logs: any[], targets: any): number {
     const plannedMeals = targets?.planned_meals;
-    const totalMeals = plannedMeals?.length || 3;
-    const foodLogs = logs.filter(
-      (log) => log.category?.toLowerCase() === 'food'
-    );
-    const somaReal = foodLogs.reduce(
-      (acc, log) => acc + (log.primaryValue ?? log.primary_value ?? 0),
-      0
-    );
-    const maxPossibleScore = totalMeals * 100;
-    const percentage = Math.round((somaReal / maxPossibleScore) * 100);
-    return Math.max(0, Math.min(100, percentage));
+    return calculateFoodScore(logs, plannedMeals ?? 3);
   },
 
   /**
@@ -36,13 +31,12 @@ export const historyService = {
       );
 
       if (catId === 'water') {
-        const total = catLogs.reduce(
+        const totalMl = catLogs.reduce(
           (acc, log) => acc + (log.details?.quantity_ml || 0),
           0
         );
         const target = userProfile?.targets?.water_ml_per_day || 2000;
-        const pct = target > 0 ? (total / target) * 100 : 0;
-        return Math.min(100, pct);
+        return calculateWaterScore(totalMl, target);
       }
 
       if (catId === 'food') {

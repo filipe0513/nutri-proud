@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { LimitWarningDrawer } from '@/components/shared/LimitWarningDrawer';
 import { LifesaverDrawer } from '@/components/shared/LifesaverDrawer';
 import { toLocalISOString } from '@/lib/utils';
+import { calculateWaterScore, calculateFoodScore } from '@/utils/scoreUtils';
 import { LifeBuoy } from 'lucide-react';
 
 /** Modelo local do AiInsight retornado pela API */
@@ -158,19 +159,15 @@ function DashboardContent() {
     if (catLogs.length === 0) return 0;
 
     if (catId === 'water') {
-      // Proportional to daily water target
-      const total = catLogs.reduce((acc, log) => acc + (log.details?.quantity_ml || 0), 0);
-      return Math.min(100, Math.round((total / (user_profile?.targets?.water_ml_per_day || 2000)) * 100));
+      // Sum all ml logged today, then score against the daily target
+      const totalMl = catLogs.reduce((acc, log) => acc + (log.details?.quantity_ml || 0), 0);
+      return calculateWaterScore(totalMl, user_profile?.targets?.water_ml_per_day || 2000);
     }
 
     if (catId === 'food') {
       const rawTargets = user_profile?.targets as Record<string, unknown> | undefined;
-      const plannedMeals = Array.isArray(rawTargets?.planned_meals) ? rawTargets.planned_meals : [];
-      const totalMeals = plannedMeals.length || 3;
-      const somaReal = catLogs.reduce((acc, log) => acc + (log.primary_value || 0), 0);
-      const maxPossibleScore = totalMeals * 100;
-      const percentage = Math.round((somaReal / maxPossibleScore) * 100);
-      return Math.max(0, Math.min(100, percentage));
+      const plannedMeals = Array.isArray(rawTargets?.planned_meals) ? rawTargets.planned_meals as string[] : [];
+      return calculateFoodScore(catLogs, plannedMeals.length > 0 ? plannedMeals : 3);
     }
 
     // sleep, workout, poop: average of primary_value (already computed in each drawer)

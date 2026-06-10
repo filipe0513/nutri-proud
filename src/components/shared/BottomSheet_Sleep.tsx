@@ -13,6 +13,7 @@ import { Moon, Minus, Plus, Trash2 } from 'lucide-react';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
 import { toLocalISOString } from '@/lib/utils';
+import { calculateSleepScore } from '@/utils/scoreUtils';
 
 export function BottomSheet_Sleep({ 
   customTrigger,
@@ -88,20 +89,7 @@ export function BottomSheet_Sleep({
     try {
       setIsSubmitting(true);
 
-      // Base score: proportional to sleep target (capped at 100)
-      let score = Math.min(100, Math.round((duration / sleepTarget) * 100));
-
-      // Awoke times penalty
-      if (awokeTimes === 1) score -= 5;
-      else if (awokeTimes === 2) score -= 10;
-      else if (awokeTimes >= 3) score -= 20;
-
-      // Quality bonus/penalty
-      if (quality === 'cansado') score -= 10;
-      else if (quality === 'revigorado') score += 10;
-
-      // Clamp to [0, 100]
-      score = Math.max(0, Math.min(100, score));
+      const score = calculateSleepScore(duration, awokeTimes, quality, sleepTarget);
 
       const logData = {
         event_time: toLocalISOString(new Date(selectedDate)),

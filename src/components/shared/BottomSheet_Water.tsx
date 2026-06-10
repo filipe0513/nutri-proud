@@ -12,6 +12,7 @@ import { Droplet, Trophy, Trash2 } from 'lucide-react';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
 import { toLocalISOString } from '@/lib/utils';
+import { calculateWaterScore } from '@/utils/scoreUtils';
 
 export function BottomSheet_Water({ 
   customTrigger, 
@@ -60,7 +61,7 @@ export function BottomSheet_Water({
   }, [initialData]);
 
   const handleSave = async (ml: number) => {
-    const score = Math.min(100, Math.round((ml / targetMl) * 100));
+    const score = calculateWaterScore(ml, targetMl);
     const logData = {
       event_time: toLocalISOString(new Date(selectedDate)),
       category: 'water' as const,

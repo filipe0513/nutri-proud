@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { userService } from './userService';
-import { historyService } from './historyService';
+import { calculateFoodScore } from '@/utils/scoreUtils';
 
 export function getLocalDayInterval(eventTimeStr: string): { start: Date; end: Date } {
   const tIndex = eventTimeStr.indexOf('T');
@@ -178,7 +178,8 @@ export const logService = {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   calculateFoodScore(logs: any[], targets: any): number {
-    return historyService.calculateFoodScore(logs, targets);
+    const plannedMeals = targets?.planned_meals;
+    return calculateFoodScore(logs, plannedMeals ?? 3);
   },
 };
 

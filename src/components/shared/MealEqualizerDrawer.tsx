@@ -14,6 +14,7 @@ import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
 import { ALL_MEALS } from '@/schemas/profileSchema';
 import { toLocalISOString } from '@/lib/utils';
+import { calculateMealQualityScore } from '@/utils/scoreUtils';
 
 /** Fallback set when the user has no planned_meals configured yet */
 const FALLBACK_MEAL_IDS = ['Café da Manhã', 'Almoço', 'Jantar'];
@@ -73,26 +74,6 @@ export function MealEqualizerDrawer({
     return FALLBACK_MEAL_IDS;
   }, [userProfile]);
 
-  /**
-   * Compute the proportional score for one meal log.
-   * 
-   * Each planned meal is worth (100 / totalPlanned) points.
-   * The macro quality multiplier (0–1) is derived from average absolute deviation on sliders.
-   * 
-   * E.g. 5 planned meals → each meal is worth 20 points at best.
-   */
-  const computeProportionalScore = (
-    proteinVal: number,
-    carbsVal: number,
-    fatsVal: number,
-    fiberVal: number
-  ): number => {
-    // Quality 0–1: how close sliders are to centre (0 = perfect)
-    const avgDeviation = (Math.abs(proteinVal) + Math.abs(carbsVal) + Math.abs(fatsVal) + Math.abs(fiberVal)) / 4;
-    const qualityMultiplier = Math.max(0, 1 - avgDeviation / 50);
-
-    return Math.round(100 * qualityMultiplier);
-  };
 
   useEffect(() => {
     if (initialData) {
@@ -133,7 +114,7 @@ export function MealEqualizerDrawer({
   const handleSave = async () => {
     if (!selectedMeal) return;
 
-    const score = computeProportionalScore(protein, carbs, fats, fiber);
+    const score = calculateMealQualityScore(protein, carbs, fats, fiber);
 
     const logData = {
       event_time: toLocalISOString(new Date(selectedDate)),

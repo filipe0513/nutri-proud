@@ -13,6 +13,7 @@ import { Slider } from '@/components/ui/slider';
 import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
 import { toLocalISOString } from '@/lib/utils';
+import { calculateTrainingScore } from '@/utils/scoreUtils';
 
 export function WorkoutEqualizerDrawer({ 
   customTrigger,
@@ -83,8 +84,7 @@ export function WorkoutEqualizerDrawer({
   };
 
   const handleSave = async () => {
-    const calculatedScore = 100 + cardio + carga;
-    const score = Math.max(0, Math.min(100, calculatedScore));
+    const score = calculateTrainingScore(cardio, carga);
 
     const logData = {
       event_time: toLocalISOString(new Date(selectedDate)),
