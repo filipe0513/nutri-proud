@@ -89,10 +89,16 @@ function DashboardContent() {
 
     const checkAndShowInsight = async () => {
       try {
+        // ⚠️ Se o usuário já tem um drawer aberto, não interromper o fluxo
+        if (useAppStore.getState().activeDrawer !== null) return;
+
         // 1. Fetch the latest insight
         const res = await fetch('/api/insights/latest');
         if (!res.ok) return;
         const { insight }: { insight: AiInsight | null } = await res.json();
+
+        // Re-check after the async fetch: the user may have opened a drawer while waiting
+        if (useAppStore.getState().activeDrawer !== null) return;
 
         if (insight && isFresh(insight.createdAt)) {
           // Case A: Fresh insight already exists
@@ -114,6 +120,10 @@ function DashboardContent() {
             body: JSON.stringify({ localTime }),
           });
           if (!genRes.ok) return;
+
+          // Re-check after the slower generate call: user may have opened a drawer
+          if (useAppStore.getState().activeDrawer !== null) return;
+
           const newInsight: AiInsight = await genRes.json();
           setInsightData(newInsight);
           setOpenDrawer('insights');
@@ -370,7 +380,13 @@ function DashboardContent() {
       />
       <InsightsDrawer
         open={openDrawer === 'insights'}
-        onOpenChange={(o) => { if (!o) setOpenDrawer(null); }}
+        onOpenChange={(o) => {
+          // Só limpa o drawer se for o insights que está ativo, para não fechar
+          // um drawer que o usuário tenha aberto por conta própria
+          if (!o && useAppStore.getState().activeDrawer === 'insights') {
+            setOpenDrawer(null);
+          }
+        }}
         message={insightData?.message ?? null}
         cta={insightData?.cta}
       />
