@@ -125,6 +125,18 @@ export const insightService = {
    * e nos logs do dia, usando a IA com saída JSON forçada.
    */
   async generateContextualInsight(userId: string, localTime: string) {
+    // ── Rate limit: máximo 1 insight por hora por usuário ────────────────────
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const recentInsight = await prisma.aiInsight.findFirst({
+      where: { userId, createdAt: { gte: oneHourAgo } },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (recentInsight) {
+      // Retorna o existente sem chamar a IA
+      return recentInsight;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     // Pega logs do dia atual no fuso de São Paulo
     const dayStart = getLocalStartOfDay();
 
