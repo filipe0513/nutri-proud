@@ -19,6 +19,45 @@ export async function markAsRead(notificationId: string, userId: string) {
   });
 }
 
+/**
+ * Cria uma notificação persistente para um insight gerado pela IA.
+ * Chamada pelo insightService logo após salvar o AiInsight no banco.
+ */
+export async function createInsightNotification(
+  userId: string,
+  message: string,
+  cta: string | null,
+) {
+  const ctaLabel = cta ? ` (foco: ${cta})` : '';
+  return prisma.notification.create({
+    data: {
+      id: uuidv4(),
+      userId,
+      title: 'Nutri tem um insight para você ✨',
+      message: message + ctaLabel,
+      category: 'INSIGHT',
+      actionType: 'OPEN_INSIGHTS_DRAWER',
+    },
+  });
+}
+
+/**
+ * Cria uma notificação persistente com a reação da IA à jacada do usuário.
+ * Chamada pela rota /api/ai/jacada-reaction após gerar o texto.
+ */
+export async function createJacadaNotification(userId: string, message: string) {
+  return prisma.notification.create({
+    data: {
+      id: uuidv4(),
+      userId,
+      title: 'Nutri reagiu à sua jacada 🍔',
+      message,
+      category: 'SYSTEM',
+      actionType: null,
+    },
+  });
+}
+
 export async function triggerWaterReminders() {
   // Only trigger in the evening (around 20:00 local time) for daily summary/reminder
   // Vercel UTC vs local time might be an issue. Assuming Brazil time for Vercel Cron.

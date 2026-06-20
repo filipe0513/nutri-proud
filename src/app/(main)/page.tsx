@@ -77,6 +77,8 @@ function DashboardContent() {
   // We use global state to allow the FAB in BottomNav to open drawers programmatically
   const openDrawer = useAppStore(state => state.activeDrawer);
   const setOpenDrawer = useAppStore(state => state.setActiveDrawer);
+  const pendingInsightData = useAppStore(state => state.pendingInsightData);
+  const setPendingInsightData = useAppStore(state => state.setPendingInsightData);
 
   // ─── Insight Drawer state ────────────────────────────────────────────────
   const [insightData, setInsightData] = useState<AiInsight | null>(null);
@@ -385,10 +387,11 @@ function DashboardContent() {
           // um drawer que o usuário tenha aberto por conta própria
           if (!o && useAppStore.getState().activeDrawer === 'insights') {
             setOpenDrawer(null);
+            setPendingInsightData(null); // limpa dados transitórios ao fechar
           }
         }}
-        message={insightData?.message ?? null}
-        cta={insightData?.cta}
+        message={insightData?.message ?? pendingInsightData?.message ?? null}
+        cta={insightData?.cta ?? pendingInsightData?.cta}
       />
 
       <LimitWarningDrawer 

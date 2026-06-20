@@ -3,6 +3,7 @@ import { aiService } from './aiService';
 import { DailyLog } from '@prisma/client';
 import { AiInsightResponse } from '@/schemas/insightSchema';
 import { getLocalStartOfDay } from '@/utils/dateUtils';
+import { createInsightNotification } from './notificationService';
 
 export const insightService = {
   /**
@@ -186,6 +187,9 @@ Se não houver hábito prioritário para sugerir, use null em cta.
         isViewed: false,
       },
     });
+
+    // Espelha o insight como notificação persistente (fire-and-forget)
+    createInsightNotification(userId, parsed.message, parsed.cta ?? null).catch(() => {/* silent */});
 
     return insight;
   },

@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { auth } from '@/auth';
+import { cookies } from 'next/headers';
+import { createJacadaNotification } from '@/services/notificationService';
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+
+async function getUserId(): Promise<string | undefined> {
+  const session = await auth();
+  if (session?.user?.id) return session.user.id;
+
+  const cookieStore = await cookies();
+  return cookieStore.get('anon_user_id')?.value;
+}
 
 export async function POST(request: Request) {
   try {
@@ -29,6 +40,12 @@ export async function POST(request: Request) {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text().trim();
+
+    // Persiste a reação como notificação (fire-and-forget, silencioso)
+    const userId = await getUserId();
+    if (userId) {
+      createJacadaNotification(userId, text).catch(() => {/* silent */});
+    }
 
     return NextResponse.json({ message: text });
   } catch (error) {
