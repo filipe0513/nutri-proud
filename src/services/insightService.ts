@@ -135,7 +135,10 @@ export const insightService = {
     const registeredCategories = [...new Set(todayLogs.map((l) => l.category.toUpperCase()))];
     const missingCategories = ALL_CATEGORIES.filter((c) => !registeredCategories.includes(c));
 
-    const hour = new Date(localTime).getHours();
+    // Extrai a hora diretamente da string ISO (ex: "2026-06-19T23:53:00.000-03:00")
+    // sem usar new Date().getHours(), que no Node.js ignora o offset e retorna UTC.
+    // O formato é garantido por toLocalISOString() + validação Zod (offset: true).
+    const hour = parseInt(localTime.slice(11, 13), 10);
     const periodLabel =
       hour < 12 ? 'manhã' : hour < 18 ? 'tarde' : 'noite';
 
