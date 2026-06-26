@@ -32,6 +32,9 @@ interface AppState {
   setAddLogOpen: (isOpen: boolean) => void;
   activeDrawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | 'jacada' | 'lifesaver' | 'insights' | null;
   setActiveDrawer: (drawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | 'jacada' | 'lifesaver' | 'insights' | null) => void;
+  /** Dados transitórios de insight para abrir o InsightsDrawer programaticamente (ex: via notificações) */
+  pendingInsightData: { message: string; cta: string | null } | null;
+  setPendingInsightData: (data: { message: string; cta: string | null } | null) => void;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
@@ -42,6 +45,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
       setAddLogOpen: (isOpen) => set({ isAddLogOpen: isOpen }),
       activeDrawer: null,
       setActiveDrawer: (drawer) => set({ activeDrawer: drawer }),
+      pendingInsightData: null,
+      setPendingInsightData: (data) => set({ pendingInsightData: data }),
 
       initializeData: async () => {
         const [profile, logs] = await Promise.all([

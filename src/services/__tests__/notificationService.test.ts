@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { triggerWaterReminders, triggerJacadaRecovery, getUserNotifications, markAsRead } from '../notificationService';
+import { triggerWaterReminders, triggerJacadaRecovery, getUserNotifications, markAsRead, createInsightNotification, createJacadaNotification } from '../notificationService';
 import { prismaMock } from '@/lib/__mocks__/prisma';
 
 vi.mock('@/lib/prisma', async () => {
@@ -82,5 +82,49 @@ describe('notificationService', () => {
     expect(result.success).toBe(true);
     expect(result.count).toBe(1);
     expect(prismaMock.notification.create).toHaveBeenCalled();
+  });
+
+  // ─── New functions ───────────────────────────────────────────────────────────
+
+  it('createInsightNotification should persist an INSIGHT notification with correct fields', async () => {
+    // Arrange
+    const mockCreated = { id: 'ins-1', category: 'INSIGHT', actionType: 'OPEN_INSIGHTS_DRAWER' };
+    prismaMock.notification.create.mockResolvedValue(mockCreated as any);
+
+    // Act
+    await createInsightNotification('user1', 'Beba mais água hoje! 💧', 'WATER');
+
+    // Assert
+    expect(prismaMock.notification.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: 'user1',
+          category: 'INSIGHT',
+          actionType: 'OPEN_INSIGHTS_DRAWER',
+          title: 'Nutri tem um insight para você ✨',
+        }),
+      })
+    );
+  });
+
+  it('createJacadaNotification should persist a SYSTEM notification for the jacada reaction', async () => {
+    // Arrange
+    const mockCreated = { id: 'jac-1', category: 'SYSTEM' };
+    prismaMock.notification.create.mockResolvedValue(mockCreated as any);
+
+    // Act
+    await createJacadaNotification('user2', 'Amanhã a garrafa d\'água será sua melhor amiga! 🍺');
+
+    // Assert
+    expect(prismaMock.notification.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: 'user2',
+          category: 'SYSTEM',
+          actionType: null,
+          title: 'Nutri reagiu à sua jacada 🍔',
+        }),
+      })
+    );
   });
 });

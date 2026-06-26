@@ -77,6 +77,8 @@ function DashboardContent() {
   // We use global state to allow the FAB in BottomNav to open drawers programmatically
   const openDrawer = useAppStore(state => state.activeDrawer);
   const setOpenDrawer = useAppStore(state => state.setActiveDrawer);
+  const pendingInsightData = useAppStore(state => state.pendingInsightData);
+  const setPendingInsightData = useAppStore(state => state.setPendingInsightData);
 
   // ─── Insight Drawer state ────────────────────────────────────────────────
   const [insightData, setInsightData] = useState<AiInsight | null>(null);
@@ -89,10 +91,16 @@ function DashboardContent() {
 
     const checkAndShowInsight = async () => {
       try {
+        // ⚠️ Se o usuário já tem um drawer aberto, não interromper o fluxo
+        if (useAppStore.getState().activeDrawer !== null) return;
+
         // 1. Fetch the latest insight
         const res = await fetch('/api/insights/latest');
         if (!res.ok) return;
         const { insight }: { insight: AiInsight | null } = await res.json();
+
+        // Re-check after the async fetch: the user may have opened a drawer while waiting
+        if (useAppStore.getState().activeDrawer !== null) return;
 
         if (insight && isFresh(insight.createdAt)) {
           // Case A: Fresh insight already exists
@@ -114,6 +122,10 @@ function DashboardContent() {
             body: JSON.stringify({ localTime }),
           });
           if (!genRes.ok) return;
+
+          // Re-check after the slower generate call: user may have opened a drawer
+          if (useAppStore.getState().activeDrawer !== null) return;
+
           const newInsight: AiInsight = await genRes.json();
           setInsightData(newInsight);
           setOpenDrawer('insights');
@@ -370,9 +382,16 @@ function DashboardContent() {
       />
       <InsightsDrawer
         open={openDrawer === 'insights'}
-        onOpenChange={(o) => { if (!o) setOpenDrawer(null); }}
-        message={insightData?.message ?? null}
-        cta={insightData?.cta}
+        onOpenChange={(o) => {
+          // Só limpa o drawer se for o insights que está ativo, para não fechar
+          // um drawer que o usuário tenha aberto por conta própria
+          if (!o && useAppStore.getState().activeDrawer === 'insights') {
+            setOpenDrawer(null);
+            setPendingInsightData(null); // limpa dados transitórios ao fechar
+          }
+        }}
+        message={insightData?.message ?? pendingInsightData?.message ?? null}
+        cta={insightData?.cta ?? pendingInsightData?.cta}
       />
 
       <LimitWarningDrawer 

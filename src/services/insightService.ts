@@ -3,6 +3,7 @@ import { aiService } from './aiService';
 import { DailyLog } from '@prisma/client';
 import { AiInsightResponse } from '@/schemas/insightSchema';
 import { getLocalStartOfDay } from '@/utils/dateUtils';
+import { createInsightNotification } from './notificationService';
 
 export const insightService = {
   /**
@@ -124,6 +125,18 @@ export const insightService = {
    * e nos logs do dia, usando a IA com saída JSON forçada.
    */
   async generateContextualInsight(userId: string, localTime: string) {
+    // ── Rate limit: máximo 1 insight por hora por usuário ────────────────────
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const recentInsight = await prisma.aiInsight.findFirst({
+      where: { userId, createdAt: { gte: oneHourAgo } },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (recentInsight) {
+      // Retorna o existente sem chamar a IA
+      return recentInsight;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     // Pega logs do dia atual no fuso de São Paulo
     const dayStart = getLocalStartOfDay();
 
@@ -135,7 +148,10 @@ export const insightService = {
     const registeredCategories = [...new Set(todayLogs.map((l) => l.category.toUpperCase()))];
     const missingCategories = ALL_CATEGORIES.filter((c) => !registeredCategories.includes(c));
 
-    const hour = new Date(localTime).getHours();
+    // Extrai a hora diretamente da string ISO (ex: "2026-06-19T23:53:00.000-03:00")
+    // sem usar new Date().getHours(), que no Node.js ignora o offset e retorna UTC.
+    // O formato é garantido por toLocalISOString() + validação Zod (offset: true).
+    const hour = parseInt(localTime.slice(11, 13), 10);
     const periodLabel =
       hour < 12 ? 'manhã' : hour < 18 ? 'tarde' : 'noite';
 
@@ -183,6 +199,9 @@ Se não houver hábito prioritário para sugerir, use null em cta.
         isViewed: false,
       },
     });
+
+    // Espelha o insight como notificação persistente (fire-and-forget)
+    createInsightNotification(userId, parsed.message, parsed.cta ?? null).catch(() => {/* silent */});
 
     return insight;
   },

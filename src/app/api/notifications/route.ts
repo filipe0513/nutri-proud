@@ -1,15 +1,23 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { cookies } from 'next/headers';
 import { getUserNotifications, markAsRead } from '@/services/notificationService';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId');
+async function getUserId(): Promise<string | undefined> {
+  const session = await auth();
+  if (session?.user?.id) return session.user.id;
 
-  if (!userId) {
-    return NextResponse.json({ error: 'userId is required' }, { status: 400 });
-  }
+  const cookieStore = await cookies();
+  return cookieStore.get('anon_user_id')?.value;
+}
 
+export async function GET() {
   try {
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
+    }
+
     const notifications = await getUserNotifications(userId);
     return NextResponse.json(notifications);
   } catch (error) {
@@ -20,10 +28,15 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const { notificationId, userId } = await request.json();
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
+    }
 
-    if (!notificationId || !userId) {
-      return NextResponse.json({ error: 'notificationId and userId are required' }, { status: 400 });
+    const { notificationId } = await request.json();
+
+    if (!notificationId) {
+      return NextResponse.json({ error: 'notificationId is required' }, { status: 400 });
     }
 
     const updated = await markAsRead(notificationId, userId);
