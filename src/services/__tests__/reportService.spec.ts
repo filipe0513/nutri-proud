@@ -16,6 +16,7 @@ const defaultTargets = {
   water_ml_per_day: 2000,
   planned_meals: ['breakfast', 'lunch', 'dinner'],
   sleep_hours_per_night: 8,
+  weekly_workouts: 3,
 };
 
 describe('reportService', () => {
@@ -104,8 +105,14 @@ describe('reportService', () => {
     // Check invite string
     expect(text).toContain('Acompanhe minha evolução diária! Baixe o Orgulho da Nutri em: https://nutri-proud.vercel.app');
 
-    // Check categories breakdown (workout 100 → calcTrainingScore(0,0) = 100)
-    expect(text).toContain('💪 Treino: 100/100');
+    // For multi-day periods the workout score is a HYBRID (frequency × 0.6 + quality × 0.4).
+    // Period: 3 days, goal = (3/7) × 3 ≈ 1.29 sessions, actual = 1 session
+    // frequencyScore = min(100, round(1/1.29×100)) = 78
+    // qualityScore   = calculateTrainingScore(0,0) = 100
+    // hybrid         = round(78×0.6 + 100×0.4) = round(46.8 + 40) = 87
+    expect(text).toContain('💪 Treino: 87/100');
+    // Also verify sessions annotation is present
+    expect(text).toContain('sessões)');
 
     // Check observations from note field
     expect(text).toContain('📝 *Observações Registradas*');
