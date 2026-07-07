@@ -17,6 +17,19 @@ import { useAppStore } from '@/store/store';
 import { useHistoryStore } from '@/store/historyStore';
 import { ActivityLog } from '@/store/types';
 
+const SLIDER_LABELS: Record<number, string> = {
+  0: '—',
+  1: 'Um pouquinho',
+  2: 'Mais ou menos',
+  3: 'Muito',
+  4: 'Exagerei',
+  5: 'Chutei o balde 🤦',
+};
+
+function getSliderLabel(value: number): string {
+  return SLIDER_LABELS[value] ?? String(value);
+}
+
 export function JacadaDrawer({
   open,
   onOpenChange,
@@ -183,7 +196,7 @@ export function JacadaDrawer({
               <span className="text-body-1 font-semibold text-neutral-600 flex items-center gap-2">
                 🍩 Açúcar / Doces
               </span>
-              <span className="font-bold text-orange-500 text-lg">{sugar}</span>
+              <span className="font-semibold text-orange-500 text-sm">{getSliderLabel(sugar)}</span>
             </div>
             <Slider
               value={[sugar]}
@@ -192,8 +205,8 @@ export function JacadaDrawer({
               step={1}
             />
             <div className="flex justify-between text-xs text-neutral-400 px-1">
-              <span>0 (Nada)</span>
-              <span>5 (Muito)</span>
+              <span>Nada</span>
+              <span>Chutei o balde</span>
             </div>
           </div>
 
@@ -203,7 +216,7 @@ export function JacadaDrawer({
               <span className="text-body-1 font-semibold text-neutral-600 flex items-center gap-2">
                 🍔 Frituras / Fast Food
               </span>
-              <span className="font-bold text-orange-500 text-lg">{fat}</span>
+              <span className="font-semibold text-orange-500 text-sm">{getSliderLabel(fat)}</span>
             </div>
             <Slider
               value={[fat]}
@@ -212,8 +225,8 @@ export function JacadaDrawer({
               step={1}
             />
             <div className="flex justify-between text-xs text-neutral-400 px-1">
-              <span>0 (Nada)</span>
-              <span>5 (Muito)</span>
+              <span>Nada</span>
+              <span>Chutei o balde</span>
             </div>
           </div>
 
@@ -223,7 +236,7 @@ export function JacadaDrawer({
               <span className="text-body-1 font-semibold text-neutral-600 flex items-center gap-2">
                 🍺 Álcool
               </span>
-              <span className="font-bold text-orange-500 text-lg">{alcohol}</span>
+              <span className="font-semibold text-orange-500 text-sm">{getSliderLabel(alcohol)}</span>
             </div>
             <Slider
               value={[alcohol]}
@@ -232,8 +245,8 @@ export function JacadaDrawer({
               step={1}
             />
             <div className="flex justify-between text-xs text-neutral-400 px-1">
-              <span>0 (Nada)</span>
-              <span>5 (Muito)</span>
+              <span>Nada</span>
+              <span>Chutei o balde</span>
             </div>
           </div>
 
