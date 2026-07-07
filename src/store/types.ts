@@ -17,7 +17,7 @@ export interface UserProfile {
   };
 }
 
-export type Category = 'water' | 'food' | 'sleep' | 'workout' | 'poop' | 'note';
+export type Category = 'water' | 'food' | 'sleep' | 'workout' | 'poop' | 'note' | 'jacada';
 
 export interface ActivityLog {
   id: string;
@@ -34,5 +34,9 @@ export interface ActivityLog {
     awoke_times?: number;
     quality_feeling?: 'cansado' | 'normal' | 'revigorado' | null;
     state?: string;
+    // Jacada fields
+    sugar?: number;
+    fat?: number;
+    alcohol?: number;
   };
 }
