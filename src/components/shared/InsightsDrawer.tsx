@@ -1,7 +1,7 @@
 'use client';
 
 import { Sparkles, X, ArrowRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useAppStore } from '@/store/store';
 import {
   Drawer,
   DrawerContent,
@@ -10,13 +10,13 @@ import {
   DrawerClose,
 } from '@/components/ui/drawer';
 
-/** Map from the CTA field (uppercase pillar name) to a human-readable action label + route */
-const CTA_MAP: Record<string, { label: string; href: string }> = {
-  WATER:   { label: 'Registrar Água',        href: '/pillar/water' },
-  FOOD:    { label: 'Registrar Refeição',     href: '/pillar/food' },
-  SLEEP:   { label: 'Registrar Sono',         href: '/pillar/sleep' },
-  WORKOUT: { label: 'Registrar Treino',       href: '/pillar/workout' },
-  POOP:    { label: 'Registrar Intestino',    href: '/pillar/poop' },
+/** Map from the CTA field (uppercase pillar name) to drawer key + human-readable label */
+const CTA_MAP: Record<string, { label: string; drawerKey: 'water' | 'meal' | 'sleep' | 'workout' | 'poop' }> = {
+  WATER:   { label: 'Registrar Água',        drawerKey: 'water' },
+  FOOD:    { label: 'Registrar Refeição',     drawerKey: 'meal' },
+  SLEEP:   { label: 'Registrar Sono',         drawerKey: 'sleep' },
+  WORKOUT: { label: 'Registrar Treino',       drawerKey: 'workout' },
+  POOP:    { label: 'Registrar Intestino',    drawerKey: 'poop' },
 };
 
 interface InsightsDrawerProps {
@@ -28,14 +28,16 @@ interface InsightsDrawerProps {
 }
 
 export function InsightsDrawer({ open, onOpenChange, message, cta }: InsightsDrawerProps) {
-  const router = useRouter();
+  const setOpenDrawer = useAppStore(state => state.setActiveDrawer);
 
   const ctaInfo = cta ? CTA_MAP[cta.toUpperCase()] : null;
 
   const handleCta = () => {
+    // Fecha o InsightsDrawer e abre o drawer de registro correspondente — sem navegação
     onOpenChange(false);
     if (ctaInfo) {
-      router.push(ctaInfo.href);
+      // Pequeno delay para o fechamento animar antes de abrir o próximo drawer
+      setTimeout(() => setOpenDrawer(ctaInfo.drawerKey), 300);
     }
   };
 
