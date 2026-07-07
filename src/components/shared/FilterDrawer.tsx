@@ -124,7 +124,7 @@ export function FilterDrawer() {
               <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 pointer-events-none" />
               <input
                 type="date"
-                value={filters.startDate ? filters.startDate.split('T')[0] : ''}
+                value={dateRange.from ? dateRange.from.toISOString().split('T')[0] : ''}
                 onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value ? new Date(e.target.value) : undefined }))}
                 className="w-full h-14 pl-12 pr-4 bg-glass-light-2 border border-white/40 rounded-2xl text-neutral-500 text-button-1 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all appearance-none"
               />
@@ -137,7 +137,7 @@ export function FilterDrawer() {
               <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 pointer-events-none" />
               <input
                 type="date"
-                value={filters.endDate ? filters.endDate.split('T')[0] : ''}
+                value={dateRange.to ? dateRange.to.toISOString().split('T')[0] : ''}
                 onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value ? new Date(e.target.value) : undefined }))}
                 className="w-full h-14 pl-12 pr-4 bg-glass-light-2 border border-white/40 rounded-2xl text-neutral-500 text-button-1 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all appearance-none"
               />

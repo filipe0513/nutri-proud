@@ -16,6 +16,7 @@ import { BottomSheet_Sleep } from "@/components/shared/BottomSheet_Sleep";
 import { BottomSheet_Poop } from "@/components/shared/BottomSheet_Poop";
 import { MealEqualizerDrawer } from "@/components/shared/MealEqualizerDrawer";
 import { WorkoutEqualizerDrawer } from "@/components/shared/WorkoutEqualizerDrawer";
+import { JacadaDrawer } from "@/components/shared/JacadaDrawer";
 import { historyService } from "@/services/historyService";
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -73,7 +74,7 @@ export default function HistoryPage() {
     resetHistory,
     isEmptyFilters,
   } = useHistoryStore();
-  const { user_profile } = useAppStore();
+  const { user_profile, initializeData } = useAppStore();
   const { ref, inView } = useInView();
 
   const [editingLog, setEditingLog] = useState<ActivityLog | null>(null);
@@ -89,6 +90,8 @@ export default function HistoryPage() {
 
   const handleClose = () => {
     setEditingLog(null);
+    // Refresh the home store so stories reflect any edits/deletes without needing F5
+    initializeData();
   };
 
   useEffect(() => {
@@ -249,6 +252,11 @@ export default function HistoryPage() {
           editingLog?.category === "workout" ? editingLog : undefined
         }
         customTrigger={<div className="hidden" />}
+      />
+      <JacadaDrawer
+        open={editingLog?.category === "jacada"}
+        onOpenChange={(open) => !open && handleClose()}
+        initialData={editingLog?.category === "jacada" ? editingLog : undefined}
       />
     </div>
   );
