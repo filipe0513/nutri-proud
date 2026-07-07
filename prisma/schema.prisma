@@ -69,6 +69,7 @@ model DailyLog {
   category     String   // "water", "sleep", "poop", "food", "workout", "note"
   primaryValue Int
   details      Json     // JSONB field
+  source       String   @default("UNKNOWN")
   
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -95,4 +96,12 @@ model AiInsight {
   createdAt DateTime @default(now()) @map("created_at")
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SystemEvent {
+  id         String   @id @default(uuid())
+  userId     String?  // Nullable para eventos de quem ainda não logou
+  eventName  String   // Nome do evento (ex: AUTH_EMAIL_STARTED)
+  metadata   Json?    // Detalhes extras opcionais
+  createdAt  DateTime @default(now())
 }

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import type { NextAuthConfig } from 'next-auth';
 
 export const authConfig = {
@@ -7,12 +7,24 @@ export const authConfig = {
     signIn: "/welcome",
   },
   callbacks: {
-    async session({ session, user }) {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role as string;
+      }
+      return token;
+    },
+    async session({ session, user, token }) {
       // Com PrismaAdapter, a sessão sempre usa "database" strategy.
       // O objeto `user` (do BD) está disponível diretamente aqui.
-      if (session.user && user) {
-        session.user.id = user.id;
-        (session.user as any).role = (user as any).role;
+      // Se usarmos JWT, o user será recebido no jwt() e repassado via token
+      if (session.user) {
+        if (user) {
+          session.user.id = user.id;
+          session.user.role = user.role as string;
+        } else if (token) {
+          session.user.id = token.sub as string;
+          session.user.role = token.role as string;
+        }
       }
       return session;
     },
