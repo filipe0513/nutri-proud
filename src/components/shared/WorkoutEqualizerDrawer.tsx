@@ -54,6 +54,28 @@ export function WorkoutEqualizerDrawer({
     return 'bg-notify-success border-notify-success';
   };
 
+  const getCardioLegend = (value: number) => {
+    switch (value) {
+      case -50: return '🥱 nem suei';
+      case -25: return '🚶♂️ de leve';
+      case 0: return '✅ tá pago';
+      case 25: return '🔥 intenso';
+      case 50: return '💦 lavado de suor';
+      default: return '';
+    }
+  };
+
+  const getCargaLegend = (value: number) => {
+    switch (value) {
+      case -50: return '🥱 pelo menos fui';
+      case -25: return '🧸 de leve';
+      case 0: return '✅ tá pago';
+      case 25: return '📈 subindo as cargas';
+      case 50: return '🦍 bitelo me aguarde';
+      default: return '';
+    }
+  };
+
   useEffect(() => {
     if (initialData) {
       const details = initialData.details as any;
@@ -155,20 +177,26 @@ export function WorkoutEqualizerDrawer({
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-body-1 font-medium text-red-900/80">Cardio</span>
-                <span className="text-title-3 font-bold text-red-950">{cardio > 0 ? `+${cardio}%` : `${cardio}%`}</span>
+                <div className="text-right">
+                  <span className="text-title-3 font-bold text-red-950 block">{cardio > 0 ? `+${cardio}%` : `${cardio}%`}</span>
+                  <span className="text-caption-1 text-red-700/80 block">{getCardioLegend(cardio)}</span>
+                </div>
               </div>
               <div className="w-full touch-none relative px-2">
-                <Slider value={[cardio]} min={-50} max={50} step={10} onValueChange={(v) => setCardio(v[0])} thumbClassName={getThumbColorClass} />
+                <Slider value={[cardio]} min={-50} max={50} step={25} onValueChange={(v) => setCardio(v[0])} thumbClassName={getThumbColorClass} />
               </div>
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-body-1 font-medium text-red-900/80">Carga</span>
-                <span className="text-title-3 font-bold text-red-950">{carga > 0 ? `+${carga}%` : `${carga}%`}</span>
+                <div className="text-right">
+                  <span className="text-title-3 font-bold text-red-950 block">{carga > 0 ? `+${carga}%` : `${carga}%`}</span>
+                  <span className="text-caption-1 text-red-700/80 block">{getCargaLegend(carga)}</span>
+                </div>
               </div>
               <div className="w-full touch-none relative px-2">
-                <Slider value={[carga]} min={-50} max={50} step={10} onValueChange={(v) => setCarga(v[0])} thumbClassName={getThumbColorClass} />
+                <Slider value={[carga]} min={-50} max={50} step={25} onValueChange={(v) => setCarga(v[0])} thumbClassName={getThumbColorClass} />
               </div>
             </div>
           </div>
