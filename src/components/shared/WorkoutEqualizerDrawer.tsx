@@ -178,8 +178,7 @@ export function WorkoutEqualizerDrawer({
               <div className="flex justify-between items-center">
                 <span className="text-body-1 font-medium text-red-900/80">Cardio</span>
                 <div className="text-right">
-                  <span className="text-title-3 font-bold text-red-950 block">{cardio > 0 ? `+${cardio}%` : `${cardio}%`}</span>
-                  <span className="text-caption-1 text-red-700/80 block">{getCardioLegend(cardio)}</span>
+                  <span className="text-title-3 font-bold text-red-950">{getCardioLegend(cardio)}</span>
                 </div>
               </div>
               <div className="w-full touch-none relative px-2">
@@ -191,8 +190,7 @@ export function WorkoutEqualizerDrawer({
               <div className="flex justify-between items-center">
                 <span className="text-body-1 font-medium text-red-900/80">Carga</span>
                 <div className="text-right">
-                  <span className="text-title-3 font-bold text-red-950 block">{carga > 0 ? `+${carga}%` : `${carga}%`}</span>
-                  <span className="text-caption-1 text-red-700/80 block">{getCargaLegend(carga)}</span>
+                  <span className="text-title-3 font-bold text-red-950">{getCargaLegend(carga)}</span>
                 </div>
               </div>
               <div className="w-full touch-none relative px-2">
