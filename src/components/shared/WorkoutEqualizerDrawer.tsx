@@ -57,7 +57,7 @@ export function WorkoutEqualizerDrawer({
   const getCardioLegend = (value: number) => {
     switch (value) {
       case -50: return '🥱 nem suei';
-      case -25: return '🚶♂️ de leve';
+      case -25: return '🚶 de leve';
       case 0: return '✅ tá pago';
       case 25: return '🔥 intenso';
       case 50: return '💦 lavado de suor';
