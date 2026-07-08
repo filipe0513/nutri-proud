@@ -32,6 +32,7 @@ export const logSchema = z.object({
       message: 'Não é possível registrar eventos em datas futuras.',
     })
     .optional(),
+  source: z.string().optional(),
 });
 
 // Schema para os detalhes da Jacada
@@ -46,4 +47,5 @@ export const jacadaSchema = z.object({
       message: 'Não é possível registrar eventos em datas futuras.',
     })
     .optional(),
+  source: z.string().optional(),
 });

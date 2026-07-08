@@ -63,7 +63,8 @@ export function ActionCardWithDrawer({
       event_time: `${selectedDate}T12:00:00.000Z`,
       category: category,
       primary_value: opt.primaryValue,
-      details: onLogDetails(finalValue)
+      details: onLogDetails(finalValue),
+      source: 'CARD'
     });
     toast.success(`${opt.label} registrado!`, {
       className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success'

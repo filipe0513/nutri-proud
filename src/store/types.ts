@@ -39,4 +39,5 @@ export interface ActivityLog {
     fat?: number;
     alcohol?: number;
   };
+  source?: string;
 }

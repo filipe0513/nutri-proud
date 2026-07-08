@@ -263,6 +263,7 @@ function DashboardContent() {
                   setPendingAction(null);
                   setIsWarningOpen(true);
                 } else {
+                  useAppStore.getState().setActiveDrawerSource('STORIES');
                   router.push(`/pillar/${cat.id}`);
                 }
               }}

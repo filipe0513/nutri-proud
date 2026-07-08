@@ -32,17 +32,25 @@ export function InsightsDrawer({ open, onOpenChange, message, cta }: InsightsDra
 
   const ctaInfo = cta ? CTA_MAP[cta.toUpperCase()] : null;
 
+  const handleInternalOpenChange = (newOpen: boolean) => {
+    onOpenChange(newOpen);
+    if (!newOpen) {
+      fetch('/api/events', { method: 'POST', body: JSON.stringify({ eventName: 'AI_DRAWER_DISMISSED' }) }).catch(() => {});
+    }
+  };
+
   const handleCta = () => {
+    fetch('/api/events', { method: 'POST', body: JSON.stringify({ eventName: 'AI_DRAWER_CONVERTED' }) }).catch(() => {});
     // Fecha o InsightsDrawer e abre o drawer de registro correspondente — sem navegação
     onOpenChange(false);
     if (ctaInfo) {
       // Pequeno delay para o fechamento animar antes de abrir o próximo drawer
-      setTimeout(() => setOpenDrawer(ctaInfo.drawerKey), 300);
+      setTimeout(() => setOpenDrawer(ctaInfo.drawerKey, 'AI_DRAWER'), 300);
     }
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer open={open} onOpenChange={handleInternalOpenChange}>
       <DrawerContent className="bg-glass-light-3 backdrop-blur-lg border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
         {/* Close button */}
         <div className="flex justify-end pt-2 -mb-2">

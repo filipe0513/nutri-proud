@@ -14,7 +14,7 @@ export function NavWithShare() {
   const pathname = usePathname();
 
   const handleSelectPillar = (pillar: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'jacada') => {
-    setActiveDrawer(pillar);
+    setActiveDrawer(pillar, 'FAB');
     if (pathname !== '/') {
       router.push('/');
     }

@@ -31,6 +31,7 @@ export function BottomSheet_Water({
   const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
   const deleteLogHistory = useHistoryStore(state => state.deleteLogHistory);
   const setWaterToTarget = useAppStore(state => state.setWaterToTarget);
+  const activeDrawerSource = useAppStore(state => state.activeDrawerSource);
   const userProfile = useAppStore(state => state.user_profile);
   
   const [internalOpen, setInternalOpen] = useState(false);
@@ -65,7 +66,8 @@ export function BottomSheet_Water({
       event_time: toLocalISOString(new Date(selectedDate)),
       category: 'water' as const,
       primary_value: score,
-      details: { quantity_ml: ml }
+      details: { quantity_ml: ml },
+      source: activeDrawerSource || undefined,
     };
 
     if (initialData) {
@@ -95,7 +97,7 @@ export function BottomSheet_Water({
   };
 
   const handleTargetHit = async () => {
-    await setWaterToTarget(selectedDate);
+    await setWaterToTarget(selectedDate, activeDrawerSource || undefined);
     toast.success('Meta de Água Batida!', {
       description: 'Orgulho da Nutri! 👏',
       className: 'bg-orange-500 text-white border-transparent'

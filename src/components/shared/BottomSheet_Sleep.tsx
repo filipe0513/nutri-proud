@@ -31,6 +31,7 @@ export function BottomSheet_Sleep({
   const removeLog = useAppStore(state => state.removeLog);
   const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
   const deleteLogHistory = useHistoryStore(state => state.deleteLogHistory);
+  const activeDrawerSource = useAppStore(state => state.activeDrawerSource);
   const userProfile = useAppStore(state => state.user_profile);
   const sleepTarget = userProfile?.targets?.sleep_hours_per_night || 8;
   
@@ -97,7 +98,8 @@ export function BottomSheet_Sleep({
           duration_hours: duration,
           awoke_times: awokeTimes,
           quality_feeling: quality
-        }
+        },
+        source: activeDrawerSource || undefined,
       };
 
       if (initialData) {

@@ -23,7 +23,7 @@ interface AppState {
   addLog: (log: Omit<ActivityLog, 'id' | 'created_at'>) => Promise<void>;
   updateLog: (id: string, log: Omit<ActivityLog, 'id' | 'created_at'>) => Promise<void>;
   removeLog: (id: string) => Promise<void>;
-  setWaterToTarget: (date?: string) => Promise<void>;
+  setWaterToTarget: (date?: string, source?: string) => Promise<void>;
   initializeData: () => Promise<void>;
   resetData: () => void;
   
@@ -31,7 +31,9 @@ interface AppState {
   isAddLogOpen: boolean;
   setAddLogOpen: (isOpen: boolean) => void;
   activeDrawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | 'jacada' | 'lifesaver' | 'insights' | null;
-  setActiveDrawer: (drawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | 'jacada' | 'lifesaver' | 'insights' | null) => void;
+  activeDrawerSource: string | null;
+  setActiveDrawer: (drawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | 'jacada' | 'lifesaver' | 'insights' | null, source?: string) => void;
+  setActiveDrawerSource: (source: string | null) => void;
   /** Dados transitórios de insight para abrir o InsightsDrawer programaticamente (ex: via notificações) */
   pendingInsightData: { message: string; cta: string | null } | null;
   setPendingInsightData: (data: { message: string; cta: string | null } | null) => void;
@@ -44,7 +46,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
       isAddLogOpen: false,
       setAddLogOpen: (isOpen) => set({ isAddLogOpen: isOpen }),
       activeDrawer: null,
-      setActiveDrawer: (drawer) => set({ activeDrawer: drawer }),
+      activeDrawerSource: null,
+      setActiveDrawer: (drawer, source) => set({ activeDrawer: drawer, activeDrawerSource: source || null }),
+      setActiveDrawerSource: (source) => set({ activeDrawerSource: source }),
       pendingInsightData: null,
       setPendingInsightData: (data) => set({ pendingInsightData: data }),
 
@@ -139,7 +143,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
         }));
       },
 
-      setWaterToTarget: async (date?: string) => {
+      setWaterToTarget: async (date?: string, source?: string) => {
         const state = get();
         const profile = state.user_profile;
         if (!profile) return;
@@ -161,7 +165,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
           event_time: eventTime,
           category: 'water',
           primary_value: 100, // fully met
-          details: { quantity_ml: targetMl }
+          details: { quantity_ml: targetMl },
+          source,
         };
 
         await api.saveActivityLog(newLog);

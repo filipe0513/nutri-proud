@@ -29,6 +29,7 @@ export function WorkoutEqualizerDrawer({
   const addLog = useAppStore(state => state.addLog);
   const updateLog = useAppStore(state => state.updateLog);
   const removeLog = useAppStore(state => state.removeLog);
+  const activeDrawerSource = useAppStore(state => state.activeDrawerSource);
   const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
   const deleteLogHistory = useHistoryStore(state => state.deleteLogHistory);
   
@@ -91,7 +92,8 @@ export function WorkoutEqualizerDrawer({
       primary_value: score,
       details: { 
         factors: { cardio, carga }
-      }
+      },
+      source: activeDrawerSource || undefined,
     };
 
     if (initialData) {

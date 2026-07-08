@@ -80,6 +80,12 @@ export default function SettingsPage() {
       className:
         "bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success",
     });
+
+    fetch('/api/events', { method: 'POST', body: JSON.stringify({ eventName: 'SETTINGS_SAVED' }) }).catch(() => {});
+  };
+
+  const onError = () => {
+    fetch('/api/events', { method: 'POST', body: JSON.stringify({ eventName: 'SETTINGS_VALIDATION_ERROR' }) }).catch(() => {});
   };
 
   const appVersion = packageInfo.version;
@@ -119,7 +125,7 @@ export default function SettingsPage() {
         </Card>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-6">
         {/* Seção 1: Dados Pessoais */}
         <Card className="bg-glass-light-2 backdrop-blur-md border-white/40 shadow-sm rounded-3xl overflow-hidden">
           <CardContent className="p-6 space-y-4">

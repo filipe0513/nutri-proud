@@ -33,6 +33,7 @@ export function MealEqualizerDrawer({
   const addLog = useAppStore(state => state.addLog);
   const updateLog = useAppStore(state => state.updateLog);
   const removeLog = useAppStore(state => state.removeLog);
+  const activeDrawerSource = useAppStore(state => state.activeDrawerSource);
   const activityLogs = useAppStore(state => state.activity_logs);
   const userProfile = useAppStore(state => state.user_profile);
   const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
@@ -121,7 +122,8 @@ export function MealEqualizerDrawer({
       details: { 
         meal_type: selectedMeal as any,
         factors: { protein, carbs, fats, fiber }
-      }
+      },
+      source: activeDrawerSource || undefined,
     };
 
     const mealName = ALL_MEALS.find(m => m.id === selectedMeal)?.label || selectedMeal;

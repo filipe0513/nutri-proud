@@ -25,6 +25,10 @@ function WelcomeContent() {
     try {
       emailSchema.parse(email);
       setLoadingEmail(true);
+      
+      // Fire and forget telemetry
+      fetch('/api/events', { method: 'POST', body: JSON.stringify({ eventName: 'AUTH_EMAIL_STARTED' }) }).catch(() => {});
+
       const callbackUrl = forceLogin ? "/?merged=true" : "/";
       await signIn("resend", { email, redirect: false, callbackUrl });
       toast.success("Link enviado!", {
@@ -43,6 +47,9 @@ function WelcomeContent() {
   };
 
   const handleGoogleSignIn = () => {
+    // Fire and forget telemetry
+    fetch('/api/events', { method: 'POST', body: JSON.stringify({ eventName: 'AUTH_GOOGLE_CLICKED' }) }).catch(() => {});
+    
     const callbackUrl = forceLogin ? "/?merged=true" : "/";
     signIn("google", { callbackUrl });
   };

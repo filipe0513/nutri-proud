@@ -62,6 +62,7 @@ export const logService = {
         primaryValue: logData.primary_value,
         details: logData.details,
         eventTime: toSafeEventTime(logData.event_time),
+        source: logData.source || 'UNKNOWN',
       }
     });
 
@@ -82,6 +83,7 @@ export const logService = {
         primaryValue: logData.primary_value,
         details: logData.details,
         eventTime: toSafeEventTime(logData.event_time),
+        source: logData.source || 'UNKNOWN',
       }
     });
 

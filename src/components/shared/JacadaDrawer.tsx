@@ -44,7 +44,7 @@ export function JacadaDrawer({
   const [alcohol, setAlcohol] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const { initializeData, removeLog, updateLog } = useAppStore();
+  const { initializeData, removeLog, updateLog, activeDrawerSource } = useAppStore();
   const { updateLogHistory, deleteLogHistory } = useHistoryStore();
 
   // Populate fields when editing
@@ -113,6 +113,7 @@ export function JacadaDrawer({
           body: JSON.stringify({
             ...initialData,
             details: { sugar, fat, alcohol },
+            source: activeDrawerSource || undefined,
           }),
         });
 
@@ -132,7 +133,11 @@ export function JacadaDrawer({
         const res = await fetch('/api/logs/jacada', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sugar, fat, alcohol, event_time: toLocalISOString(new Date()) }),
+          body: JSON.stringify({ 
+            sugar, fat, alcohol, 
+            event_time: toLocalISOString(new Date()),
+            source: activeDrawerSource || undefined 
+          }),
         });
 
         if (!res.ok) throw new Error('Falha ao registrar jacada');

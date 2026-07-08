@@ -28,6 +28,7 @@ export function BottomSheet_Poop({
   const addLog = useAppStore(state => state.addLog);
   const updateLog = useAppStore(state => state.updateLog);
   const removeLog = useAppStore(state => state.removeLog);
+  const activeDrawerSource = useAppStore(state => state.activeDrawerSource);
   const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
   const deleteLogHistory = useHistoryStore(state => state.deleteLogHistory);
   
@@ -71,7 +72,8 @@ export function BottomSheet_Poop({
       event_time: toLocalISOString(new Date(selectedDate)),
       category: 'poop' as const,
       primary_value: primaryValue,
-      details: { state }
+      details: { state },
+      source: activeDrawerSource || undefined,
     };
 
     if (initialData) {
