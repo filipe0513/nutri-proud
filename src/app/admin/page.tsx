@@ -1,8 +1,9 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Activity, BarChart3, Mail, TrendingUp, Cpu } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Users, Activity, BrainCircuit } from "lucide-react";
+import { WeeklyVolumeChart, SourceDistributionChart } from "./charts";
 
 export default async function AdminPage() {
   const session = await auth();
@@ -12,155 +13,171 @@ export default async function AdminPage() {
     redirect("/");
   }
 
-  // Estatísticas para o Dashboard
+  // 1. Overview KPIs
   const totalUsers = await prisma.user.count({ where: { is_anonymous: false } });
   const totalAnon = await prisma.user.count({ where: { is_anonymous: true } });
   
-  // Proxy DAU (24h)
   // eslint-disable-next-line react-hooks/purity
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const logsLast24h = await prisma.dailyLog.count({
     where: { createdAt: { gte: oneDayAgo } }
   });
 
-  // Agrupamento por source (Caminhos de Uso)
-  const logsBySource = await prisma.dailyLog.groupBy({
+  const aiInsightsCount = await prisma.aiInsight.count();
+  const aiCostEstimate = (aiInsightsCount * 0.015).toFixed(2); // Simulação: $0.015 por insight
+  
+  // 2. Volume Semanal
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  const weeklyLogs = await prisma.dailyLog.findMany({
+    where: { createdAt: { gte: sevenDaysAgo } },
+    select: { createdAt: true }
+  });
+
+  const daysOfWeek = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const logsByDay = weeklyLogs.reduce((acc, log) => {
+    const dayName = daysOfWeek[log.createdAt.getDay()];
+    acc[dayName] = (acc[dayName] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const areaChartData = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dayName = daysOfWeek[d.getDay()];
+    areaChartData.push({
+      name: dayName,
+      logs: logsByDay[dayName] || 0
+    });
+  }
+
+  // 3. Distribuição Source
+  const sourceGroups = await prisma.dailyLog.groupBy({
     by: ['source'],
     _count: { source: true }
   });
-  const totalSourcedLogs = logsBySource.reduce((acc, curr) => acc + curr._count.source, 0);
+  
+  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const donutData = sourceGroups.map((item, index) => ({
+    name: item.source || 'UNKNOWN',
+    value: item._count.source,
+    fill: COLORS[index % COLORS.length]
+  }));
 
-  // IA - Sucesso vs Desistência
-  const aiConverted = await prisma.systemEvent.count({
-    where: { eventName: 'AI_DRAWER_CONVERTED' }
-  });
-  const aiDismissed = await prisma.systemEvent.count({
-    where: { eventName: 'AI_DRAWER_DISMISSED' }
-  });
-  const aiTotal = aiConverted + aiDismissed;
-  const aiSuccessRate = aiTotal > 0 ? Math.round((aiConverted / aiTotal) * 100) : 0;
-
-  // Funil de E-mail
-  const emailStarted = await prisma.systemEvent.count({
-    where: { eventName: 'AUTH_EMAIL_STARTED' }
-  });
-  const emailValidated = await prisma.user.count({
-    where: { emailVerified: { not: null } }
-  });
-  const emailDropOff = emailStarted > 0 ? Math.round(((emailStarted - emailValidated) / emailStarted) * 100) : 0;
-
-  // Últimos 10 usuários
-  const lastUsers = await prisma.user.findMany({
+  // 4. Heavy Users Table (Top 10)
+  const topUsers = await prisma.user.findMany({
     take: 10,
-    orderBy: { createdAt: 'desc' },
-    select: { id: true, email: true, createdAt: true, is_anonymous: true }
+    orderBy: {
+      logs: {
+        _count: 'desc'
+      }
+    },
+    include: {
+      _count: {
+        select: { logs: true }
+      }
+    }
   });
 
   return (
     <div className="min-h-screen bg-neutral-100 p-8">
       <div className="max-w-6xl mx-auto space-y-8">
-        <header className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-neutral-800">
-              Admin Dashboard
-            </h1>
-            <p className="text-neutral-500">
-              Métricas e conversões do Orgulho da Nutri
-            </p>
-          </div>
+        <header className="flex flex-col gap-2">
+          <h1 className="text-title-1 font-bold text-neutral-800">
+            Centro de Comando Premium
+          </h1>
+          <p className="text-body-1 text-neutral-500">
+            Análise comportamental avançada e métricas de sistema do Orgulho da Nutri.
+          </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
+        {/* KPIs */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-neutral-500">Usuários Registrados</CardTitle>
+              <CardTitle className="text-sm font-medium text-neutral-500">Base Ativa (Registrados)</CardTitle>
               <Users className="w-4 h-4 text-neutral-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-neutral-800">{totalUsers}</div>
-              <p className="text-xs text-neutral-500">+{totalAnon} anônimos</p>
+              <div className="text-3xl font-bold text-neutral-800">{totalUsers}</div>
+              <p className="text-xs text-neutral-500 mt-1">+{totalAnon} usuários no modo anônimo</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-neutral-500">DAU (Logs 24h)</CardTitle>
+              <CardTitle className="text-sm font-medium text-neutral-500">Engajamento (24h)</CardTitle>
               <Activity className="w-4 h-4 text-neutral-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-neutral-800">{logsLast24h}</div>
-              <p className="text-xs text-neutral-500">Registros no último dia</p>
+              <div className="text-3xl font-bold text-neutral-800">{logsLast24h}</div>
+              <p className="text-xs text-neutral-500 mt-1">Registros de hábitos adicionados hoje</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-neutral-500">Sucesso da IA</CardTitle>
-              <Cpu className="w-4 h-4 text-neutral-400" />
+              <CardTitle className="text-sm font-medium text-neutral-500">Custo Est. de IA</CardTitle>
+              <BrainCircuit className="w-4 h-4 text-neutral-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-neutral-800">{aiSuccessRate}%</div>
-              <p className="text-xs text-neutral-500">{aiConverted} usos / {aiDismissed} pulos</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-neutral-500">Drop-off de E-mail</CardTitle>
-              <Mail className="w-4 h-4 text-neutral-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-neutral-800">{emailDropOff}%</div>
-              <p className="text-xs text-neutral-500">{emailStarted} iniciados / {emailValidated} ativos</p>
+              <div className="text-3xl font-bold text-neutral-800">${aiCostEstimate}</div>
+              <p className="text-xs text-neutral-500 mt-1">{aiInsightsCount} insights gerados até agora</p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-neutral-700">
-                <BarChart3 className="w-5 h-5" /> Caminhos de Uso (Logs)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {logsBySource.map(sourceData => {
-                  const percentage = totalSourcedLogs > 0 ? Math.round((sourceData._count.source / totalSourcedLogs) * 100) : 0;
-                  return (
-                    <div key={sourceData.source} className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-neutral-600">{sourceData.source || 'UNKNOWN'}</span>
-                      <span className="text-sm text-neutral-500">{percentage}% ({sourceData._count.source})</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <WeeklyVolumeChart data={areaChartData} />
+          <SourceDistributionChart data={donutData} />
+        </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-neutral-700">
-                <TrendingUp className="w-5 h-5" /> Saúde da Comunidade (Últimos 10)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {lastUsers.map(u => (
-                  <div key={u.id} className="flex items-center justify-between pb-2 border-b border-neutral-100 last:border-0">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-neutral-700">{u.email || (u.is_anonymous ? 'Usuário Anônimo' : 'Sem E-mail')}</span>
-                      <span className="text-xs text-neutral-400">{new Date(u.createdAt).toLocaleDateString('pt-BR')}</span>
-                    </div>
-                    <div className="text-xs bg-neutral-100 px-2 py-1 rounded-md text-neutral-500">
-                      {u.is_anonymous ? 'Anônimo' : 'Registrado'}
-                    </div>
-                  </div>
+        {/* Top Heavy Users */}
+        <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm overflow-hidden">
+          <CardHeader>
+            <CardTitle className="text-neutral-700">Heavy Users (Top 10)</CardTitle>
+            <CardDescription>Usuários mais engajados com base no volume total de hábitos registrados.</CardDescription>
+          </CardHeader>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-neutral-500 uppercase bg-neutral-100/50 border-y border-neutral-200">
+                <tr>
+                  <th scope="col" className="px-6 py-3">Usuário</th>
+                  <th scope="col" className="px-6 py-3">Status</th>
+                  <th scope="col" className="px-6 py-3">Entrou em</th>
+                  <th scope="col" className="px-6 py-3 text-right">Total de Logs</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topUsers.map((u, i) => (
+                  <tr key={u.id} className="bg-white/30 border-b border-neutral-100 last:border-0 hover:bg-white/50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-neutral-800 flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-full bg-neutral-200 flex items-center justify-center text-xs text-neutral-500 font-bold">
+                        {i + 1}
+                      </div>
+                      {u.email || (u.is_anonymous ? 'Usuário Anônimo' : 'Sem E-mail')}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-md text-xs font-medium ${u.is_anonymous ? 'bg-notify-warning-glass text-notify-warning border border-notify-warning/20' : 'bg-notify-success-glass text-notify-success border border-notify-success/20'}`}>
+                        {u.is_anonymous ? 'Anônimo' : 'Registrado'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-neutral-500">
+                      {new Date(u.createdAt).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="px-6 py-4 text-right font-bold text-neutral-700">
+                      {u._count.logs}
+                    </td>
+                  </tr>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </tbody>
+            </table>
+          </div>
+        </Card>
 
       </div>
     </div>
