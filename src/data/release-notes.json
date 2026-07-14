@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.17.0",
+    "date": "2026-07-14",
+    "highlights": [
+      "✨ Adicionada lista de novidades diretamente no app (clique na versão em Configurações)",
+      "🚀 Novo sistema de automação para lançamentos mais rápidos e seguros"
+    ]
+  },
+  {
     "version": "1.16.0",
     "date": "2026-07-14",
     "highlights": [
