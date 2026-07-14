@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.18.0",
+    "date": "2026-07-14",
+    "highlights": [
+      "📊 Adição de Nome e data do Último Registro na tabela de Heavy Users do painel Admin",
+      "📈 Correção e melhoria na telemetria, garantindo rastreamento mais preciso de engajamento"
+    ]
+  },
+  {
     "version": "1.17.0",
     "date": "2026-07-14",
     "highlights": [
