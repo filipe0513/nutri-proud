@@ -78,6 +78,11 @@ export default async function AdminPage() {
     include: {
       _count: {
         select: { logs: true }
+      },
+      logs: {
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        select: { createdAt: true }
       }
     }
   });
@@ -147,8 +152,10 @@ export default async function AdminPage() {
               <thead className="text-xs text-neutral-500 uppercase bg-neutral-100/50 border-y border-neutral-200">
                 <tr>
                   <th scope="col" className="px-6 py-3">Usuário</th>
+                  <th scope="col" className="px-6 py-3">Nome</th>
                   <th scope="col" className="px-6 py-3">Status</th>
                   <th scope="col" className="px-6 py-3">Entrou em</th>
+                  <th scope="col" className="px-6 py-3">Último Registro</th>
                   <th scope="col" className="px-6 py-3 text-right">Total de Logs</th>
                 </tr>
               </thead>
@@ -161,13 +168,21 @@ export default async function AdminPage() {
                       </div>
                       {u.email || (u.is_anonymous ? 'Usuário Anônimo' : 'Sem E-mail')}
                     </td>
+                    <td className="px-6 py-4 text-neutral-600">
+                      {u.name || 'Sem nome'}
+                    </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-md text-xs font-medium ${u.is_anonymous ? 'bg-notify-warning-glass text-notify-warning border border-notify-warning/20' : 'bg-notify-success-glass text-notify-success border border-notify-success/20'}`}>
                         {u.is_anonymous ? 'Anônimo' : 'Registrado'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-neutral-500">
+                    <td className="px-6 py-4 text-neutral-500 whitespace-nowrap">
                       {new Date(u.createdAt).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="px-6 py-4 text-neutral-500 whitespace-nowrap">
+                      {u.logs.length > 0 
+                        ? new Date(u.logs[0].createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '')
+                        : 'Nenhum registro'}
                     </td>
                     <td className="px-6 py-4 text-right font-bold text-neutral-700">
                       {u._count.logs}
