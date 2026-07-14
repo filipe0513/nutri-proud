@@ -46,7 +46,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const { sugar, fat, alcohol } = await request.json();
+    const body = await request.json();
+    const { sugar, fat, alcohol, logId } = body as {
+      sugar: number;
+      fat: number;
+      alcohol: number;
+      logId?: string;
+    };
 
     if (sugar === undefined || fat === undefined || alcohol === undefined) {
       return NextResponse.json(
@@ -127,6 +133,22 @@ REGRAS OBRIGATÓRIAS:
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text().trim();
+
+    // Se logId foi fornecido, persiste a reação no DailyLog (fire-and-forget, silencioso)
+    if (logId && userId) {
+      prisma.dailyLog.findUnique({ where: { id: logId, userId } })
+        .then((log) => {
+          if (!log) return;
+          const existingDetails = (log.details as Record<string, unknown>) ?? {};
+          return prisma.dailyLog.update({
+            where: { id: logId },
+            data: {
+              details: { ...existingDetails, nutri_reaction: text },
+            },
+          });
+        })
+        .catch(() => {/* silent — não bloqueia a resposta */});
+    }
 
     // Persiste a reação como notificação (fire-and-forget, silencioso)
     if (userId) {

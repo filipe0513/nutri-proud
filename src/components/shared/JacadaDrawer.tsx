@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { useAppStore } from '@/store/store';
 import { useHistoryStore } from '@/store/historyStore';
 import { ActivityLog } from '@/store/types';
+import { JacadaReactionDrawer } from '@/components/shared/JacadaReactionDrawer';
 
 const SLIDER_LABELS: Record<number, string> = {
   0: '—',
@@ -44,6 +45,11 @@ export function JacadaDrawer({
   const [alcohol, setAlcohol] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // State for the reaction drawer (shown after creating a new jacada)
+  const [reactionOpen, setReactionOpen] = useState(false);
+  const [reactionLoading, setReactionLoading] = useState(false);
+  const [reactionMessage, setReactionMessage] = useState('');
+
   const { initializeData, removeLog, updateLog, activeDrawerSource } = useAppStore();
   const { updateLogHistory, deleteLogHistory } = useHistoryStore();
 
@@ -69,35 +75,26 @@ export function JacadaDrawer({
     }
   };
 
-  const fetchAIReaction = async (s: number, f: number, a: number) => {
-    const toastId = toast.loading('Nutri analisando deslize...');
+  const fetchAIReaction = async (s: number, f: number, a: number, logId: string) => {
+    setReactionLoading(true);
+    setReactionOpen(true);
     try {
       const aiRes = await fetch('/api/ai/jacada-reaction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sugar: s, fat: f, alcohol: a }),
+        body: JSON.stringify({ sugar: s, fat: f, alcohol: a, logId }),
       });
 
       if (aiRes.ok) {
         const aiData = await aiRes.json();
-        toast.success('Nutri diz:', {
-          id: toastId,
-          description: aiData.message,
-          className: 'bg-orange-50 border-orange-200 text-orange-900',
-        });
+        setReactionMessage(aiData.message);
       } else {
-        toast.success('Jacada registrada!', {
-          id: toastId,
-          description: 'Os pontos foram deduzidos da sua alimentação de hoje.',
-          className: 'bg-orange-50 border-orange-200 text-orange-900',
-        });
+        setReactionMessage('A Nutri não conseguiu analisar agora. Mas a jacada foi registrada!');
       }
     } catch {
-      toast.success('Jacada registrada!', {
-        id: toastId,
-        description: 'Os pontos foram deduzidos da sua alimentação de hoje.',
-        className: 'bg-orange-50 border-orange-200 text-orange-900',
-      });
+      setReactionMessage('A Nutri não conseguiu analisar agora. Mas a jacada foi registrada!');
+    } finally {
+      setReactionLoading(false);
     }
   };
 
@@ -112,7 +109,7 @@ export function JacadaDrawer({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...initialData,
-            details: { sugar, fat, alcohol },
+            details: { ...initialData.details, sugar, fat, alcohol },
             source: activeDrawerSource || undefined,
           }),
         });
@@ -120,8 +117,16 @@ export function JacadaDrawer({
         if (!res.ok) throw new Error('Falha ao atualizar jacada');
 
         const updated = await res.json();
-        updateLog(initialData.id, { ...initialData, details: { sugar, fat, alcohol }, primary_value: updated.primary_value ?? initialData.primary_value });
-        updateLogHistory(initialData.id, { ...initialData, details: { sugar, fat, alcohol }, primary_value: updated.primary_value ?? initialData.primary_value });
+        updateLog(initialData.id, {
+          ...initialData,
+          details: { ...initialData.details, sugar, fat, alcohol },
+          primary_value: updated.primary_value ?? initialData.primary_value,
+        });
+        updateLogHistory(initialData.id, {
+          ...initialData,
+          details: { ...initialData.details, sugar, fat, alcohol },
+          primary_value: updated.primary_value ?? initialData.primary_value,
+        });
 
         toast.success('Jacada atualizada!', {
           className: 'bg-orange-50 border-orange-200 text-orange-900',
@@ -133,14 +138,17 @@ export function JacadaDrawer({
         const res = await fetch('/api/logs/jacada', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            sugar, fat, alcohol, 
+          body: JSON.stringify({
+            sugar, fat, alcohol,
             event_time: toLocalISOString(new Date()),
-            source: activeDrawerSource || undefined 
+            source: activeDrawerSource || undefined
           }),
         });
 
         if (!res.ok) throw new Error('Falha ao registrar jacada');
+
+        const savedData = await res.json();
+        const logId: string = savedData?.result?.id ?? '';
 
         const savedSugar = sugar;
         const savedFat = fat;
@@ -149,9 +157,9 @@ export function JacadaDrawer({
         resetForm();
         onOpenChange(false);
 
-        // Fire and forget: AI reaction
-        fetchAIReaction(savedSugar, savedFat, savedAlcohol);
+        // Refresh home data then fetch AI reaction (opens reaction drawer)
         await initializeData();
+        fetchAIReaction(savedSugar, savedFat, savedAlcohol, logId);
       }
     } catch (error) {
       toast.error('Erro ao salvar jacada. Tente novamente.');
@@ -181,113 +189,139 @@ export function JacadaDrawer({
   };
 
   const isEditing = !!initialData;
+  const savedReaction = initialData?.details?.nutri_reaction;
 
   return (
-    <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent className="bg-glass-light-3 backdrop-blur-lg border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-10">
-        <DrawerHeader className="px-0 pb-4">
-          <DrawerTitle className="text-title-2 text-neutral-600 flex items-center gap-2">
-            <span className="text-3xl">🍺🍔🍩</span> {isEditing ? 'Editar Jacada' : 'Jacada do Dia'}
-          </DrawerTitle>
-          <p className="text-body-2 text-neutral-500 mt-2">
-            Avalie de 0 a 5 o impacto do seu deslize. Cada ponto deduz da sua pontuação de alimentação do dia.
-          </p>
-        </DrawerHeader>
+    <>
+      <Drawer open={open} onOpenChange={handleOpenChange}>
+        <DrawerContent className="bg-glass-light-3 backdrop-blur-lg border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-10">
+          <DrawerHeader className="px-0 pb-4">
+            <DrawerTitle className="text-title-2 text-neutral-600 flex items-center gap-2">
+              <span className="text-3xl">🍺🍔🍩</span> {isEditing ? 'Editar Jacada' : 'Jacada do Dia'}
+            </DrawerTitle>
+            <p className="text-body-2 text-neutral-500 mt-2">
+              Avalie de 0 a 5 o impacto do seu deslize. Cada ponto deduz da sua pontuação de alimentação do dia.
+            </p>
+          </DrawerHeader>
 
-        <div className="space-y-8 mt-4">
-          {/* Sugar */}
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-body-1 font-semibold text-neutral-600 flex items-center gap-2">
-                🍩 Açúcar / Doces
-              </span>
-              <span className="font-semibold text-orange-500 text-sm">{getSliderLabel(sugar)}</span>
+          <div className="space-y-8 mt-4">
+            {/* Sugar */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-body-1 font-semibold text-neutral-600 flex items-center gap-2">
+                  🍩 Açúcar / Doces
+                </span>
+                <span className="font-semibold text-orange-500 text-sm">{getSliderLabel(sugar)}</span>
+              </div>
+              <Slider
+                value={[sugar]}
+                onValueChange={([val]) => setSugar(val)}
+                max={5}
+                step={1}
+              />
+              <div className="flex justify-between text-xs text-neutral-400 px-1">
+                <span>Nada</span>
+                <span>Chutei o balde</span>
+              </div>
             </div>
-            <Slider
-              value={[sugar]}
-              onValueChange={([val]) => setSugar(val)}
-              max={5}
-              step={1}
-            />
-            <div className="flex justify-between text-xs text-neutral-400 px-1">
-              <span>Nada</span>
-              <span>Chutei o balde</span>
-            </div>
-          </div>
 
-          {/* Fat */}
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-body-1 font-semibold text-neutral-600 flex items-center gap-2">
-                🍔 Frituras / Fast Food
-              </span>
-              <span className="font-semibold text-orange-500 text-sm">{getSliderLabel(fat)}</span>
+            {/* Fat */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-body-1 font-semibold text-neutral-600 flex items-center gap-2">
+                  🍔 Frituras / Fast Food
+                </span>
+                <span className="font-semibold text-orange-500 text-sm">{getSliderLabel(fat)}</span>
+              </div>
+              <Slider
+                value={[fat]}
+                onValueChange={([val]) => setFat(val)}
+                max={5}
+                step={1}
+              />
+              <div className="flex justify-between text-xs text-neutral-400 px-1">
+                <span>Nada</span>
+                <span>Chutei o balde</span>
+              </div>
             </div>
-            <Slider
-              value={[fat]}
-              onValueChange={([val]) => setFat(val)}
-              max={5}
-              step={1}
-            />
-            <div className="flex justify-between text-xs text-neutral-400 px-1">
-              <span>Nada</span>
-              <span>Chutei o balde</span>
-            </div>
-          </div>
 
-          {/* Alcohol */}
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-body-1 font-semibold text-neutral-600 flex items-center gap-2">
-                🍺 Álcool
-              </span>
-              <span className="font-semibold text-orange-500 text-sm">{getSliderLabel(alcohol)}</span>
+            {/* Alcohol */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-body-1 font-semibold text-neutral-600 flex items-center gap-2">
+                  🍺 Álcool
+                </span>
+                <span className="font-semibold text-orange-500 text-sm">{getSliderLabel(alcohol)}</span>
+              </div>
+              <Slider
+                value={[alcohol]}
+                onValueChange={([val]) => setAlcohol(val)}
+                max={5}
+                step={1}
+              />
+              <div className="flex justify-between text-xs text-neutral-400 px-1">
+                <span>Nada</span>
+                <span>Chutei o balde</span>
+              </div>
             </div>
-            <Slider
-              value={[alcohol]}
-              onValueChange={([val]) => setAlcohol(val)}
-              max={5}
-              step={1}
-            />
-            <div className="flex justify-between text-xs text-neutral-400 px-1">
-              <span>Nada</span>
-              <span>Chutei o balde</span>
-            </div>
-          </div>
 
-          {isEditing ? (
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-14 w-14 rounded-2xl border border-orange-200 bg-white/50 text-orange-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50 flex-shrink-0"
-                onClick={handleDelete}
-                title="Apagar registro"
-                disabled={loading}
-              >
-                <Trash2 size={18} />
-              </Button>
+            {/* Saved Nutri reaction (view mode only) */}
+            {isEditing && savedReaction && (
+              <div className="rounded-2xl bg-orange-50 border border-orange-200 p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🥗</span>
+                  <p className="text-caption-1 font-bold text-orange-600 uppercase tracking-wide">
+                    O que a Nutri disse
+                  </p>
+                </div>
+                <p className="text-body-2 text-neutral-700 leading-relaxed">
+                  {savedReaction}
+                </p>
+              </div>
+            )}
+
+            {isEditing ? (
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-14 w-14 rounded-2xl border border-orange-200 bg-white/50 text-orange-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50 flex-shrink-0"
+                  onClick={handleDelete}
+                  title="Apagar registro"
+                  disabled={loading}
+                >
+                  <Trash2 size={18} />
+                </Button>
+                <button
+                  onClick={handleRegister}
+                  disabled={loading || (sugar === 0 && fat === 0 && alcohol === 0)}
+                  className="flex-1 h-14 rounded-2xl bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-bold text-button-1 transition-all shadow-lg disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+                >
+                  {loading ? 'Salvando...' : 'Salvar'}
+                  <Utensils className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
               <button
                 onClick={handleRegister}
                 disabled={loading || (sugar === 0 && fat === 0 && alcohol === 0)}
-                className="flex-1 h-14 rounded-2xl bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-bold text-button-1 transition-all shadow-lg disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+                className="w-full h-14 mt-4 rounded-2xl bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-bold text-button-1 transition-all shadow-lg disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
               >
-                {loading ? 'Salvando...' : 'Salvar'}
+                {loading ? 'Registrando...' : 'Registrar Jacada'}
                 <Utensils className="w-5 h-5" />
               </button>
-            </div>
-          ) : (
-            <button
-              onClick={handleRegister}
-              disabled={loading || (sugar === 0 && fat === 0 && alcohol === 0)}
-              className="w-full h-14 mt-4 rounded-2xl bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-bold text-button-1 transition-all shadow-lg disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
-            >
-              {loading ? 'Registrando...' : 'Registrar Jacada'}
-              <Utensils className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-      </DrawerContent>
-    </Drawer>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Reaction drawer — shown after new jacada is saved */}
+      <JacadaReactionDrawer
+        open={reactionOpen}
+        onOpenChange={setReactionOpen}
+        message={reactionMessage}
+        isLoading={reactionLoading}
+      />
+    </>
   );
 }

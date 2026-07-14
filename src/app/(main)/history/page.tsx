@@ -191,9 +191,14 @@ export default function HistoryPage() {
                               <p className="font-bold text-body-1 text-neutral-500">
                                 {CATEGORY_NAMES[log.category] || log.category}
                               </p>
-                              <p className="text-caption-1 text-neutral-400">
+                              <p className="text-caption-1 text-neutral-400 flex items-center gap-2">
                                 {format(new Date(log.event_time), "HH:mm")} •
                                 Pontuação: {log.primary_value}
+                                {log.category === "jacada" && (log as ActivityLog).details?.nutri_reaction && (
+                                  <span className="inline-flex items-center gap-1 text-orange-500 font-semibold">
+                                    · 💬 Nutri reagiu
+                                  </span>
+                                )}
                               </p>
                             </div>
                           </div>

@@ -38,6 +38,7 @@ export interface ActivityLog {
     sugar?: number;
     fat?: number;
     alcohol?: number;
+    nutri_reaction?: string; // AI reaction saved after jacada registration
   };
   source?: string;
 }
