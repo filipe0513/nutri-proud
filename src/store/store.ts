@@ -31,7 +31,7 @@ interface AppState {
   isAddLogOpen: boolean;
   setAddLogOpen: (isOpen: boolean) => void;
   activeDrawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | 'jacada' | 'lifesaver' | 'insights' | null;
-  activeDrawerSource: string | null;
+  activeDrawerSource: string;
   setActiveDrawer: (drawer: 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note' | 'jacada' | 'lifesaver' | 'insights' | null, source?: string) => void;
   setActiveDrawerSource: (source: string | null) => void;
   /** Dados transitórios de insight para abrir o InsightsDrawer programaticamente (ex: via notificações) */
@@ -46,9 +46,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
       isAddLogOpen: false,
       setAddLogOpen: (isOpen) => set({ isAddLogOpen: isOpen }),
       activeDrawer: null,
-      activeDrawerSource: null,
-      setActiveDrawer: (drawer, source) => set({ activeDrawer: drawer, activeDrawerSource: source || null }),
-      setActiveDrawerSource: (source) => set({ activeDrawerSource: source }),
+      activeDrawerSource: 'UNKNOWN',
+      setActiveDrawer: (drawer, source) => set({ activeDrawer: drawer, activeDrawerSource: source || 'UNKNOWN' }),
+      setActiveDrawerSource: (source) => set({ activeDrawerSource: source || 'UNKNOWN' }),
       pendingInsightData: null,
       setPendingInsightData: (data) => set({ pendingInsightData: data }),
 

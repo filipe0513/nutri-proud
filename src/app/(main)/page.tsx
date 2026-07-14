@@ -296,7 +296,7 @@ function DashboardContent() {
           {isLifesaverTime && (
             <div
               className="flex items-center bg-red-50 rounded-2xl px-4 py-4 border border-red-200 shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-[0.98] group"
-              onClick={() => setOpenDrawer('lifesaver')}
+              onClick={() => setOpenDrawer('lifesaver', 'CARD')}
             >
               <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                 <LifeBuoy className="h-5 w-5 text-red-500" />
@@ -310,7 +310,7 @@ function DashboardContent() {
 
           {/* Note */}
           {renderActionItem(ACTION_LIST[0], (
-            <Drawer open={openDrawer === 'note' || undefined} onOpenChange={(o) => o ? setOpenDrawer('note') : setOpenDrawer(null)}>
+            <Drawer open={openDrawer === 'note' || undefined} onOpenChange={(o) => o ? setOpenDrawer('note', 'CARD') : setOpenDrawer(null)}>
               <DrawerTrigger asChild>
                 {actionTrigger(ACTION_LIST[0])}
               </DrawerTrigger>
@@ -334,7 +334,8 @@ function DashboardContent() {
                           event_time: toLocalISOString(new Date()),
                           category: 'note',
                           primary_value: 100,
-                          details: { notes: noteText }
+                          details: { notes: noteText },
+                          source: useAppStore.getState().activeDrawerSource || 'CARD'
                         });
                         toast.success('Nota salva com sucesso!', {
                           className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success'
@@ -374,11 +375,11 @@ function DashboardContent() {
       />
       <JacadaDrawer
         open={openDrawer === 'jacada'}
-        onOpenChange={(o) => o ? setOpenDrawer('jacada') : setOpenDrawer(null)}
+        onOpenChange={(o) => o ? setOpenDrawer('jacada', 'CARD') : setOpenDrawer(null)}
       />
       <LifesaverDrawer
         open={openDrawer === 'lifesaver'}
-        onOpenChange={(o) => o ? setOpenDrawer('lifesaver') : setOpenDrawer(null)}
+        onOpenChange={(o) => o ? setOpenDrawer('lifesaver', 'CARD') : setOpenDrawer(null)}
         scores={scores}
       />
       <InsightsDrawer
@@ -400,7 +401,7 @@ function DashboardContent() {
         onClose={() => setIsWarningOpen(false)} 
         onContinueAnyway={() => {
           if (pendingAction) {
-            setOpenDrawer(pendingAction as 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note');
+            setOpenDrawer(pendingAction as 'water' | 'meal' | 'workout' | 'sleep' | 'poop' | 'note', 'CARD');
             setPendingAction(null);
           }
         }}
