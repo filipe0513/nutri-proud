@@ -1,0 +1,147 @@
+[
+  {
+    "version": "1.16.0",
+    "date": "2026-07-14",
+    "highlights": [
+      "🧠 Análise de intestino pela IA com correlação alimentar",
+      "💬 Reação da Nutri agora vira drawer vinculado ao log",
+      "🛡️ Prevenção de duplo-clique em todos os botões de salvar"
+    ]
+  },
+  {
+    "version": "1.15.0",
+    "date": "2026-07-14",
+    "highlights": [
+      "📊 Redesign premium do painel admin com gráficos e agregações reais"
+    ]
+  },
+  {
+    "version": "1.14.0",
+    "date": "2026-07-09",
+    "highlights": [
+      "💪 Nova UI para registro de treinos com legendas claras",
+      "⚖️ Sliders de treino simplificados para 25 passos (melhor precisão)"
+    ]
+  },
+  {
+    "version": "1.13.0",
+    "date": "2026-07-08",
+    "highlights": [
+      "📈 Lançamento do Dashboard de Métricas Administrativo",
+      "📡 Nova telemetria e tracking de eventos do sistema",
+      "🔒 Infraestrutura de controle de acesso (RBAC) e segurança"
+    ]
+  },
+  {
+    "version": "1.12.0",
+    "date": "2026-07-07",
+    "highlights": [
+      "🔥 Pontuação híbrida de treinos e índice de consistência (NPS)",
+      "🍔 Penalidade adaptativa para jacadas no relatório",
+      "🤖 Nutri AI mais inteligente com contexto da semana toda",
+      "📅 Interação aprimorada no diário: filtre e delete eventos ao vivo"
+    ]
+  },
+  {
+    "version": "1.11.0",
+    "date": "2026-07-07",
+    "highlights": [
+      "🔔 Nova central de Notificações com histórico de insights",
+      "🛡️ Limite inteligente de geração de IA (1 por hora) para evitar spam",
+      "✨ Melhorias de usabilidade para evitar sobreposição de telas"
+    ]
+  },
+  {
+    "version": "1.10.1",
+    "date": "2026-06-26",
+    "highlights": [
+      "🔗 Compartilhamento de relatórios usando o domínio correto",
+      "🚪 Melhor limpeza de dados temporários ao sair da conta"
+    ]
+  },
+  {
+    "version": "1.10.0",
+    "date": "2026-06-10",
+    "highlights": [
+      "🌍 Correção de fuso horário nos diários (agora sempre no seu horário local)",
+      "🧮 Novo motor de cálculo de pontos unificado para água e sono",
+      "🔐 Refatoração profunda na infraestrutura de login (Proxy Next.js)"
+    ]
+  },
+  {
+    "version": "1.9.0",
+    "date": "2026-06-10",
+    "highlights": [
+      "🎁 Novo formato de insights com gaveta surpresa e cooldown",
+      "💪 Melhorias no cálculo compensatório do log de treinos",
+      "⚙️ Atualizações internas de banco de dados e autenticação via Email"
+    ]
+  },
+  {
+    "version": "1.8.0",
+    "date": "2026-06-05",
+    "highlights": [
+      "💬 Reações instantâneas da IA (Nutri) ao registrar uma refeição fora do plano",
+      "🤖 Insights semanais inteligentes gerados com Gemini AI",
+      "🛟 Botão 'Salva-Vidas' para resgatar sua nota quando o dia for ruim"
+    ]
+  },
+  {
+    "version": "1.7.0",
+    "date": "2026-06-04",
+    "highlights": [
+      "🍱 Sincronização inteligente dos botões de comida com suas refeições planejadas",
+      "😴 Melhor experiência e usabilidade ao avaliar a qualidade do sono",
+      "✨ Nova tela de abertura (Splash Screen) motivacional",
+      "💯 As notas diárias agora são normalizadas em base 100 para leitura fácil"
+    ]
+  },
+  {
+    "version": "1.6.0",
+    "date": "2026-05-20",
+    "highlights": [
+      "📅 Diário interativo: clique nos dias passados para recolher e expandir",
+      "🍔 Penalidade da jacada agora é proporcional ao volume da sua dieta",
+      "🔔 Lembretes de água reprogramados para os horários certos"
+    ]
+  },
+  {
+    "version": "1.5.0",
+    "date": "2026-05-19",
+    "highlights": [
+      "📱 Nova navegação centralizada via botão flutuante (FAB)",
+      "📤 Nova opção para gerar e compartilhar relatórios com a sua Nutri",
+      "🍔 Lógica de 'Cascata' implementada para as jacadas",
+      "🔒 Novas regras de segurança bloqueando acessos indevidos"
+    ]
+  },
+  {
+    "version": "1.4.1",
+    "date": "2026-05-18",
+    "highlights": [
+      "🐛 Correções na tela de registro de intestino"
+    ]
+  },
+  {
+    "version": "1.4.0",
+    "date": "2026-05-11",
+    "highlights": [
+      "🐛 Resolução de erro ao apagar logs do histórico"
+    ]
+  },
+  {
+    "version": "1.3.0",
+    "date": "2026-05-10",
+    "highlights": [
+      "📱 Agora o Orgulho da Nutri é instalável no seu celular (PWA)!"
+    ]
+  },
+  {
+    "version": "1.2.0",
+    "date": "2026-05-08",
+    "highlights": [
+      "🎨 Ajustes finos de contraste e cores inspirados no Glassmorphism",
+      "✨ Melhorias na legibilidade das barras e ícones"
+    ]
+  }
+]

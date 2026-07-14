@@ -2,7 +2,8 @@
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { ReleaseNotesDrawer } from "@/components/shared/ReleaseNotesDrawer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,6 +23,7 @@ import packageInfo from "../../../../package.json";
 export default function SettingsPage() {
   const { user_profile, updateProfile } = useAppStore();
   const router = useRouter();
+  const [showReleaseNotes, setShowReleaseNotes] = useState(false);
 
   const {
     register,
@@ -364,10 +366,23 @@ export default function SettingsPage() {
 
       <div className="mt-8 text-center pb-8">
         <p className="text-caption-1 text-neutral-400">
-          Orgulho da Nutri • Versão {appVersion}
+          Orgulho da Nutri •{" "}
+          <button 
+            type="button"
+            onClick={() => setShowReleaseNotes(true)}
+            className="hover:text-neutral-500 hover:underline transition-colors"
+          >
+            Versão {appVersion}
+          </button>
           {environment !== "production" && (<span className=" ml-1 text-xs">({environment})</span>)}
         </p>
       </div>
+
+      <ReleaseNotesDrawer 
+        open={showReleaseNotes} 
+        onOpenChange={setShowReleaseNotes} 
+        currentVersion={appVersion} 
+      />
     </div>
   );
 }
