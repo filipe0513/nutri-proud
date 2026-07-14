@@ -44,6 +44,7 @@ export function MealEqualizerDrawer({
   const drawerOpen = isControlled ? open : internalOpen;
 
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
     if (initialData?.event_time) {
       return toLocalISOString(new Date(initialData.event_time)).slice(0, 16);
@@ -111,43 +112,59 @@ export function MealEqualizerDrawer({
   };
 
   const handleSave = async () => {
-    if (!selectedMeal) return;
+    if (!selectedMeal || isSubmitting) return;
 
-    const score = calculateMealQualityScore(protein, carbs, fats, fiber);
+    try {
+      setIsSubmitting(true);
+      const score = calculateMealQualityScore(protein, carbs, fats, fiber);
 
-    const logData = {
-      event_time: toLocalISOString(new Date(selectedDate)),
-      category: 'food' as const,
-      primary_value: score,
-      details: { 
-        meal_type: selectedMeal as any,
-        factors: { protein, carbs, fats, fiber }
-      },
-      source: activeDrawerSource || undefined,
-    };
+      const logData = {
+        event_time: toLocalISOString(new Date(selectedDate)),
+        category: 'food' as const,
+        primary_value: score,
+        details: { 
+          meal_type: selectedMeal as any,
+          factors: { protein, carbs, fats, fiber }
+        },
+        source: activeDrawerSource || undefined,
+      };
 
-    const mealName = ALL_MEALS.find(m => m.id === selectedMeal)?.label || selectedMeal;
+      const mealName = ALL_MEALS.find(m => m.id === selectedMeal)?.label || selectedMeal;
 
-    if (initialData) {
-      await updateLog(initialData.id, logData);
-      updateLogHistory(initialData.id, logData);
-      toast.success(`${mealName} atualizado!`);
-      if (isControlled && onOpenChange) onOpenChange(false);
-    } else {
-      await addLog(logData);
-      toast.success(`${mealName} registrado!`);
+      if (initialData) {
+        await updateLog(initialData.id, logData);
+        updateLogHistory(initialData.id, logData);
+        toast.success(`${mealName} atualizado!`);
+        if (isControlled && onOpenChange) onOpenChange(false);
+      } else {
+        await addLog(logData);
+        toast.success(`${mealName} registrado!`);
+      }
+
+      // Slight delay to allow drawer close animation before reset
+      setTimeout(resetState, 300);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao salvar refeição.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Slight delay to allow drawer close animation before reset
-    setTimeout(resetState, 300);
   };
 
   const handleDelete = async () => {
-    if (!initialData) return;
-    await removeLog(initialData.id);
-    deleteLogHistory(initialData.id);
-    toast.success('Refeição apagada!');
-    if (isControlled && onOpenChange) onOpenChange(false);
+    if (!initialData || isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      await removeLog(initialData.id);
+      deleteLogHistory(initialData.id);
+      toast.success('Refeição apagada!');
+      if (isControlled && onOpenChange) onOpenChange(false);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao apagar refeição.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   /**
@@ -277,6 +294,7 @@ export function MealEqualizerDrawer({
                   size="icon"
                   className="h-14 w-14 rounded-2xl border border-green-200 bg-white/50 text-green-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50 flex-shrink-0"
                   onClick={handleDelete}
+                  disabled={isSubmitting}
                   title="Apagar registro"
                 >
                   <Trash2 size={18} />
@@ -287,24 +305,27 @@ export function MealEqualizerDrawer({
                   variant="outline"
                   className="h-14 rounded-2xl border border-green-200 bg-white/50 backdrop-blur-sm text-green-900 hover:bg-white/80 flex-1 text-button-1 shadow-sm"
                   onClick={() => setSelectedMeal(null)}
+                  disabled={isSubmitting}
                 >
                   Voltar
                 </Button>
               )}
               {initialData ? (
                 <Button 
-                  className="h-14 rounded-2xl bg-green-500 hover:bg-green-600 text-white border-transparent flex-1 text-button-1 shadow-md"
+                  className="h-14 rounded-2xl bg-green-500 hover:bg-green-600 text-white border-transparent flex-1 text-button-1 shadow-md disabled:opacity-60"
                   onClick={handleSave}
+                  disabled={isSubmitting}
                 >
-                  Salvar
+                  {isSubmitting ? 'Salvando...' : 'Salvar'}
                 </Button>
               ) : (
                 <DrawerClose asChild>
                   <Button 
-                    className="h-14 rounded-2xl bg-green-500 hover:bg-green-600 text-white border-transparent flex-1 text-button-1 shadow-md"
+                    className="h-14 rounded-2xl bg-green-500 hover:bg-green-600 text-white border-transparent flex-1 text-button-1 shadow-md disabled:opacity-60"
                     onClick={handleSave}
+                    disabled={isSubmitting}
                   >
-                    Confirmar
+                    {isSubmitting ? 'Salvando...' : 'Confirmar'}
                   </Button>
                 </DrawerClose>
               )}

@@ -40,6 +40,7 @@ export function WorkoutEqualizerDrawer({
   // Equalizer states
   const [cardio, setCardio] = useState(0);
   const [carga, setCarga] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
     if (initialData?.event_time) {
       return toLocalISOString(new Date(initialData.event_time)).slice(0, 16);
@@ -106,37 +107,54 @@ export function WorkoutEqualizerDrawer({
   };
 
   const handleSave = async () => {
-    const score = calculateTrainingScore(cardio, carga);
+    if (isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      const score = calculateTrainingScore(cardio, carga);
 
-    const logData = {
-      event_time: toLocalISOString(new Date(selectedDate)),
-      category: 'workout' as const,
-      primary_value: score,
-      details: { 
-        factors: { cardio, carga }
-      },
-      source: activeDrawerSource || undefined,
-    };
+      const logData = {
+        event_time: toLocalISOString(new Date(selectedDate)),
+        category: 'workout' as const,
+        primary_value: score,
+        details: { 
+          factors: { cardio, carga }
+        },
+        source: activeDrawerSource || undefined,
+      };
 
-    if (initialData) {
-      await updateLog(initialData.id, logData);
-      updateLogHistory(initialData.id, logData);
-      toast.success('Treino atualizado com sucesso!');
-      if (isControlled && onOpenChange) onOpenChange(false);
-    } else {
-      await addLog(logData);
-      toast.success('Treino registrado com sucesso!');
+      if (initialData) {
+        await updateLog(initialData.id, logData);
+        updateLogHistory(initialData.id, logData);
+        toast.success('Treino atualizado com sucesso!');
+        if (isControlled && onOpenChange) onOpenChange(false);
+      } else {
+        await addLog(logData);
+        toast.success('Treino registrado com sucesso!');
+      }
+
+      setTimeout(resetState, 300);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao salvar treino.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setTimeout(resetState, 300);
   };
 
   const handleDelete = async () => {
-    if (!initialData) return;
-    await removeLog(initialData.id);
-    deleteLogHistory(initialData.id);
-    toast.success('Treino apagado!');
-    if (isControlled && onOpenChange) onOpenChange(false);
+    if (!initialData || isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      await removeLog(initialData.id);
+      deleteLogHistory(initialData.id);
+      toast.success('Treino apagado!');
+      if (isControlled && onOpenChange) onOpenChange(false);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao apagar treino.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -206,24 +224,27 @@ export function WorkoutEqualizerDrawer({
                 size="icon"
                 className="h-14 w-14 rounded-2xl border border-red-200 bg-white/50 text-red-400 hover:text-red-600 hover:border-red-400 hover:bg-red-50 flex-shrink-0"
                 onClick={handleDelete}
+                disabled={isSubmitting}
                 title="Apagar registro"
               >
                 <Trash2 size={18} />
               </Button>
               <Button 
-                className="h-14 rounded-2xl bg-red-500 hover:bg-red-600 text-white border-transparent flex-1 text-button-1 shadow-md"
+                className="h-14 rounded-2xl bg-red-500 hover:bg-red-600 text-white border-transparent flex-1 text-button-1 shadow-md disabled:opacity-60"
                 onClick={handleSave}
+                disabled={isSubmitting}
               >
-                Salvar
+                {isSubmitting ? 'Salvando...' : 'Salvar'}
               </Button>
             </div>
           ) : (
             <DrawerClose asChild>
               <Button 
-                className="h-14 rounded-2xl bg-red-500 hover:bg-red-600 text-white border-transparent w-full text-button-1 shadow-md"
+                className="h-14 rounded-2xl bg-red-500 hover:bg-red-600 text-white border-transparent w-full text-button-1 shadow-md disabled:opacity-60"
                 onClick={handleSave}
+                disabled={isSubmitting}
               >
-                Confirmar
+                {isSubmitting ? 'Salvando...' : 'Confirmar'}
               </Button>
             </DrawerClose>
           )}

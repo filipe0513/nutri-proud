@@ -40,6 +40,7 @@ export function BottomSheet_Water({
 
   const [customInput, setCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [selectedDate, setSelectedDate] = useState(() => {
     if (initialData?.event_time) {
@@ -61,48 +62,74 @@ export function BottomSheet_Water({
   }, [initialData]);
 
   const handleSave = async (ml: number) => {
-    const score = calculateWaterScore(ml, targetMl);
-    const logData = {
-      event_time: toLocalISOString(new Date(selectedDate)),
-      category: 'water' as const,
-      primary_value: score,
-      details: { quantity_ml: ml },
-      source: activeDrawerSource || undefined,
-    };
+    if (isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      const score = calculateWaterScore(ml, targetMl);
+      const logData = {
+        event_time: toLocalISOString(new Date(selectedDate)),
+        category: 'water' as const,
+        primary_value: score,
+        details: { quantity_ml: ml },
+        source: activeDrawerSource || undefined,
+      };
 
-    if (initialData) {
-      await updateLog(initialData.id, logData);
-      updateLogHistory(initialData.id, logData);
-      toast.success(`Água atualizada para ${ml}ml!`, {
-        className: 'bg-blue-500 text-white border-transparent'
-      });
-    } else {
-      await addLog(logData);
-      toast.success(`${ml}ml registrados!`, {
-        className: 'bg-blue-500 text-white border-transparent'
-      });
+      if (initialData) {
+        await updateLog(initialData.id, logData);
+        updateLogHistory(initialData.id, logData);
+        toast.success(`Água atualizada para ${ml}ml!`, {
+          className: 'bg-blue-500 text-white border-transparent'
+        });
+      } else {
+        await addLog(logData);
+        toast.success(`${ml}ml registrados!`, {
+          className: 'bg-blue-500 text-white border-transparent'
+        });
+      }
+      
+      closeDrawer();
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao salvar registro.');
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    closeDrawer();
   };
 
   const handleDelete = async () => {
-    if (!initialData) return;
-    await removeLog(initialData.id);
-    deleteLogHistory(initialData.id);
-    toast.success('Registro apagado!', {
-      className: 'bg-blue-500 text-white border-transparent'
-    });
-    closeDrawer();
+    if (!initialData || isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      await removeLog(initialData.id);
+      deleteLogHistory(initialData.id);
+      toast.success('Registro apagado!', {
+        className: 'bg-blue-500 text-white border-transparent'
+      });
+      closeDrawer();
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao apagar registro.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleTargetHit = async () => {
-    await setWaterToTarget(selectedDate, activeDrawerSource || undefined);
-    toast.success('Meta de Água Batida!', {
-      description: 'Orgulho da Nutri! 👏',
-      className: 'bg-orange-500 text-white border-transparent'
-    });
-    closeDrawer();
+    if (isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      await setWaterToTarget(selectedDate, activeDrawerSource || undefined);
+      toast.success('Meta de Água Batida!', {
+        description: 'Orgulho da Nutri! 👏',
+        className: 'bg-orange-500 text-white border-transparent'
+      });
+      closeDrawer();
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao registrar.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const closeDrawer = () => {
@@ -176,13 +203,14 @@ export function BottomSheet_Water({
             {/* Target Button */}
             <Button 
               onClick={handleTargetHit}
-              className="h-16 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white border-transparent flex flex-col items-center justify-center shadow-lg transform transition-transform active:scale-95"
+              disabled={isSubmitting}
+              className="h-16 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white border-transparent flex flex-col items-center justify-center shadow-lg transform transition-transform active:scale-95 disabled:opacity-60 disabled:active:scale-100"
             >
               <div className="flex items-center space-x-2">
                 <Trophy size={20} />
-                <span className="text-button-1 font-bold">Bater Meta do Dia 💧</span>
+                <span className="text-button-1 font-bold">{isSubmitting ? 'Registrando...' : 'Bater Meta do Dia 💧'}</span>
               </div>
-              <span className="text-caption-2 text-white/80">Registrar {targetMl}ml de uma vez</span>
+              {!isSubmitting && <span className="text-caption-2 text-white/80">Registrar {targetMl}ml de uma vez</span>}
             </Button>
 
             <div className="grid grid-cols-2 gap-4">
@@ -194,7 +222,8 @@ export function BottomSheet_Water({
                 <Button 
                   key={i}
                   variant="outline" 
-                  className="h-16 rounded-2xl border border-blue-200 bg-white/50 backdrop-blur-sm hover:border-blue-500 hover:bg-white/80 text-blue-950 flex flex-col items-center justify-center"
+                  disabled={isSubmitting}
+                  className="h-16 rounded-2xl border border-blue-200 bg-white/50 backdrop-blur-sm hover:border-blue-500 hover:bg-white/80 text-blue-950 flex flex-col items-center justify-center disabled:opacity-60"
                   onClick={() => handleSave(opt.value)}
                 >
                   <span className="text-button-1">{opt.label}</span>
@@ -233,6 +262,7 @@ export function BottomSheet_Water({
                   size="icon"
                   className="h-14 w-14 rounded-2xl border border-blue-200 bg-white/50 text-blue-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50 flex-shrink-0"
                   onClick={handleDelete}
+                  disabled={isSubmitting}
                   title="Apagar registro"
                 >
                   <Trash2 size={18} />
@@ -243,19 +273,21 @@ export function BottomSheet_Water({
                   variant="outline"
                   className="h-14 rounded-2xl border border-blue-200 bg-white/50 backdrop-blur-sm text-blue-900 hover:bg-white/80 flex-1 text-button-1 shadow-sm"
                   onClick={() => setCustomInput(false)}
+                  disabled={isSubmitting}
                 >
                   Voltar
                 </Button>
               )}
               <Button 
-                className="h-14 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white border-transparent flex-1 text-button-1 shadow-md"
+                className="h-14 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white border-transparent flex-1 text-button-1 shadow-md disabled:opacity-60"
+                disabled={isSubmitting}
                 onClick={() => {
                   if(customValue && !isNaN(Number(customValue))) {
                     handleSave(Number(customValue));
                   }
                 }}
               >
-                {initialData ? 'Salvar' : 'Confirmar'}
+                {isSubmitting ? 'Salvando...' : (initialData ? 'Salvar' : 'Confirmar')}
               </Button>
               <DrawerClose ref={closeRef} className="hidden" />
             </div>

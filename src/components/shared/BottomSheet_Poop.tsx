@@ -43,6 +43,7 @@ export function BottomSheet_Poop({
   const [analysisMessage, setAnalysisMessage] = useState('');
 
   const closeRef = useRef<HTMLButtonElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
     if (initialData?.event_time) {
       return toLocalISOString(new Date(initialData.event_time)).slice(0, 16);
@@ -101,51 +102,68 @@ export function BottomSheet_Poop({
   };
 
   const handleSave = async (state: string, primaryValue: number) => {
-    const logData = {
-      event_time: toLocalISOString(new Date(selectedDate)),
-      category: 'poop' as const,
-      primary_value: primaryValue,
-      details: { state },
-      source: activeDrawerSource || undefined,
-    };
+    if (isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      const logData = {
+        event_time: toLocalISOString(new Date(selectedDate)),
+        category: 'poop' as const,
+        primary_value: primaryValue,
+        details: { state },
+        source: activeDrawerSource || undefined,
+      };
 
-    if (initialData) {
-      await updateLog(initialData.id, logData);
-      updateLogHistory(initialData.id, logData);
-      toast.success('Registro atualizado!', {
-        className: 'bg-amber-500 text-white border-transparent'
-      });
-      if (isControlled && onOpenChange) onOpenChange(false);
-    } else {
-      const result = await addLog(logData);
-      toast.success('Registro salvo!', {
-        className: 'bg-amber-500 text-white border-transparent'
-      });
+      if (initialData) {
+        await updateLog(initialData.id, logData);
+        updateLogHistory(initialData.id, logData);
+        toast.success('Registro atualizado!', {
+          className: 'bg-amber-500 text-white border-transparent'
+        });
+        if (isControlled && onOpenChange) onOpenChange(false);
+      } else {
+        const result = await addLog(logData);
+        toast.success('Registro salvo!', {
+          className: 'bg-amber-500 text-white border-transparent'
+        });
 
-      // After saving, trigger AI analysis for non-normal states
-      if (state !== 'normal') {
-        const savedLogId: string = result.id ?? '';
-        // Close poop drawer first, then open analysis
-        if (closeRef.current) closeRef.current.click();
-        if (savedLogId) fetchPoopAnalysis(state, savedLogId);
-        return;
+        // After saving, trigger AI analysis for non-normal states
+        if (state !== 'normal') {
+          const savedLogId: string = result.id ?? '';
+          // Close poop drawer first, then open analysis
+          if (closeRef.current) closeRef.current.click();
+          if (savedLogId) fetchPoopAnalysis(state, savedLogId);
+          return;
+        }
       }
-    }
-    
-    // Auto close
-    if (closeRef.current) {
-      closeRef.current.click();
+      
+      // Auto close
+      if (closeRef.current) {
+        closeRef.current.click();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao salvar registro.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!initialData) return;
-    await removeLog(initialData.id);
-    deleteLogHistory(initialData.id);
-    toast.success('Registro apagado!', {
-      className: 'bg-amber-500 text-white border-transparent'
-    });
-    if (isControlled && onOpenChange) onOpenChange(false);
+    if (!initialData || isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      await removeLog(initialData.id);
+      deleteLogHistory(initialData.id);
+      toast.success('Registro apagado!', {
+        className: 'bg-amber-500 text-white border-transparent'
+      });
+      if (isControlled && onOpenChange) onOpenChange(false);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao apagar registro.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const savedAnalysis = initialData?.details?.nutri_analysis;
@@ -193,13 +211,14 @@ export function BottomSheet_Poop({
               <button
                 key={opt.id}
                 onClick={() => handleSave(opt.id, calculateGutScore(opt.id))}
-                className={`h-16 rounded-2xl border text-button-1 font-medium transition-colors shadow-sm active:scale-95 flex items-center justify-center ${
+                disabled={isSubmitting}
+                className={`h-16 rounded-2xl border text-button-1 font-medium transition-colors shadow-sm active:scale-95 flex items-center justify-center disabled:opacity-60 disabled:active:scale-100 ${
                   initialData?.details.state === opt.id
                     ? 'bg-amber-500 text-white border-amber-600'
                     : 'bg-white/50 border-amber-200 text-amber-900 hover:bg-amber-100'
                 }`}
               >
-                {opt.label}
+                {isSubmitting && initialData?.details.state === opt.id ? 'Salvando...' : opt.label}
               </button>
             ))}
 
@@ -225,6 +244,7 @@ export function BottomSheet_Poop({
                   size="icon"
                   className="h-11 w-11 rounded-2xl border border-amber-200 bg-white/50 text-amber-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50"
                   onClick={handleDelete}
+                  disabled={isSubmitting}
                   title="Apagar registro"
                 >
                   <Trash2 size={16} />
