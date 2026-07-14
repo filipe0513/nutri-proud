@@ -39,6 +39,8 @@ export interface ActivityLog {
     fat?: number;
     alcohol?: number;
     nutri_reaction?: string; // AI reaction saved after jacada registration
+    // Poop analysis field
+    nutri_analysis?: string; // AI analysis saved after non-normal poop registration
   };
   source?: string;
 }

@@ -20,7 +20,7 @@ interface AppState {
   // Actions
   saveOnboardingData: (data: OnboardingData) => Promise<void>;
   updateProfile: (profile: UserProfile) => Promise<void>;
-  addLog: (log: Omit<ActivityLog, 'id' | 'created_at'>) => Promise<void>;
+  addLog: (log: Omit<ActivityLog, 'id' | 'created_at'>) => Promise<ActivityLog>;
   updateLog: (id: string, log: Omit<ActivityLog, 'id' | 'created_at'>) => Promise<void>;
   removeLog: (id: string) => Promise<void>;
   setWaterToTarget: (date?: string, source?: string) => Promise<void>;
@@ -116,6 +116,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
             (a, b) => new Date(b.event_time).getTime() - new Date(a.event_time).getTime()
           ),
         }));
+
+        return newLog;
       },
 
       updateLog: async (id, log) => {

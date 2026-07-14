@@ -1,0 +1,261 @@
+import { NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { auth } from '@/auth';
+import { cookies } from 'next/headers';
+import { prisma } from '@/lib/prisma';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+const apiKey = process.env.GEMINI_API_KEY;
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+
+async function getUserId(): Promise<string | undefined> {
+  const session = await auth();
+  if (session?.user?.id) return session.user.id;
+  const cookieStore = await cookies();
+  return cookieStore.get('anon_user_id')?.value;
+}
+
+const STATE_LABELS: Record<string, string> = {
+  hard: '🧱 Ressecado / Difícil',
+  liquid: '💦 Solto / Líquido',
+  gas: '💨 Gases / Desconforto',
+  normal: '😌 Suave / Normal',
+};
+
+const MEAL_LABELS: Record<string, string> = {
+  'Café da Manhã': 'Café da Manhã',
+  'Almoço': 'Almoço',
+  'Jantar': 'Jantar',
+  'Lanche da Tarde': 'Lanche da Tarde',
+  'Ceia': 'Ceia',
+};
+
+function formatMealType(id: string): string {
+  return MEAL_LABELS[id] ?? id;
+}
+
+function formatDeviation(value: number): string {
+  if (value === 0) return '0%';
+  return value > 0 ? `+${value}%` : `${value}%`;
+}
+
+interface DailyLogRow {
+  eventTime: Date;
+  category: string;
+  details: unknown;
+}
+
+interface FoodDetails {
+  meal_type?: string;
+  factors?: { protein?: number; carbs?: number; fats?: number; fiber?: number };
+}
+
+interface JacadaDetails {
+  sugar?: number;
+  fat?: number;
+  alcohol?: number;
+}
+
+interface WaterDetails {
+  quantity_ml?: number;
+}
+
+interface PoopDetails {
+  state?: string;
+}
+
+function buildDailyContextSummary(logs: DailyLogRow[]): string {
+  // Group logs by local date string (dd/MM), ordered chronologically
+  const byDay: Record<string, DailyLogRow[]> = {};
+
+  for (const log of logs) {
+    const dayKey = format(new Date(log.eventTime), 'dd/MM', { locale: ptBR });
+    if (!byDay[dayKey]) byDay[dayKey] = [];
+    byDay[dayKey].push(log);
+  }
+
+  if (Object.keys(byDay).length === 0) {
+    return 'Nenhum registro encontrado nos últimos 3 dias.';
+  }
+
+  const lines: string[] = [];
+
+  for (const [day, dayLogs] of Object.entries(byDay)) {
+    lines.push(`📅 ${day}:`);
+
+    // --- Food ---
+    const foodLogs = dayLogs.filter((l) => l.category === 'food');
+    if (foodLogs.length > 0) {
+      lines.push('  Alimentação:');
+      for (const fl of foodLogs) {
+        const d = fl.details as FoodDetails | null;
+        const mealType = formatMealType(d?.meal_type ?? 'Refeição');
+        const f = d?.factors ?? {};
+        const protein = formatDeviation(f.protein ?? 0);
+        const carbs = formatDeviation(f.carbs ?? 0);
+        const fats = formatDeviation(f.fats ?? 0);
+        const fiber = formatDeviation(f.fiber ?? 0);
+        lines.push(
+          `    - ${mealType}: Proteínas ${protein}, Carbos ${carbs}, Gorduras ${fats}, Fibras ${fiber}`,
+        );
+      }
+    } else {
+      lines.push('  Alimentação: (nenhum registro)');
+    }
+
+    // --- Jacada ---
+    const jacadaLogs = dayLogs.filter((l) => l.category === 'jacada');
+    if (jacadaLogs.length > 0) {
+      const jLines: string[] = [];
+      for (const jl of jacadaLogs) {
+        const d = jl.details as JacadaDetails | null;
+        jLines.push(
+          `Açúcar ${d?.sugar ?? 0}/5, Frituras ${d?.fat ?? 0}/5, Álcool ${d?.alcohol ?? 0}/5`,
+        );
+      }
+      lines.push(`  Jacada: ${jLines.join(' | ')}`);
+    } else {
+      lines.push('  Jacada: (nenhuma)');
+    }
+
+    // --- Water (aggregate per day) ---
+    const waterLogs = dayLogs.filter((l) => l.category === 'water');
+    const totalWaterMl = waterLogs.reduce((acc, wl) => {
+      const d = wl.details as WaterDetails | null;
+      return acc + (d?.quantity_ml ?? 0);
+    }, 0);
+    lines.push(
+      `  Água: ${totalWaterMl > 0 ? `${totalWaterMl}ml` : '(não registrado)'}`,
+    );
+
+    // --- Other poop logs ---
+    const poopLogs = dayLogs.filter((l) => l.category === 'poop');
+    if (poopLogs.length > 0) {
+      const pLabels = poopLogs.map((pl) => {
+        const d = pl.details as PoopDetails | null;
+        return STATE_LABELS[d?.state ?? ''] ?? d?.state ?? 'desconhecido';
+      });
+      lines.push(`  Intestino: ${pLabels.join(', ')}`);
+    } else {
+      lines.push('  Intestino: (nenhum registro)');
+    }
+
+    lines.push('');
+  }
+
+  return lines.join('\n').trim();
+}
+
+export async function POST(request: Request) {
+  try {
+    if (!genAI) {
+      return NextResponse.json(
+        { error: 'Gemini API Key não configurada.' },
+        { status: 500 },
+      );
+    }
+
+    const body = await request.json();
+    const { state, logId } = body as { state: string; logId?: string };
+
+    if (!state) {
+      return NextResponse.json(
+        { error: 'O campo state é obrigatório.' },
+        { status: 400 },
+      );
+    }
+
+    // Only analyse non-normal states
+    if (state === 'normal') {
+      return NextResponse.json({ analysis: null });
+    }
+
+    const userId = await getUserId();
+    let contextSummary = 'Nenhum dado disponível.';
+
+    if (userId) {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+      const recentLogs = await prisma.dailyLog.findMany({
+        where: {
+          userId,
+          category: { in: ['poop', 'food', 'jacada', 'water'] },
+          eventTime: { gte: threeDaysAgo },
+        },
+        orderBy: { eventTime: 'asc' },
+        select: { eventTime: true, category: true, details: true },
+      });
+
+      contextSummary = buildDailyContextSummary(recentLogs as DailyLogRow[]);
+    }
+
+    const currentStateLabel = STATE_LABELS[state] ?? state;
+
+    const prompt = `Você é a Nutri, nutricionista analítica e empática.
+Analise os dados dos últimos 3 dias e identifique se há correlação clara com o registro de intestino atual.
+
+Registro atual de intestino: ${currentStateLabel}
+
+--- Últimos 3 dias ---
+${contextSummary}
+
+REGRAS OBRIGATÓRIAS:
+1. Só responda se houver correlação CLARA e ESPECÍFICA nos dados fornecidos. Caso contrário, retorne EXATAMENTE o JSON: {"analysis": null}
+2. Se houver correlação, forneça uma análise objetiva (2-3 frases curtas) identificando a causa provável e 1 sugestão prática e concreta.
+3. Correlações relevantes a observar:
+   - Fibras baixas (valores negativos) nos dias anteriores → ressecado/duro
+   - Gorduras muito altas + jacada elevada → solto/líquido
+   - Álcool + frituras → solto/líquido ou gases
+   - Água insuficiente (abaixo de 1.500ml) → ressecado
+   - Padrão consistente ao longo de vários dias
+4. Use APENAS os dados fornecidos. Não presuma o que não foi registrado.
+5. Tom: educativo, empático, direto. Não alarmista, não condescendente.
+6. Retorne JSON válido e nada mais: {"analysis": "texto aqui"} ou {"analysis": null}
+7. Escreva em português brasileiro, de forma natural e humana.`;
+
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      generationConfig: { responseMimeType: 'application/json' },
+    });
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const rawText = response.text().trim();
+
+    let analysis: string | null = null;
+    try {
+      const parsed = JSON.parse(rawText) as { analysis: string | null };
+      analysis = parsed.analysis ?? null;
+    } catch {
+      // JSON parsing failed → treat as no correlation found
+      analysis = null;
+    }
+
+    // Persist the analysis in the DailyLog (fire-and-forget, does not block response)
+    if (logId && userId && analysis) {
+      prisma.dailyLog
+        .findUnique({ where: { id: logId, userId } })
+        .then((log) => {
+          if (!log) return;
+          const existingDetails = (log.details as Record<string, unknown>) ?? {};
+          return prisma.dailyLog.update({
+            where: { id: logId },
+            data: {
+              details: { ...existingDetails, nutri_analysis: analysis },
+            },
+          });
+        })
+        .catch(() => {/* silent */});
+    }
+
+    return NextResponse.json({ analysis });
+  } catch (error) {
+    console.error('Erro ao gerar análise de intestino:', error);
+    return NextResponse.json(
+      { error: 'Erro interno ao gerar análise.' },
+      { status: 500 },
+    );
+  }
+}

@@ -199,6 +199,11 @@ export default function HistoryPage() {
                                     · 💬 Nutri reagiu
                                   </span>
                                 )}
+                                {log.category === "poop" && (log as ActivityLog).details?.nutri_analysis && (
+                                  <span className="inline-flex items-center gap-1 text-amber-600 font-semibold">
+                                    · 🧠 Nutri analisou
+                                  </span>
+                                )}
                               </p>
                             </div>
                           </div>
