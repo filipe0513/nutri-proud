@@ -132,50 +132,133 @@ export const insightService = {
       orderBy: { createdAt: 'desc' },
     });
     if (recentInsight) {
-      // Retorna o existente sem chamar a IA
       return recentInsight;
     }
     // ─────────────────────────────────────────────────────────────────────────
 
-    // Pega logs do dia atual no fuso de São Paulo
-    const dayStart = getLocalStartOfDay();
-
-    const todayLogs = await prisma.dailyLog.findMany({
-      where: { userId, eventTime: { gte: dayStart } },
+    // ── 1. Perfil do usuário (targets + profile) ──────────────────────────────
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { targets: true, profile: true },
     });
 
-    const ALL_CATEGORIES = ['WATER', 'FOOD', 'SLEEP', 'WORKOUT', 'POOP'];
-    const registeredCategories = [...new Set(todayLogs.map((l) => l.category.toUpperCase()))];
-    const missingCategories = ALL_CATEGORIES.filter((c) => !registeredCategories.includes(c));
+    type UserTargets = {
+      water_ml_per_day?: number;
+      sleep_hours_per_night?: number;
+      workouts_per_week?: number;
+      meals_per_day?: number;
+    };
+    type UserProfile = {
+      main_goal?: string;
+    };
 
-    // Extrai a hora diretamente da string ISO (ex: "2026-06-19T23:53:00.000-03:00")
-    // sem usar new Date().getHours(), que no Node.js ignora o offset e retorna UTC.
-    // O formato é garantido por toLocalISOString() + validação Zod (offset: true).
+    const targets = (user?.targets ?? {}) as UserTargets;
+    const profile = (user?.profile ?? {}) as UserProfile;
+
+    const waterGoalMl = targets.water_ml_per_day ?? 2500;
+    const sleepGoalHours = targets.sleep_hours_per_night ?? 8;
+    const workoutGoalPerWeek = targets.workouts_per_week ?? 3;
+    const mealsGoalPerDay = targets.meals_per_day ?? 3;
+    const mainGoal = profile.main_goal ?? 'health';
+
+    // ── 2. Últimos 30 logs (histórico recente) ────────────────────────────────
+    const last30Logs = await prisma.dailyLog.findMany({
+      where: { userId },
+      orderBy: { eventTime: 'desc' },
+      take: 30,
+    });
+
+    // ── 3. Logs de hoje ────────────────────────────────────────────────────────
+    const dayStart = getLocalStartOfDay();
+    const todayLogs = last30Logs.filter((l) => new Date(l.eventTime) >= dayStart);
+
+    // ── 4. Métricas derivadas ─────────────────────────────────────────────────
     const hour = parseInt(localTime.slice(11, 13), 10);
-    const periodLabel =
-      hour < 12 ? 'manhã' : hour < 18 ? 'tarde' : 'noite';
+    const periodLabel = hour < 12 ? 'manhã' : hour < 18 ? 'tarde' : 'noite';
 
-    const logsSummary =
+    // Categorias registradas hoje
+    const ALL_CATEGORIES = ['WATER', 'FOOD', 'SLEEP', 'WORKOUT', 'POOP'];
+    const registeredTodayUpper = new Set(todayLogs.map((l) => l.category.toUpperCase()));
+    const missingCategories = ALL_CATEGORIES.filter((c) => !registeredTodayUpper.has(c));
+
+    // Água hoje: soma dos primaryValue dos logs WATER (primaryValue = % da meta)
+    const waterLogsToday = todayLogs.filter((l) => l.category.toLowerCase() === 'water');
+    const waterPctToday = waterLogsToday.reduce((sum, l) => sum + l.primaryValue, 0);
+    const waterMlToday = Math.round((waterPctToday / 100) * waterGoalMl);
+
+    // Refeições hoje
+    const mealsToday = todayLogs.filter((l) => l.category.toLowerCase() === 'food').length;
+
+    // Sono da última noite
+    const lastSleepLog = last30Logs.find((l) => l.category.toLowerCase() === 'sleep');
+    const lastSleepScore = lastSleepLog ? lastSleepLog.primaryValue : null;
+
+    // Frequência de treino nos últimos 7 dias
+    const sevenDaysAgo = new Date(dayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const workoutsThisWeek = last30Logs.filter(
+      (l) => l.category.toLowerCase() === 'workout' && new Date(l.eventTime) >= sevenDaysAgo,
+    ).length;
+
+    // Dias desde o último treino
+    const lastWorkoutLog = last30Logs.find((l) => l.category.toLowerCase() === 'workout');
+    const daysSinceLastWorkout = lastWorkoutLog
+      ? Math.floor((Date.now() - new Date(lastWorkoutLog.eventTime).getTime()) / 86_400_000)
+      : null;
+
+    // Resumo de frequência semanal (últimos 7 dias) por categoria
+    const weeklyFrequency: Record<string, number> = {};
+    for (const cat of ALL_CATEGORIES) {
+      weeklyFrequency[cat] = last30Logs.filter(
+        (l) => l.category.toUpperCase() === cat && new Date(l.eventTime) >= sevenDaysAgo,
+      ).length;
+    }
+
+    // ── 5. Montar o contexto rico ─────────────────────────────────────────────
+    const todayLogsSummary =
       todayLogs.length === 0
-        ? 'Nenhum registro feito hoje ainda.'
-        : todayLogs
-            .map((l) => `- ${l.category}: score ${l.primaryValue}/100`)
-            .join('\n');
+        ? 'Nenhum registro feito hoje ainda (primeira abertura do dia).'
+        : todayLogs.map((l) => `- ${l.category.toUpperCase()}: score ${l.primaryValue}/100`).join('\n');
+
+    const weeklyFreqSummary = Object.entries(weeklyFrequency)
+      .map(([cat, count]) => `- ${cat}: ${count} registros nos últimos 7 dias`)
+      .join('\n');
 
     const prompt = `
 Você é a Nutri, assistente de saúde acolhedora e bem-humorada do app "Orgulho da Nutri".
-É ${periodLabel} (${hour}h) para o usuário.
-Logs de hoje:
-${logsSummary}
-Pilares ainda não registrados hoje: ${missingCategories.join(', ') || 'nenhum (parabéns!)'}
 
-Gere UMA mensagem curta (máx 2 frases), empática e motivadora cruzando a hora do dia com os hábitos faltantes.
-Use emojis com moderação. Seja direta, nunca punitiva.
+## Contexto atual do usuário
+- Hora local: ${hour}h (${periodLabel})
+- Objetivo principal: ${mainGoal === 'fat_loss' ? 'emagrecer' : mainGoal === 'muscle_gain' ? 'ganhar massa' : 'saúde geral'}
+
+## Logs de hoje
+${todayLogsSummary}
+- Água: ${waterMlToday}ml registrados de ${waterGoalMl}ml meta (${waterPctToday}%)
+- Refeições: ${mealsToday} de ${mealsGoalPerDay} meta
+- Sono da última noite: ${lastSleepScore !== null ? `${lastSleepScore}/100` : 'não registrado'}
+- Pilares sem registro hoje: ${missingCategories.length > 0 ? missingCategories.join(', ') : 'nenhum — parabéns!'}
+
+## Histórico recente (últimos 7 dias)
+${weeklyFreqSummary}
+- Treinos: ${workoutsThisWeek} de ${workoutGoalPerWeek} na semana (meta semanal)
+- Dias desde o último treino: ${daysSinceLastWorkout !== null ? daysSinceLastWorkout : 'nunca registrou'}
+- Meta de sono: ${sleepGoalHours}h por noite
+
+## Regras de priorização (siga na ordem):
+1. Se é manhã (< 10h) e não há NENHUM log hoje → priorize SLEEP (registrar o sono da noite anterior)
+2. Se é tarde/noite (>= 17h) e WORKOUT está AUSENTE hoje E treinos abaixo da meta semanal → priorize WORKOUT
+3. Se o usuário não registra treino há mais de 2 dias e a meta é >= 3/semana → mencione o treino
+4. Se FOOD está ausente e já é almoço (>= 11h) ou jantar (>= 18h) → mencione refeição
+5. Se todos os pilares urgentes do período estão cobertos → elogie e sugira água ou nada (null)
+6. NUNCA sugira água como prioridade se já há logs de água hoje com >= 50% da meta
+
+## Instruções de resposta
+- Gere UMA mensagem curta (máx 2 frases), empática e motivadora.
+- Cruze a hora do dia com os dados acima para ser específico e útil.
+- Use emojis com moderação. Seja direta, nunca punitiva.
+- Não invente dados que não estão no contexto.
 
 Responda SOMENTE com um JSON válido neste formato exato (sem markdown, sem explicações):
-{"message": "<texto da mensagem>", "cta": "<NOME_DO_HABITO_EM_MAIUSCULO_OU_null>"}
-
-Se não houver hábito prioritário para sugerir, use null em cta.
+{"message": "<texto da mensagem>", "cta": "<WORKOUT|SLEEP|WATER|FOOD|POOP|null>"}
 `.trim();
 
     const rawText = await aiService.generateRawText(prompt);
@@ -183,11 +266,9 @@ Se não houver hábito prioritário para sugerir, use null em cta.
     // Tenta fazer parse do JSON retornado
     let parsed: AiInsightResponse;
     try {
-      // Remove possíveis blocos de código markdown que a IA às vezes adiciona
       const clean = rawText.replace(/```json|```/g, '').trim();
       parsed = JSON.parse(clean) as AiInsightResponse;
     } catch {
-      // Fallback: se a IA não retornou JSON válido, usa o texto bruto como message
       parsed = { message: rawText.slice(0, 300), cta: null };
     }
 
