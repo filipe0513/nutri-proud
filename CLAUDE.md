@@ -146,6 +146,23 @@ interface DailyLog {
 - Single `DailyLog` table with JSONB `details` column — no separate tables per category.
 - All DB access via Prisma. Run `npx prisma generate` after schema changes.
 
+### 🔒 RLS on Every New Table (MANDATORY — Security)
+
+Every new Prisma `model` that creates a table in the `public` schema **MUST** have Row-Level Security enabled. Without it, anyone with the Supabase project URL can read, edit, and delete all data.
+
+**Rule:** Whenever you create or update `prisma/schema.prisma` with a new `model`, you must add `ALTER TABLE "ModelName" ENABLE ROW LEVEL SECURITY;` to the same migration SQL file.
+
+**Template to append at the end of every `migration.sql` that creates a new table:**
+
+```sql
+-- Enable RLS (required for Supabase security)
+ALTER TABLE "NewTableName" ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE "NewTableName" FROM anon;
+REVOKE ALL ON TABLE "NewTableName" FROM authenticated;
+```
+
+> ⚠️ Forgetting this will trigger a critical security alert from Supabase (`rls_disabled_in_public`).
+
 ---
 
 ## 🎨 Design System (STRICT — No Exceptions)
