@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Utensils, Trash2 } from 'lucide-react';
 import { toLocalISOString } from '@/lib/utils';
+import { DatePickerInput } from '@/components/shared/DatePickerInput';
 import {
   Drawer,
   DrawerContent,
@@ -44,6 +45,12 @@ export function JacadaDrawer({
   const [fat, setFat] = useState(0);
   const [alcohol, setAlcohol] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    if (initialData?.event_time) {
+      return toLocalISOString(new Date(initialData.event_time)).slice(0, 16);
+    }
+    return toLocalISOString(new Date()).slice(0, 16);
+  });
 
   // State for the reaction drawer (shown after creating a new jacada)
   const [reactionOpen, setReactionOpen] = useState(false);
@@ -59,6 +66,7 @@ export function JacadaDrawer({
       setSugar(initialData.details?.sugar ?? 0);
       setFat(initialData.details?.fat ?? 0);
       setAlcohol(initialData.details?.alcohol ?? 0);
+      setSelectedDate(toLocalISOString(new Date(initialData.event_time)).slice(0, 16));
     }
   }, [initialData]);
 
@@ -66,6 +74,7 @@ export function JacadaDrawer({
     setSugar(0);
     setFat(0);
     setAlcohol(0);
+    setSelectedDate(toLocalISOString(new Date()).slice(0, 16));
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -109,6 +118,7 @@ export function JacadaDrawer({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...initialData,
+            event_time: toLocalISOString(new Date(selectedDate)),
             details: { ...initialData.details, sugar, fat, alcohol },
             source: activeDrawerSource || undefined,
           }),
@@ -119,11 +129,13 @@ export function JacadaDrawer({
         const updated = await res.json();
         updateLog(initialData.id, {
           ...initialData,
+          event_time: toLocalISOString(new Date(selectedDate)),
           details: { ...initialData.details, sugar, fat, alcohol },
           primary_value: updated.primary_value ?? initialData.primary_value,
         });
         updateLogHistory(initialData.id, {
           ...initialData,
+          event_time: toLocalISOString(new Date(selectedDate)),
           details: { ...initialData.details, sugar, fat, alcohol },
           primary_value: updated.primary_value ?? initialData.primary_value,
         });
@@ -140,7 +152,7 @@ export function JacadaDrawer({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             sugar, fat, alcohol,
-            event_time: toLocalISOString(new Date()),
+            event_time: toLocalISOString(new Date(selectedDate)),
             source: activeDrawerSource || undefined
           }),
         });
@@ -196,9 +208,17 @@ export function JacadaDrawer({
       <Drawer open={open} onOpenChange={handleOpenChange}>
         <DrawerContent className="bg-glass-light-3 backdrop-blur-lg border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-10">
           <DrawerHeader className="px-0 pb-4">
-            <DrawerTitle className="text-title-2 text-neutral-600 flex items-center gap-2">
-              <span className="text-3xl">🍺🍔🍩</span> {isEditing ? 'Editar Jacada' : 'Jacada do Dia'}
-            </DrawerTitle>
+            <div className="flex items-center justify-between">
+              <DrawerTitle className="text-title-2 text-neutral-600 flex items-center gap-2">
+                <span className="text-3xl">🍺🍔🍩</span> {isEditing ? 'Editar Jacada' : 'Jacada do Dia'}
+              </DrawerTitle>
+              <DatePickerInput
+                value={selectedDate}
+                onChange={setSelectedDate}
+                accentColor="text-orange-700"
+                borderColor="border-orange-200"
+              />
+            </div>
             <p className="text-body-2 text-neutral-500 mt-2">
               Avalie de 0 a 5 o impacto do seu deslize. Cada ponto deduz da sua pontuação de alimentação do dia.
             </p>
