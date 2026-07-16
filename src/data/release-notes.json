@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.19.0",
+    "date": "2026-07-16",
+    "highlights": [
+      "📅 Agora o drawer de Jacada exibe a data do registro para maior clareza",
+      "🧠 Notificações da IA muito mais inteligentes e personalizadas com base no seu histórico recente e metas",
+      "🛟 Formatação do drawer Salva-Vidas melhorada para uma leitura mais clara e agradável",
+      "🔒 Segurança reforçada: proteção (RLS) habilitada em tabelas de notificações e insights"
+    ]
+  },
+  {
     "version": "1.18.0",
     "date": "2026-07-14",
     "highlights": [
