@@ -73,9 +73,8 @@ export function LifesaverDrawer({
               <p className="text-body-2 animate-pulse">Pensando nas melhores estratégias...</p>
             </div>
           ) : tips ? (
-            <div className="bg-white/80 p-5 rounded-2xl border border-neutral-200/50 shadow-sm prose prose-sm text-neutral-600">
-              {/* Parse tips safely or just use simple newlines to bullets mapping if we get simple markdown */}
-              <div dangerouslySetInnerHTML={{ __html: tips.replace(/\n/g, '<br/>') }} />
+            <div className="bg-white/80 p-5 rounded-2xl border border-neutral-200/50 shadow-sm">
+              <div dangerouslySetInnerHTML={{ __html: tips }} />
             </div>
           ) : (
             <div className="text-center text-neutral-400">
