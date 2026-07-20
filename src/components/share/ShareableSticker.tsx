@@ -64,11 +64,17 @@ export const ShareableSticker = forwardRef<HTMLDivElement, ShareableStickerProps
 
           {type === 'GLOBAL' && pillarScores && (
             <div className="w-full flex justify-between gap-1.5 mt-2 mb-4">
-               {(Object.keys(pillarScores) as InfographicPillar[]).map(p => (
-                 <div key={p} className="h-2.5 flex-1 rounded-full bg-white/20 overflow-hidden">
-                    <div className="h-full bg-white rounded-full" style={{ width: `${pillarScores[p]}%` }} />
-                 </div>
-               ))}
+               {(Object.keys(pillarScores) as InfographicPillar[]).map(p => {
+                 const PillarIcon = ICONS[p as StickerType];
+                 return (
+                   <div key={p} className="flex-1 flex flex-col items-center gap-1.5">
+                     <PillarIcon className="w-4 h-4 text-white/90 drop-shadow-md" />
+                     <div className="h-2.5 w-full rounded-full bg-white/20 overflow-hidden">
+                        <div className="h-full bg-white rounded-full" style={{ width: `${pillarScores[p]}%` }} />
+                     </div>
+                   </div>
+                 );
+               })}
             </div>
           )}
 

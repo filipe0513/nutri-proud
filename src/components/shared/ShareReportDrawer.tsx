@@ -606,9 +606,9 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
                         border: '2px solid rgba(139,92,246,0.3)',
                         background: selectedExport === 'CARD' ? 'transparent' : 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
                         padding: selectedExport === 'CARD' ? '0' : '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        display: selectedExport === 'CARD' ? 'block' : 'flex',
+                        alignItems: selectedExport === 'CARD' ? 'stretch' : 'center',
+                        justifyContent: selectedExport === 'CARD' ? 'flex-start' : 'center',
                       }}
                     >
                       {selectedExport === 'CARD' ? (
