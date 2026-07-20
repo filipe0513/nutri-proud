@@ -253,8 +253,8 @@ export function JacadaDrawer({
                 step={1}
               />
               <div className="flex justify-between text-xs text-neutral-400 px-1">
-                <span>Nada</span>
-                <span>Chutei o balde</span>
+                <button type="button" onClick={() => setSugar(0)} className="cursor-pointer hover:text-neutral-600 transition-colors py-1">Nada</button>
+                <button type="button" onClick={() => setSugar(5)} className="cursor-pointer hover:text-neutral-600 transition-colors py-1">Chutei o balde</button>
               </div>
             </div>
 
@@ -273,8 +273,8 @@ export function JacadaDrawer({
                 step={1}
               />
               <div className="flex justify-between text-xs text-neutral-400 px-1">
-                <span>Nada</span>
-                <span>Chutei o balde</span>
+                <button type="button" onClick={() => setFat(0)} className="cursor-pointer hover:text-neutral-600 transition-colors py-1">Nada</button>
+                <button type="button" onClick={() => setFat(5)} className="cursor-pointer hover:text-neutral-600 transition-colors py-1">Chutei o balde</button>
               </div>
             </div>
 
@@ -293,8 +293,8 @@ export function JacadaDrawer({
                 step={1}
               />
               <div className="flex justify-between text-xs text-neutral-400 px-1">
-                <span>Nada</span>
-                <span>Chutei o balde</span>
+                <button type="button" onClick={() => setAlcohol(0)} className="cursor-pointer hover:text-neutral-600 transition-colors py-1">Nada</button>
+                <button type="button" onClick={() => setAlcohol(5)} className="cursor-pointer hover:text-neutral-600 transition-colors py-1">Chutei o balde</button>
               </div>
             </div>
 
