@@ -8,6 +8,7 @@ import { StoryCircle } from '@/components/shared/StoryCircle';
 import { ScoreCard } from '@/components/shared/ScoreCard';
 import { InsightsBanner } from '@/components/shared/InsightsBanner';
 import { InsightsDrawer } from '@/components/shared/InsightsDrawer';
+import { WeeklyStreak } from '@/components/shared/WeeklyStreak';
 import { Sparkles, ChevronRight } from 'lucide-react';
 import { Droplets, Utensils, Dumbbell, Moon, Smile, StickyNote } from 'lucide-react';
 import { JacadaDrawer } from '@/components/shared/JacadaDrawer';
@@ -243,7 +244,10 @@ function DashboardContent() {
       {/* 1. Greeting + Streak Badge */}
       <StoryHeader />
 
-      {/* 2. Score Card */}
+      {/* 2. Weekly Streak Squircles */}
+      <WeeklyStreak />
+
+      {/* 3. Score Card */}
       <ScoreCard />
 
       {/* 3. Progresso de Hoje (below Score Card) */}
