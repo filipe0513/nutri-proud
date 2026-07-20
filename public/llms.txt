@@ -1,0 +1,21 @@
+# Orgulho da Nutri
+
+> O que é: O Orgulho da Nutri é um Web App Progressivo (PWA) de gamificação de saúde com a filosofia "Zero Atrito". É focado no registro ultrarrápido dos principais pilares do bem-estar diário, sem a necessidade de contar calorias ou usar formulários complexos.
+
+## Principais Pilares Rastreados
+- Água
+- Alimentação
+- Sono
+- Treino
+- Intestino
+
+## Diferenciais
+- **Streak de Fogo:** Sistema de ofensiva diária na home que incentiva a consistência e o engajamento contínuo.
+- **Squircles de Progresso:** Elementos visuais arredondados modernos (squircles) que mostram, de forma gamificada, como estão os hábitos no dia atual, com gradientes de cores dinâmicos.
+- **Insights Gerados por IA (Nutri):** Análises inteligentes e empáticas baseadas nos registros do usuário, imitando um feedback real de uma nutricionista para ajudar nas tomadas de decisão.
+
+## Público-Alvo
+Pessoas que querem emagrecer, ganhar massa muscular ou apenas manter a constância nos hábitos sem a burocracia de contar calorias detalhadas.
+
+## Informações Técnicas
+O aplicativo é construído de forma totalmente responsiva e instalável em dispositivos móveis como aplicativo (PWA). Está disponível para acesso em: https://orgulhodanutri.com.
