@@ -141,12 +141,10 @@ function computeInfographicScores(logs: any[], userProfile: any) {
   }
 
   const globalScore = historyService.calculateDayScore(logs, userProfile);
-  const bestPillar = ALL_PILLARS.reduce(
-    (best, p) => (scores[p] > scores[best] ? p : best),
-    'WATER' as InfographicPillar,
-  );
+  const maxScore = Math.max(...ALL_PILLARS.map(p => scores[p]));
+  const bestPillars = ALL_PILLARS.filter(p => scores[p] === maxScore);
 
-  return { scores, globalScore, bestPillar };
+  return { scores, globalScore, bestPillars };
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -187,7 +185,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
   const [infographicData, setInfographicData] = useState<{
     scores: PillarScores;
     globalScore: number;
-    bestPillar: InfographicPillar;
+    bestPillars: InfographicPillar[];
     periodName: string;
   } | null>(null);
 
@@ -253,10 +251,10 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
       const data: { logs: ActivityLog[] } = await res.json();
       const logs = data.logs ?? [];
 
-      const { scores, globalScore, bestPillar } = computeInfographicScores(logs, user_profile);
+      const { scores, globalScore, bestPillars } = computeInfographicScores(logs, user_profile);
       const periodName = buildPeriodName(infoPeriod, startDate, endDate);
 
-      setInfographicData({ scores, globalScore, bestPillar, periodName });
+      setInfographicData({ scores, globalScore, bestPillars, periodName });
       setInfoReady(true);
     } catch {
       toast.error('Não foi possível gerar o infográfico. Tente novamente.');
@@ -569,7 +567,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
                         periodName={infographicData.periodName}
                         scores={infographicData.scores}
                         globalScore={infographicData.globalScore}
-                        bestPillar={infographicData.bestPillar}
+                        bestPillars={infographicData.bestPillars}
                       />
                     </div>
                   </div>
@@ -646,7 +644,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
             periodName={infographicData.periodName}
             scores={infographicData.scores}
             globalScore={infographicData.globalScore}
-            bestPillar={infographicData.bestPillar}
+            bestPillars={infographicData.bestPillars}
           />
         </div>
       )}

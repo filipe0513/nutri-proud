@@ -16,7 +16,7 @@ export interface ShareableInfographicProps {
   periodName: string;
   scores: PillarScores;
   globalScore: number;
-  bestPillar: InfographicPillar;
+  bestPillars: InfographicPillar[];
 }
 
 const PILLAR_BG_MAP: Record<InfographicPillar, string> = {
@@ -38,19 +38,21 @@ const PILLAR_META: Record<InfographicPillar, { label: string; emoji: string; col
 const PILLAR_ORDER: InfographicPillar[] = ['WATER', 'FOOD', 'TRAINING', 'SLEEP', 'GUT'];
 
 function getScoreGradient(score: number): string {
-  if (score >= 80) return 'linear-gradient(135deg, #10b981, #059669)';
-  if (score >= 70) return 'linear-gradient(135deg, #3b82f6, #2563eb)';
-  if (score >= 60) return 'linear-gradient(135deg, #f59e0b, #d97706)';
-  if (score >= 50) return 'linear-gradient(135deg, #ef4444, #dc2626)';
-  return 'linear-gradient(135deg, #8b5cf6, #7c3aed)';
+  if (score <= 50) return 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)';
+  if (score <= 60) return 'linear-gradient(135deg, #dc2626 0%, #f87171 100%)';
+  if (score <= 70) return 'linear-gradient(135deg, #ea580c 0%, #fb923c 100%)';
+  if (score <= 80) return 'linear-gradient(135deg, #d97706 0%, #fbbf24 100%)';
+  if (score <= 90) return 'linear-gradient(135deg, #2563eb 0%, #60a5fa 100%)';
+  return 'linear-gradient(135deg, #16a34a 0%, #4ade80 100%)';
 }
 
 function getScoreLabel(score: number): string {
-  if (score >= 80) return 'Excelente! 🔥';
-  if (score >= 70) return 'Muito Bem! 💪';
-  if (score >= 60) return 'Bom Desempenho';
+  if (score >= 90) return 'Excelente! 🔥';
+  if (score >= 80) return 'Muito Bom! 💪';
+  if (score >= 70) return 'Bom Desempenho';
+  if (score >= 60) return 'Dá para melhorar';
   if (score >= 50) return 'Em Progresso';
-  return 'Continue Firme!';
+  return 'Foco total agora!';
 }
 
 /**
@@ -64,11 +66,11 @@ function getScoreLabel(score: number): string {
 export const ShareableInfographic = React.forwardRef<
   HTMLDivElement,
   ShareableInfographicProps
->(({ periodName, scores, globalScore, bestPillar }, ref) => {
-  const bgImage = PILLAR_BG_MAP[bestPillar];
+>(({ periodName, scores, globalScore, bestPillars }, ref) => {
+  const primaryBestPillar = bestPillars[0] || 'WATER';
+  const bgImage = PILLAR_BG_MAP[primaryBestPillar];
   const scoreGradient = getScoreGradient(globalScore);
   const scoreLabel = getScoreLabel(globalScore);
-  const bestMeta = PILLAR_META[bestPillar];
 
   return (
     <div
@@ -93,7 +95,7 @@ export const ShareableInfographic = React.forwardRef<
           position: 'absolute',
           inset: 0,
           background:
-            'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.70) 100%)',
+            'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.70) 100%)',
           zIndex: 1,
         }}
       />
@@ -108,7 +110,7 @@ export const ShareableInfographic = React.forwardRef<
           width: '280px',
           height: '280px',
           borderRadius: '50%',
-          background: `radial-gradient(circle, ${bestMeta.color}33 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${PILLAR_META[primaryBestPillar].color}44 0%, transparent 70%)`,
           zIndex: 1,
           pointerEvents: 'none',
         }}
@@ -121,43 +123,51 @@ export const ShareableInfographic = React.forwardRef<
           zIndex: 2,
           padding: '28px 24px 0',
           display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
         }}
       >
-        {/* Logo */}
+        {/* Vertical Logo */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/logo-white-h.webp"
+          src="/logo-white.webp"
           alt="Orgulho da Nutri"
-          style={{ height: '24px', width: 'auto', objectFit: 'contain', alignSelf: 'flex-start' }}
+          style={{ width: '80px', height: 'auto', objectFit: 'contain' }}
         />
 
-        {/* Period chip */}
+        {/* Score Ring */}
         <div
           style={{
-            display: 'inline-flex',
+            width: '84px',
+            height: '84px',
+            borderRadius: '50%',
+            background: scoreGradient,
+            display: 'flex',
             alignItems: 'center',
-            gap: '6px',
-            paddingLeft: '10px',
-            paddingRight: '10px',
-            paddingTop: '4px',
-            paddingBottom: '4px',
-            borderRadius: '100px',
-            background: 'rgba(255,255,255,0.15)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.25)',
-            alignSelf: 'flex-start',
-            marginTop: '4px',
+            justifyContent: 'center',
+            boxShadow: `0 8px 24px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.4)`,
+            border: '2px solid rgba(255,255,255,0.2)',
           }}
         >
-          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>
-            📅 {periodName}
-          </span>
+          <div style={{ textAlign: 'center' }}>
+            <div
+              style={{
+                fontSize: '36px',
+                fontWeight: 900,
+                color: '#fff',
+                lineHeight: 1,
+                letterSpacing: '-1px',
+                textShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              }}
+            >
+              {Math.min(100, Math.round(globalScore))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ===== CENTER SCORE ===== */}
+      {/* ===== CENTER SCORE LABEL ===== */}
       <div
         style={{
           position: 'relative',
@@ -167,86 +177,49 @@ export const ShareableInfographic = React.forwardRef<
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '0',
-          paddingTop: '8px',
+          gap: '12px',
+          paddingTop: '20px',
         }}
       >
-        {/* Score ring */}
         <div
           style={{
-            width: '160px',
-            height: '160px',
-            borderRadius: '50%',
-            background: scoreGradient,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: `0 0 48px 8px ${bestMeta.color}55, 0 20px 60px rgba(0,0,0,0.4)`,
-            border: '3px solid rgba(255,255,255,0.3)',
-            marginBottom: '16px',
-          }}
-        >
-          <div style={{ textAlign: 'center' }}>
-            <div
-              style={{
-                fontSize: '56px',
-                fontWeight: 900,
-                color: '#fff',
-                lineHeight: 1,
-                letterSpacing: '-2px',
-              }}
-            >
-              {Math.min(100, Math.round(globalScore))}
-            </div>
-            <div
-              style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: 'rgba(255,255,255,0.85)',
-                marginTop: '2px',
-                letterSpacing: '0.5px',
-              }}
-            >
-              PONTOS
-            </div>
-          </div>
-        </div>
-
-        {/* Score label */}
-        <div
-          style={{
-            fontSize: '22px',
+            fontSize: '32px',
             fontWeight: 800,
             color: '#fff',
             textAlign: 'center',
             letterSpacing: '-0.5px',
-            textShadow: '0 2px 12px rgba(0,0,0,0.5)',
+            textShadow: '0 2px 12px rgba(0,0,0,0.6)',
           }}
         >
           {scoreLabel}
         </div>
 
-        {/* Best pillar badge */}
+        {/* Best pillar(s) badge */}
         <div
           style={{
-            marginTop: '10px',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '8px',
             paddingLeft: '14px',
             paddingRight: '14px',
-            paddingTop: '6px',
-            paddingBottom: '6px',
+            paddingTop: '8px',
+            paddingBottom: '8px',
             borderRadius: '100px',
-            background: `${bestMeta.color}33`,
-            border: `1px solid ${bestMeta.color}88`,
+            background: 'rgba(255,255,255,0.15)',
+            border: '1px solid rgba(255,255,255,0.3)',
             backdropFilter: 'blur(8px)',
           }}
         >
-          <span style={{ fontSize: '15px' }}>{bestMeta.emoji}</span>
           <span style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>
-            Melhor pilar: {bestMeta.label}
+            {bestPillars.length > 1 ? 'Melhores pilares:' : 'Melhor pilar:'}
           </span>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {bestPillars.map((p) => (
+              <span key={p} style={{ fontSize: '15px' }}>
+                {PILLAR_META[p].emoji}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -261,10 +234,31 @@ export const ShareableInfographic = React.forwardRef<
           gap: '14px',
         }}
       >
+        {/* Period chip (Moved near pillar bars) */}
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            padding: '4px 14px',
+            borderRadius: '100px',
+            background: 'rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            alignSelf: 'center',
+            marginBottom: '4px',
+          }}
+        >
+          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.95)', fontWeight: 600 }}>
+            📅 {periodName}
+          </span>
+        </div>
+
         {/* Pillar bars */}
         <div
           style={{
-            background: 'rgba(0,0,0,0.35)',
+            background: 'rgba(0,0,0,0.4)',
             backdropFilter: 'blur(16px)',
             borderRadius: '20px',
             border: '1px solid rgba(255,255,255,0.15)',
@@ -277,7 +271,7 @@ export const ShareableInfographic = React.forwardRef<
           {PILLAR_ORDER.map((pillar) => {
             const meta = PILLAR_META[pillar];
             const score = scores[pillar];
-            const isBest = pillar === bestPillar;
+            const isBest = bestPillars.includes(pillar);
             return (
               <div key={pillar} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 {/* Emoji */}
@@ -343,7 +337,7 @@ export const ShareableInfographic = React.forwardRef<
           <p
             style={{
               fontSize: '11px',
-              color: 'rgba(255,255,255,0.65)',
+              color: 'rgba(255,255,255,0.7)',
               fontWeight: 500,
               letterSpacing: '0.3px',
             }}
