@@ -7,18 +7,22 @@ import { historyService } from '@/services/historyService';
 
 function getScoreMessage(score: number): string {
   if (score === 0) return 'Bora começar o dia!';
-  if (score < 40) return 'Bora começar!';
-  if (score < 60) return 'Vamos melhorar';
-  if (score < 80) return 'Mandando bem!';
+  if (score <= 50) return 'Precisa melhorar...';
+  if (score <= 60) return 'Ainda dá pra mais!';
+  if (score <= 70) return 'Tá no caminho certo';
+  if (score <= 80) return 'Mandando bem!';
+  if (score <= 90) return 'Quase perfeito!';
   return 'Dia incrível! 🏆';
 }
 
 function getScoreEmoji(score: number): string {
   if (score === 0) return '🌰';
-  if (score < 40) return '🌱';
-  if (score < 60) return '🌿';
-  if (score < 80) return '🌳';
-  return '🌟';
+  if (score <= 50) return '🌱';
+  if (score <= 60) return '🌿';
+  if (score <= 70) return '🌳';
+  if (score <= 80) return '⭐';
+  if (score <= 90) return '🌟';
+  return '🏆';
 }
 
 
