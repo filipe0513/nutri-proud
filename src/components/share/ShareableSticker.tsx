@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { Flame, Droplets, Utensils, Moon, Activity, Trophy } from 'lucide-react';
+import { Flame, Droplets, Utensils, Moon, Activity, Trophy, Link2 } from 'lucide-react';
 import type { InfographicPillar } from './ShareableInfographic';
 
 export type StickerType = 'GLOBAL' | InfographicPillar;
@@ -79,7 +79,7 @@ export const ShareableSticker = forwardRef<HTMLDivElement, ShareableStickerProps
           )}
 
           <div className="mt-2 opacity-90 text-[10px] uppercase tracking-[0.2em] font-bold flex items-center gap-1.5">
-            <Trophy className="w-3.5 h-3.5" /> Orgulho da Nutri
+            <Link2 className="w-3.5 h-3.5" /> orgulhodanutri.com
           </div>
         </div>
       </div>
