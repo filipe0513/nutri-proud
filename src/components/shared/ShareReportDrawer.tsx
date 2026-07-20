@@ -27,6 +27,7 @@ import {
   type InfographicPillar,
   type PillarScores,
 } from '@/components/share/ShareableInfographic';
+import { ShareableSticker } from '@/components/share/ShareableSticker';
 import { calculateWaterScore } from '@/utils/scoreUtils';
 import { historyService } from '@/services/historyService';
 import { useAppStore } from '@/store/store';
@@ -188,11 +189,11 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
     bestPillars: InfographicPillar[];
     periodName: string;
   } | null>(null);
+  const [selectedExport, setSelectedExport] = useState<string>('CARD');
 
   const nodeRef = useRef<HTMLDivElement>(null);
 
   const today = getTodayLocal();
-
   // ── Report handlers ──────────────────────────────────────────────────────
 
   const handleGenerateReport = async () => {
@@ -239,6 +240,23 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
 
   // ── Infographic handlers ──────────────────────────────────────────────────
 
+  const getAvailableExports = useCallback(() => {
+    if (!infographicData) return [];
+    const options = [
+      { id: 'CARD', label: 'Card Completo' },
+      { id: 'STICKER_GLOBAL', label: 'Resumo Geral' },
+    ];
+    ALL_PILLARS.forEach(p => {
+      if (infographicData.scores[p] > 0) {
+        const labels: Record<string, string> = {
+          WATER: 'Água', FOOD: 'Alimentação', TRAINING: 'Treino', SLEEP: 'Sono', GUT: 'Intestino'
+        };
+        options.push({ id: `STICKER_${p}`, label: `Sticker: ${labels[p]}` });
+      }
+    });
+    return options;
+  }, [infographicData]);
+
   const handleGenerateInfographic = useCallback(async () => {
     setInfoLoading(true);
     setInfoReady(false);
@@ -265,8 +283,12 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
 
   const captureBlob = useCallback(async (): Promise<Blob | null> => {
     if (!nodeRef.current) return null;
-    return toBlob(nodeRef.current, { cacheBust: true, pixelRatio: 2, width: 375, height: 667 });
-  }, []);
+    const isSticker = selectedExport.startsWith('STICKER');
+    const options = isSticker 
+      ? { cacheBust: true, pixelRatio: 2, backgroundColor: 'rgba(0,0,0,0)' }
+      : { cacheBust: true, pixelRatio: 2, width: 375, height: 667 };
+    return toBlob(nodeRef.current, options);
+  }, [selectedExport]);
 
   const handleShareInfographic = useCallback(async () => {
     setInfoCapturing(true);
@@ -330,6 +352,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
         setInfoReady(false);
         setInfographicData(null);
         setInfoPeriod('week');
+        setSelectedExport('CARD');
         setActiveTab('nutri');
       }, 300);
     }
@@ -377,7 +400,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
               id="tab-infographic"
             >
               <ImageIcon className="h-4 w-4" />
-              Infográfico
+              Imagens/Stickers
             </button>
           </div>
 
@@ -546,29 +569,67 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
 
               {/* Preview */}
               {infoReady && infographicData && (
-                <div className="flex flex-col items-center gap-3">
-                  <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide self-start">
-                    Pré-visualização
-                  </p>
-                  {/* Scaled-down visible preview */}
-                  <div
-                    style={{
-                      width: '200px',
-                      height: '355px',
-                      borderRadius: '16px',
-                      overflow: 'hidden',
-                      boxShadow: '0 20px 60px rgba(88,28,135,0.25)',
-                      border: '2px solid rgba(139,92,246,0.3)',
-                    }}
-                  >
-                    {/* Non-ref instance purely for visual preview */}
-                    <div style={{ transform: 'scale(0.533)', transformOrigin: 'top left', width: '375px', height: '667px' }}>
-                      <ShareableInfographic
-                        periodName={infographicData.periodName}
-                        scores={infographicData.scores}
-                        globalScore={infographicData.globalScore}
-                        bestPillars={infographicData.bestPillars}
-                      />
+                <div className="flex flex-col gap-4">
+                  <div className="space-y-2">
+                    <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide">
+                      Formato de Exportação
+                    </p>
+                    <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                      {getAvailableExports().map(opt => (
+                        <button
+                          key={opt.id}
+                          onClick={() => setSelectedExport(opt.id)}
+                          className={cn(
+                            'shrink-0 px-4 py-2 rounded-xl border text-sm font-medium transition-all whitespace-nowrap',
+                            selectedExport === opt.id
+                              ? 'bg-purple-600 border-purple-600 text-white shadow-md'
+                              : 'bg-white/60 border-purple-200 text-purple-800 hover:bg-purple-100'
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-3">
+                    <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide self-start">
+                      Pré-visualização
+                    </p>
+                    <div
+                      style={{
+                        width: selectedExport === 'CARD' ? '200px' : 'auto',
+                        height: selectedExport === 'CARD' ? '355px' : 'auto',
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        boxShadow: '0 20px 60px rgba(88,28,135,0.25)',
+                        border: '2px solid rgba(139,92,246,0.3)',
+                        background: selectedExport === 'CARD' ? 'transparent' : 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
+                        padding: selectedExport === 'CARD' ? '0' : '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {selectedExport === 'CARD' ? (
+                        <div style={{ transform: 'scale(0.533)', transformOrigin: 'top left', width: '375px', height: '667px' }}>
+                          <ShareableInfographic
+                            periodName={infographicData.periodName}
+                            scores={infographicData.scores}
+                            globalScore={infographicData.globalScore}
+                            bestPillars={infographicData.bestPillars}
+                          />
+                        </div>
+                      ) : (
+                        <div style={{ transform: 'scale(0.8)', transformOrigin: 'center' }}>
+                          <ShareableSticker
+                            type={selectedExport === 'STICKER_GLOBAL' ? 'GLOBAL' : (selectedExport.replace('STICKER_', '') as InfographicPillar)}
+                            score={selectedExport === 'STICKER_GLOBAL' ? infographicData.globalScore : infographicData.scores[selectedExport.replace('STICKER_', '') as InfographicPillar]}
+                            metadata={selectedExport === 'STICKER_GLOBAL' ? infographicData.periodName : ''}
+                            pillarScores={selectedExport === 'STICKER_GLOBAL' ? infographicData.scores : undefined}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -628,7 +689,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
         </DrawerContent>
       </Drawer>
 
-      {/* ─── Off-screen infographic node (captured by html-to-image) ─── */}
+      {/* ─── Off-screen infographic/sticker node (captured by html-to-image) ─── */}
       {infographicData && (
         <div
           style={{
@@ -639,13 +700,23 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
             zIndex: -1,
           }}
         >
-          <ShareableInfographic
-            ref={nodeRef}
-            periodName={infographicData.periodName}
-            scores={infographicData.scores}
-            globalScore={infographicData.globalScore}
-            bestPillars={infographicData.bestPillars}
-          />
+          {selectedExport === 'CARD' ? (
+            <ShareableInfographic
+              ref={nodeRef}
+              periodName={infographicData.periodName}
+              scores={infographicData.scores}
+              globalScore={infographicData.globalScore}
+              bestPillars={infographicData.bestPillars}
+            />
+          ) : (
+            <ShareableSticker
+              ref={nodeRef}
+              type={selectedExport === 'STICKER_GLOBAL' ? 'GLOBAL' : (selectedExport.replace('STICKER_', '') as InfographicPillar)}
+              score={selectedExport === 'STICKER_GLOBAL' ? infographicData.globalScore : infographicData.scores[selectedExport.replace('STICKER_', '') as InfographicPillar]}
+              metadata={selectedExport === 'STICKER_GLOBAL' ? infographicData.periodName : ''}
+              pillarScores={selectedExport === 'STICKER_GLOBAL' ? infographicData.scores : undefined}
+            />
+          )}
         </div>
       )}
     </>
