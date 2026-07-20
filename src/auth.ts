@@ -17,6 +17,56 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Resend({
       apiKey: process.env.RESEND_API_KEY,
       from: process.env.AUTH_RESEND_FROM ?? "Orgulho da Nutri <login@orgulhodanutri.com>",
+      async sendVerificationRequest({ identifier: email, url, provider }) {
+        const { host } = new URL(url);
+        
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 40px 20px; }
+                .container { max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
+                .logo { font-size: 22px; font-weight: bold; color: #10b981; margin-bottom: 24px; display: inline-block; }
+                .title { font-size: 20px; color: #18181b; font-weight: 700; margin-bottom: 12px; }
+                .text { font-size: 15px; color: #71717a; line-height: 1.5; margin-bottom: 28px; }
+                .button { display: inline-block; background: #10b981; color: #ffffff !important; font-weight: 600; font-size: 16px; padding: 14px 28px; border-radius: 12px; text-decoration: none; margin-bottom: 24px; }
+                .footer { font-size: 12px; color: #a1a1aa; margin-top: 24px; line-height: 1.4; }
+                .link-fallback { font-size: 11px; color: #a1a1aa; word-break: break-all; margin-top: 16px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="logo">🍏 Orgulho da Nutri</div>
+                <div class="title">Seu link de acesso chegou!</div>
+                <div class="text">Clique no botão abaixo para entrar com segurança no seu aplicativo de hábitos.</div>
+                <a href="${url}" class="button" target="_blank">Entrar no Orgulho da Nutri 🚀</a>
+                <div class="text" style="font-size: 13px;">Este link é válido por tempo limitado. Se você não solicitou este e-mail, pode ignorá-lo com segurança.</div>
+                <div class="footer">Orgulho da Nutri • Todos os direitos reservados.</div>
+              </div>
+            </body>
+          </html>
+        `;
+
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${(provider as { apiKey?: string }).apiKey || process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: provider.from || 'Orgulho da Nutri <login@orgulhodanutri.com>',
+            to: email,
+            subject: 'Acesse sua conta no Orgulho da Nutri 🍏',
+            html: htmlContent,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error(`Resend error: ${JSON.stringify(await res.json())}`);
+        }
+      },
     }),
   ],
   adapter: PrismaAdapter(prisma),
