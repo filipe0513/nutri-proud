@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.21.0",
+    "date": "2026-07-20",
+    "highlights": [
+      "🔐 Login aprimorado: vincule sua conta Google ao seu e-mail existente e aproveite o novo visual dos e-mails de acesso!",
+      "📸 Adesivos atualizados: o gerador de imagens agora inclui o link do app para facilitar o compartilhamento com amigos.",
+      "🛠️ Melhorias de uso: o preenchimento automático do e-mail e a seleção de datas no desktop agora estão funcionando perfeitamente.",
+      "📊 Painel Admin turbinado: gráficos de acesso, telemetria detalhada e histórico de usuários em tabelas interativas."
+    ]
+  },
+  {
     "version": "1.20.0",
     "date": "2026-07-20",
     "highlights": [
