@@ -364,13 +364,15 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
   return (
     <>
       <Drawer open={open} onOpenChange={handleOpenChange}>
-        <DrawerContent className="!bg-purple-50/95 backdrop-blur-2xl border-t border-purple-200 text-purple-950 shadow-[0_-15px_60px_-10px_rgba(88,28,135,0.15)] rounded-t-[32px] px-6 pb-12">
-          <DrawerHeader className="px-0">
+        <DrawerContent className="!bg-purple-50/95 backdrop-blur-2xl border-t border-purple-200 text-purple-950 shadow-[0_-15px_60px_-10px_rgba(88,28,135,0.15)] rounded-t-[32px] px-6 pb-6 max-h-[85vh] flex flex-col">
+          <DrawerHeader className="px-0 shrink-0">
             <DrawerTitle className="text-title-2 text-purple-950 flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-500" />
               Compartilhar
             </DrawerTitle>
           </DrawerHeader>
+
+          <div className="overflow-y-auto flex-1 pb-4">
 
           {/* ── Tab switcher ── */}
           <div className="flex rounded-2xl bg-purple-100/60 border border-purple-200 p-1 mb-5">
@@ -686,6 +688,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
               )}
             </div>
           )}
+          </div>
         </DrawerContent>
       </Drawer>
 
