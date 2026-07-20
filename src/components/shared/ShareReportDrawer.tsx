@@ -301,7 +301,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
         await navigator.share({
           files: [file],
           title: 'Meu Orgulho da Nutri',
-          text: 'Olha como foi meu foco no Orgulho da Nutri! 💪',
+          text: 'Olha como foi meu foco no Orgulho da Nutri! 💪 https://orgulhodanutri.com',
         });
       } else {
         // Fallback: download
@@ -646,7 +646,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
                   {infoLoading ? (
                     <><Loader2 className="h-4 w-4 animate-spin" />Calculando...</>
                   ) : (
-                    <><ImageIcon className="h-4 w-4" />Gerar Infográfico</>
+                    <><ImageIcon className="h-4 w-4" />Gerar Imagens e Stickers</>
                   )}
                 </Button>
               )}
