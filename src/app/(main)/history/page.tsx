@@ -61,8 +61,8 @@ function getScoreColorClass(score: number) {
   if (score <= 60) return 'bg-gradient-to-r from-red-500/20 to-red-600/20 border-red-400 text-red-600';
   if (score <= 70) return 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 border-orange-400 text-orange-600';
   if (score <= 80) return 'bg-gradient-to-r from-yellow-400/20 to-yellow-500/20 border-yellow-400 text-yellow-600';
-  if (score <= 90) return 'bg-gradient-to-r from-green-500/20 to-green-600/20 border-green-400 text-green-600';
-  return 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 border-blue-400 text-blue-600';
+  if (score <= 90) return 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 border-blue-400 text-blue-600';
+  return 'bg-gradient-to-r from-green-500/20 to-green-600/20 border-green-400 text-green-600';
 }
 
 export default function HistoryPage() {
