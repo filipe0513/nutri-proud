@@ -126,7 +126,8 @@ export function FilterDrawer() {
                 type="date"
                 value={dateRange.from ? dateRange.from.toISOString().split('T')[0] : ''}
                 onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value ? new Date(e.target.value) : undefined }))}
-                className="w-full h-14 pl-12 pr-4 bg-glass-light-2 border border-white/40 rounded-2xl text-neutral-500 text-button-1 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all appearance-none"
+                onClick={(e) => e.currentTarget.showPicker()}
+                className="w-full h-14 pl-12 pr-4 bg-glass-light-2 border border-white/40 rounded-2xl text-neutral-500 text-button-1 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all appearance-none cursor-pointer"
               />
             </div>
           </div>
@@ -139,7 +140,8 @@ export function FilterDrawer() {
                 type="date"
                 value={dateRange.to ? dateRange.to.toISOString().split('T')[0] : ''}
                 onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value ? new Date(e.target.value) : undefined }))}
-                className="w-full h-14 pl-12 pr-4 bg-glass-light-2 border border-white/40 rounded-2xl text-neutral-500 text-button-1 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all appearance-none"
+                onClick={(e) => e.currentTarget.showPicker()}
+                className="w-full h-14 pl-12 pr-4 bg-glass-light-2 border border-white/40 rounded-2xl text-neutral-500 text-button-1 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all appearance-none cursor-pointer"
               />
             </div>
           </div>

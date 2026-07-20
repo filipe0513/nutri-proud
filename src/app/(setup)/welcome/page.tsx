@@ -116,6 +116,7 @@ function WelcomeContent() {
             placeholder="seu@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             className="w-full h-14 bg-white/70 border-transparent rounded-2xl px-4 text-input-1 text-neutral-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
           <Button
