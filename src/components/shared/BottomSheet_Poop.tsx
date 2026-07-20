@@ -14,6 +14,8 @@ import { ActivityLog } from '@/store/types';
 import { toLocalISOString } from '@/lib/utils';
 import { calculateGutScore } from '@/utils/scoreUtils';
 import { PoopAnalysisDrawer } from '@/components/shared/PoopAnalysisDrawer';
+import { ApiError } from '@/store/api';
+import { LimitWarningDrawer } from './LimitWarningDrawer';
 
 export function BottomSheet_Poop({ 
   customTrigger,
@@ -41,6 +43,7 @@ export function BottomSheet_Poop({
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisMessage, setAnalysisMessage] = useState('');
+  const [limitWarningOpen, setLimitWarningOpen] = useState(false);
 
   const closeRef = useRef<HTMLButtonElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -142,7 +145,11 @@ export function BottomSheet_Poop({
       }
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao salvar registro.');
+      if (err instanceof ApiError && err.status === 403) {
+        setLimitWarningOpen(true);
+      } else {
+        toast.error('Erro ao salvar registro.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -262,6 +269,11 @@ export function BottomSheet_Poop({
         onOpenChange={setAnalysisOpen}
         analysis={analysisMessage}
         isLoading={analysisLoading}
+      />
+      <LimitWarningDrawer
+        isOpen={limitWarningOpen}
+        onClose={() => setLimitWarningOpen(false)}
+        onContinueAnyway={() => setLimitWarningOpen(false)}
       />
     </>
   );

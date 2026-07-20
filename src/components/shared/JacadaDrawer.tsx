@@ -18,6 +18,7 @@ import { useAppStore } from '@/store/store';
 import { useHistoryStore } from '@/store/historyStore';
 import { ActivityLog } from '@/store/types';
 import { JacadaReactionDrawer } from '@/components/shared/JacadaReactionDrawer';
+import { LimitWarningDrawer } from '@/components/shared/LimitWarningDrawer';
 
 const SLIDER_LABELS: Record<number, string> = {
   0: '—',
@@ -56,6 +57,7 @@ export function JacadaDrawer({
   const [reactionOpen, setReactionOpen] = useState(false);
   const [reactionLoading, setReactionLoading] = useState(false);
   const [reactionMessage, setReactionMessage] = useState('');
+  const [limitWarningOpen, setLimitWarningOpen] = useState(false);
 
   const { initializeData, removeLog, updateLog, activeDrawerSource } = useAppStore();
   const { updateLogHistory, deleteLogHistory } = useHistoryStore();
@@ -157,7 +159,13 @@ export function JacadaDrawer({
           }),
         });
 
-        if (!res.ok) throw new Error('Falha ao registrar jacada');
+        if (!res.ok) {
+          if (res.status === 403) {
+            const body = await res.json().catch(() => ({ error: '' }));
+            throw Object.assign(new Error(body?.error ?? 'Limite atingido'), { status: 403 });
+          }
+          throw new Error('Falha ao registrar jacada');
+        }
 
         const savedData = await res.json();
         const logId: string = savedData?.result?.id ?? '';
@@ -174,7 +182,12 @@ export function JacadaDrawer({
         fetchAIReaction(savedSugar, savedFat, savedAlcohol, logId);
       }
     } catch (error) {
-      toast.error('Erro ao salvar jacada. Tente novamente.');
+      const asAny = error as { status?: number };
+      if (asAny?.status === 403) {
+        setLimitWarningOpen(true);
+      } else {
+        toast.error('Erro ao salvar jacada. Tente novamente.');
+      }
       console.error(error);
     } finally {
       setLoading(false);
@@ -341,6 +354,11 @@ export function JacadaDrawer({
         onOpenChange={setReactionOpen}
         message={reactionMessage}
         isLoading={reactionLoading}
+      />
+      <LimitWarningDrawer
+        isOpen={limitWarningOpen}
+        onClose={() => setLimitWarningOpen(false)}
+        onContinueAnyway={() => setLimitWarningOpen(false)}
       />
     </>
   );

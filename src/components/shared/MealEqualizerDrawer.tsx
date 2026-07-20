@@ -15,6 +15,8 @@ import { ActivityLog } from '@/store/types';
 import { ALL_MEALS } from '@/schemas/profileSchema';
 import { toLocalISOString } from '@/lib/utils';
 import { calculateMealQualityScore } from '@/utils/scoreUtils';
+import { ApiError } from '@/store/api';
+import { LimitWarningDrawer } from './LimitWarningDrawer';
 
 /** Fallback set when the user has no planned_meals configured yet */
 const FALLBACK_MEAL_IDS = ['Café da Manhã', 'Almoço', 'Jantar'];
@@ -45,6 +47,8 @@ export function MealEqualizerDrawer({
 
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [limitWarningOpen, setLimitWarningOpen] = useState(false);
+
   const [selectedDate, setSelectedDate] = useState(() => {
     if (initialData?.event_time) {
       return toLocalISOString(new Date(initialData.event_time)).slice(0, 16);
@@ -145,7 +149,11 @@ export function MealEqualizerDrawer({
       setTimeout(resetState, 300);
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao salvar refeição.');
+      if (err instanceof ApiError && err.status === 403) {
+        setLimitWarningOpen(true);
+      } else {
+        toast.error('Erro ao salvar refeição.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -183,6 +191,7 @@ export function MealEqualizerDrawer({
   }, [activityLogs, selectedDate, initialData]);
 
   return (
+    <>
     <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
       {!isControlled && (
         <DrawerTrigger asChild>
@@ -334,5 +343,11 @@ export function MealEqualizerDrawer({
         )}
       </DrawerContent>
     </Drawer>
+    <LimitWarningDrawer
+      isOpen={limitWarningOpen}
+      onClose={() => setLimitWarningOpen(false)}
+      onContinueAnyway={() => setLimitWarningOpen(false)}
+    />
+    </>
   );
 }

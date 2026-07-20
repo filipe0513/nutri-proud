@@ -14,6 +14,8 @@ import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
 import { toLocalISOString } from '@/lib/utils';
 import { calculateTrainingScore } from '@/utils/scoreUtils';
+import { ApiError } from '@/store/api';
+import { LimitWarningDrawer } from './LimitWarningDrawer';
 
 export function WorkoutEqualizerDrawer({ 
   customTrigger,
@@ -41,6 +43,8 @@ export function WorkoutEqualizerDrawer({
   const [cardio, setCardio] = useState(0);
   const [carga, setCarga] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [limitWarningOpen, setLimitWarningOpen] = useState(false);
+
   const [selectedDate, setSelectedDate] = useState(() => {
     if (initialData?.event_time) {
       return toLocalISOString(new Date(initialData.event_time)).slice(0, 16);
@@ -135,7 +139,11 @@ export function WorkoutEqualizerDrawer({
       setTimeout(resetState, 300);
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao salvar treino.');
+      if (err instanceof ApiError && err.status === 403) {
+        setLimitWarningOpen(true);
+      } else {
+        toast.error('Erro ao salvar treino.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -158,6 +166,7 @@ export function WorkoutEqualizerDrawer({
   };
 
   return (
+    <>
     <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
       {!isControlled && (
         <DrawerTrigger asChild>
@@ -251,5 +260,11 @@ export function WorkoutEqualizerDrawer({
         </div>
       </DrawerContent>
     </Drawer>
+    <LimitWarningDrawer
+      isOpen={limitWarningOpen}
+      onClose={() => setLimitWarningOpen(false)}
+      onContinueAnyway={() => setLimitWarningOpen(false)}
+    />
+    </>
   );
 }

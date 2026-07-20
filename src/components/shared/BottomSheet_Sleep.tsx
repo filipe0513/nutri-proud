@@ -14,6 +14,8 @@ import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
 import { toLocalISOString } from '@/lib/utils';
 import { calculateSleepScore } from '@/utils/scoreUtils';
+import { ApiError } from '@/store/api';
+import { LimitWarningDrawer } from './LimitWarningDrawer';
 
 export function BottomSheet_Sleep({ 
   customTrigger,
@@ -38,6 +40,7 @@ export function BottomSheet_Sleep({
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = open !== undefined;
   const drawerOpen = isControlled ? open : internalOpen;
+  const [limitWarningOpen, setLimitWarningOpen] = useState(false);
 
   const [duration, setDuration] = useState(8);
   const [awokeTimes, setAwokeTimes] = useState(0);
@@ -124,7 +127,11 @@ export function BottomSheet_Sleep({
       setTimeout(resetState, 300);
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao salvar registro.');
+      if (err instanceof ApiError && err.status === 403) {
+        setLimitWarningOpen(true);
+      } else {
+        toast.error('Erro ao salvar registro.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -149,6 +156,7 @@ export function BottomSheet_Sleep({
   };
 
   return (
+    <>
     <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
       {!isControlled && (
         <DrawerTrigger asChild>
@@ -280,5 +288,11 @@ export function BottomSheet_Sleep({
         </div>
       </DrawerContent>
     </Drawer>
+    <LimitWarningDrawer
+      isOpen={limitWarningOpen}
+      onClose={() => setLimitWarningOpen(false)}
+      onContinueAnyway={() => setLimitWarningOpen(false)}
+    />
+    </>
   );
 }

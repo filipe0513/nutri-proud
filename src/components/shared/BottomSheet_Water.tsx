@@ -13,6 +13,8 @@ import { DatePickerInput } from './DatePickerInput';
 import { ActivityLog } from '@/store/types';
 import { toLocalISOString } from '@/lib/utils';
 import { calculateWaterScore } from '@/utils/scoreUtils';
+import { ApiError } from '@/store/api';
+import { LimitWarningDrawer } from './LimitWarningDrawer';
 
 export function BottomSheet_Water({ 
   customTrigger, 
@@ -37,6 +39,7 @@ export function BottomSheet_Water({
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = open !== undefined;
   const drawerOpen = isControlled ? open : internalOpen;
+  const [limitWarningOpen, setLimitWarningOpen] = useState(false);
 
   const [customInput, setCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState('');
@@ -90,7 +93,11 @@ export function BottomSheet_Water({
       closeDrawer();
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao salvar registro.');
+      if (err instanceof ApiError && err.status === 403) {
+        setLimitWarningOpen(true);
+      } else {
+        toast.error('Erro ao salvar registro.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -166,6 +173,7 @@ export function BottomSheet_Water({
   };
 
   return (
+    <>
     <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
       {!isControlled && (
         <DrawerTrigger asChild>
@@ -295,5 +303,11 @@ export function BottomSheet_Water({
         )}
       </DrawerContent>
     </Drawer>
+    <LimitWarningDrawer
+      isOpen={limitWarningOpen}
+      onClose={() => setLimitWarningOpen(false)}
+      onContinueAnyway={() => setLimitWarningOpen(false)}
+    />
+    </>
   );
 }

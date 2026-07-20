@@ -1,5 +1,13 @@
 import { UserProfile, ActivityLog } from './types';
 
+/** Erro tipado para respostas HTTP não-ok da API. Permite detectar status 403 nos componentes. */
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 export const fetchUserProfile = async (): Promise<UserProfile | null> => {
   try {
     const res = await fetch('/api/users/profile');
@@ -72,7 +80,8 @@ export const saveActivityLog = async (log: ActivityLog): Promise<void> => {
     body: JSON.stringify(log),
   });
   if (!res.ok) {
-    console.error('Falha ao salvar log', await res.text());
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Erro ao salvar log');
   }
 };
 
@@ -86,7 +95,8 @@ export const updateActivityLog = async (id: string, log: ActivityLog): Promise<v
     body: JSON.stringify(log),
   });
   if (!res.ok) {
-    console.error('Falha ao atualizar log', await res.text());
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Erro ao atualizar log');
   }
 };
 
@@ -98,7 +108,8 @@ export const deleteActivityLog = async (id: string): Promise<void> => {
     method: 'DELETE',
   });
   if (!res.ok) {
-    console.error('Falha ao apagar log', await res.text());
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Erro ao apagar log');
   }
 };
 
