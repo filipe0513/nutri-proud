@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Users, Activity, BrainCircuit } from "lucide-react";
 import { WeeklyVolumeChart, SourceDistributionChart } from "./charts";
-
+import { HeavyUsersTable } from "./heavy-users-table";
 export default async function AdminPage() {
   const session = await auth();
 
@@ -147,51 +147,7 @@ export default async function AdminPage() {
             <CardTitle className="text-neutral-700">Heavy Users (Top 10)</CardTitle>
             <CardDescription>Usuários mais engajados com base no volume total de hábitos registrados.</CardDescription>
           </CardHeader>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-neutral-500 uppercase bg-neutral-100/50 border-y border-neutral-200">
-                <tr>
-                  <th scope="col" className="px-6 py-3">Usuário</th>
-                  <th scope="col" className="px-6 py-3">Nome</th>
-                  <th scope="col" className="px-6 py-3">Status</th>
-                  <th scope="col" className="px-6 py-3">Entrou em</th>
-                  <th scope="col" className="px-6 py-3">Último Registro</th>
-                  <th scope="col" className="px-6 py-3 text-right">Total de Logs</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topUsers.map((u, i) => (
-                  <tr key={u.id} className="bg-white/30 border-b border-neutral-100 last:border-0 hover:bg-white/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-neutral-800 flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full bg-neutral-200 flex items-center justify-center text-xs text-neutral-500 font-bold">
-                        {i + 1}
-                      </div>
-                      {u.email || (u.is_anonymous ? 'Usuário Anônimo' : 'Sem E-mail')}
-                    </td>
-                    <td className="px-6 py-4 text-neutral-600">
-                      {u.name || 'Sem nome'}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-md text-xs font-medium ${u.is_anonymous ? 'bg-notify-warning-glass text-notify-warning border border-notify-warning/20' : 'bg-notify-success-glass text-notify-success border border-notify-success/20'}`}>
-                        {u.is_anonymous ? 'Anônimo' : 'Registrado'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-neutral-500 whitespace-nowrap">
-                      {new Date(u.createdAt).toLocaleDateString('pt-BR')}
-                    </td>
-                    <td className="px-6 py-4 text-neutral-500 whitespace-nowrap">
-                      {u.logs.length > 0 
-                        ? new Date(u.logs[0].createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '')
-                        : 'Nenhum registro'}
-                    </td>
-                    <td className="px-6 py-4 text-right font-bold text-neutral-700">
-                      {u._count.logs}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <HeavyUsersTable initialData={topUsers} />
         </Card>
 
       </div>
