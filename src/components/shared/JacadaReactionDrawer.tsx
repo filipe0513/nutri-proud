@@ -25,10 +25,12 @@ export function JacadaReactionDrawer({
       <DrawerContent className="bg-glass-light-3 backdrop-blur-lg border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-10">
         <DrawerHeader className="px-0 pb-4">
           <DrawerTitle className="text-title-2 text-neutral-600 flex items-center gap-2">
-            <span className="text-3xl">🍽️</span> A Nutri analisou sua jacada
+            <span className="text-3xl">🍽️</span> Feedback da nutri
           </DrawerTitle>
           <p className="text-body-2 text-neutral-400 mt-1">
-            Feedback honesto, sem filtro.
+            {isLoading 
+              ? 'A nutri está analisando sua jacada para dar um feedback honesto...' 
+              : 'A nutri analisou sua jacada e deixou um feedback honesto, sem filtro.'}
           </p>
         </DrawerHeader>
 
