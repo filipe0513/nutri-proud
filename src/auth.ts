@@ -71,6 +71,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   adapter: PrismaAdapter(prisma),
+  events: {
+    async signIn({ user, account }) {
+      try {
+        await prisma.systemEvent.create({
+          data: {
+            eventName: 'AUTH_LOGIN_SUCCESS',
+            userId: user?.id,
+            metadata: { provider: account?.provider || 'unknown' },
+          }
+        });
+      } catch (e) {
+        console.error("Erro ao registrar evento de login:", e);
+      }
+    }
+  },
   callbacks: {
     ...authConfig.callbacks,
     async signIn({ user, account, profile }) {

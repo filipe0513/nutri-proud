@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Users, Activity, BrainCircuit } from "lucide-react";
-import { WeeklyVolumeChart, SourceDistributionChart } from "./charts";
+import { WeeklyVolumeChart, SourceDistributionChart, LoginAttemptsChart } from "./charts";
 import { HeavyUsersTable } from "./heavy-users-table";
 export default async function AdminPage() {
   const session = await auth();
@@ -87,6 +87,41 @@ export default async function AdminPage() {
     }
   });
 
+  // 5. Autenticação & Funil de Login
+  const systemEvents = await prisma.systemEvent.findMany({
+    where: {
+      eventName: {
+        in: [
+          'AUTH_ANONYMOUS_STARTED', 'AUTH_ANONYMOUS_SUCCESS',
+          'AUTH_GOOGLE_CLICKED', 'AUTH_EMAIL_STARTED',
+          'AUTH_LOGIN_SUCCESS'
+        ]
+      }
+    }
+  });
+
+  let anonStarted = 0, anonSuccess = 0;
+  let googleStarted = 0, googleSuccess = 0;
+  let resendStarted = 0, resendSuccess = 0;
+
+  for (const event of systemEvents) {
+    if (event.eventName === 'AUTH_ANONYMOUS_STARTED') anonStarted++;
+    if (event.eventName === 'AUTH_ANONYMOUS_SUCCESS') anonSuccess++;
+    if (event.eventName === 'AUTH_GOOGLE_CLICKED') googleStarted++;
+    if (event.eventName === 'AUTH_EMAIL_STARTED') resendStarted++;
+    if (event.eventName === 'AUTH_LOGIN_SUCCESS') {
+      const provider = (event.metadata as Record<string, unknown>)?.provider;
+      if (provider === 'google') googleSuccess++;
+      if (provider === 'resend') resendSuccess++;
+    }
+  }
+
+  const loginAttemptsData = [
+    { name: "Google", tentativas: googleStarted, sucessos: googleSuccess },
+    { name: "Email (Resend)", tentativas: resendStarted, sucessos: resendSuccess },
+    { name: "Anônimo", tentativas: anonStarted, sucessos: anonSuccess },
+  ];
+
   return (
     <div className="min-h-screen bg-neutral-100 p-8">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -139,6 +174,7 @@ export default async function AdminPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <WeeklyVolumeChart data={areaChartData} />
           <SourceDistributionChart data={donutData} />
+          <LoginAttemptsChart data={loginAttemptsData} />
         </div>
 
         {/* Top Heavy Users */}

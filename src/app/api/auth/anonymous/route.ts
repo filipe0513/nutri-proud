@@ -27,6 +27,14 @@ export async function POST() {
       maxAge: 60 * 60 * 24 * 7 // 7 dias
     });
 
+    // Telemetria
+    await prisma.systemEvent.create({
+      data: {
+        eventName: 'AUTH_ANONYMOUS_SUCCESS',
+        userId: user.id,
+      }
+    });
+
     return NextResponse.json({ message: "Visitante criado com sucesso.", user }, { status: 201 });
   } catch (error: any) {
     console.error("Erro na rota anônima:", error);

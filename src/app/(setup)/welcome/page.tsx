@@ -56,6 +56,9 @@ function WelcomeContent() {
 
   const handleAnonymousSignIn = async () => {
     setLoadingAnon(true);
+    // Fire and forget telemetry
+    fetch('/api/events', { method: 'POST', body: JSON.stringify({ eventName: 'AUTH_ANONYMOUS_STARTED' }) }).catch(() => {});
+    
     try {
       const res = await fetch("/api/auth/anonymous", { method: "POST" });
       if (!res.ok) throw new Error("Falha");

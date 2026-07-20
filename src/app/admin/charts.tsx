@@ -2,15 +2,24 @@
 
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, Legend, YAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { TrendingUp, CheckCircle2 } from "lucide-react";
+import { TrendingUp, CheckCircle2, LogIn } from "lucide-react";
 
 const chartConfig = {
   logs: {
     label: "Registros",
     color: "hsl(var(--primary))",
   },
+  tentativas: {
+    label: "Tentativas",
+    color: "#cbd5e1",
+  },
+  sucessos: {
+    label: "Sucessos",
+    color: "hsl(var(--primary))",
+  }
 } satisfies ChartConfig;
 
 interface WeeklyLogData {
@@ -102,6 +111,43 @@ export function SourceDistributionChart({ data }: { data: SourceData[] }) {
             </Pie>
           </PieChart>
         </ChartContainer>
+      </CardContent>
+    </Card>
+  );
+}
+
+export interface LoginAttemptsData {
+  name: string; // "Anônimo", "Google", "Resend"
+  tentativas: number;
+  sucessos: number;
+}
+
+export function LoginAttemptsChart({ data }: { data: LoginAttemptsData[] }) {
+  return (
+    <Card className="lg:col-span-3 bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm mt-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-neutral-700">
+          <LogIn className="w-5 h-5 text-notify-info" />
+          Funil de Autenticação
+        </CardTitle>
+        <CardDescription>
+          Comparativo de tentativas iniciadas vs logins concluídos com sucesso.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[300px] w-full mt-4">
+          <ChartContainer config={chartConfig} className="h-[300px] w-full">
+            <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#737373', fontSize: 12 }} dy={10} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#737373', fontSize: 12 }} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Legend verticalAlign="top" height={36} iconType="circle" />
+              <Bar dataKey="tentativas" name="Tentativas Iniciais" fill="#cbd5e1" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="sucessos" name="Logins com Sucesso" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ChartContainer>
+        </div>
       </CardContent>
     </Card>
   );
