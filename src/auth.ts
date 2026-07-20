@@ -44,6 +44,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 `[Auth/Merge] Usuário anônimo encontrado. Migrando logs...`,
               );
 
+              // Garante que o usuário real já existe na DB antes de migrar os logs.
+              // O Prisma Adapter pode ainda não ter persistido o registro neste ponto
+              // do callback signIn (especialmente no primeiro login OAuth), o que
+              // causaria uma FK violation em DailyLog_userId_fkey.
+              const realUserExists = await prisma.user.findUnique({
+                where: { id: realUserId },
+              });
+
+              if (!realUserExists) {
+                console.log(
+                  `[Auth/Merge] Usuário real ${realUserId} ainda não existe na DB. Criando registro mínimo para garantir FK...`,
+                );
+                await prisma.user.create({
+                  data: {
+                    id: realUserId,
+                    email: user.email ?? null,
+                    name: user.name ?? null,
+                    image: user.image ?? null,
+                    is_anonymous: false,
+                  },
+                });
+              }
+
               const updated = await prisma.dailyLog.updateMany({
                 where: { userId: anonUserId },
                 data: { userId: realUserId },
