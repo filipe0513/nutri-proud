@@ -13,28 +13,28 @@ interface WeekDay {
   isFuture: boolean;
 }
 
-// ─── Squircle visual states ───────────────────────────────────────────────────
+// ─── Score → gradient mapping ─────────────────────────────────────────────────
+// roxo <50 | vermelho <60 | amarelo <70 | azul <80 | verde >=80
 
-function getSquircleClasses(day: WeekDay): string {
-  const base =
-    'w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300';
-
-  if (day.isFuture) {
-    return `${base} bg-transparent border border-dashed border-neutral-200`;
+function getScoreGradient(score: number): string {
+  if (score < 50) {
+    // Roxo — esforço mínimo
+    return 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)';
   }
-  if (day.score === null) {
-    // Past day with no logs
-    return `${base} bg-neutral-200`;
+  if (score < 60) {
+    // Vermelho — abaixo do esperado
+    return 'linear-gradient(135deg, #dc2626 0%, #f87171 100%)';
   }
-  // Scored day — fire gradient
-  const ring = day.isToday ? ' ring-2 ring-orange-400 ring-offset-2' : '';
-  return `${base} bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 shadow-sm${ring}`;
-}
-
-function getFlameClasses(day: WeekDay): string {
-  if (day.isFuture) return 'w-4 h-4 text-neutral-300';
-  if (day.score === null) return 'w-4 h-4 text-white/50';
-  return 'w-4 h-4 text-white fill-white drop-shadow-sm';
+  if (score < 70) {
+    // Amarelo/âmbar — razoável
+    return 'linear-gradient(135deg, #d97706 0%, #fbbf24 100%)';
+  }
+  if (score < 80) {
+    // Azul — bom progresso
+    return 'linear-gradient(135deg, #2563eb 0%, #60a5fa 100%)';
+  }
+  // Verde — excelente
+  return 'linear-gradient(135deg, #16a34a 0%, #4ade80 100%)';
 }
 
 // ─── Stagger animation variants ───────────────────────────────────────────────
@@ -60,7 +60,29 @@ const itemVariants = {
 // ─── Sub-component: single squircle day ──────────────────────────────────────
 
 function StreakDay({ day }: { day: WeekDay }) {
-  const isActive = !day.isFuture && day.score !== null;
+  const hasScore = day.score !== null;
+  const isActive = !day.isFuture && hasScore;
+
+  // Squircle inline style — gradient when active, neutral-200 when not
+  const squircleStyle: React.CSSProperties = isActive
+    ? {
+        background: getScoreGradient(day.score!),
+        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+      }
+    : {};
+
+  // Squircle base classes
+  const squircleBase =
+    'relative w-10 h-10 flex items-center justify-center transition-all duration-300';
+
+  // Squircle shape via border-radius (squircle approximation)
+  const squircleRadius = 'rounded-[10px]'; // ~squircle
+
+  const squircleBg = isActive
+    ? '' // handled by inline style
+    : day.isFuture
+      ? 'bg-neutral-200/50 border border-dashed border-neutral-300'
+      : 'bg-neutral-200'; // past day with no logs
 
   return (
     <motion.div
@@ -68,23 +90,47 @@ function StreakDay({ day }: { day: WeekDay }) {
       className="flex flex-col items-center gap-1.5"
     >
       {/* Squircle */}
-      <div className={getSquircleClasses(day)}>
-        {isActive && day.isToday ? (
+      <div
+        className={`${squircleBase} ${squircleRadius} ${squircleBg}`}
+        style={squircleStyle}
+      >
+        {/* Today ring pulse */}
+        {day.isToday && (
+          <motion.div
+            className="absolute inset-0 rounded-[10px]"
+            animate={{ boxShadow: ['0 0 0 0px rgba(255,255,255,0.5)', '0 0 0 3px rgba(255,255,255,0)'] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+          />
+        )}
+
+        {/* Icon */}
+        {day.isToday && isActive ? (
           <motion.div
             animate={{ scale: [1, 1.15, 1] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <Flame className={getFlameClasses(day)} />
+            <Flame
+              className="w-4 h-4 drop-shadow-sm"
+              style={{ color: 'white', fill: 'white' }}
+            />
           </motion.div>
         ) : (
-          <Flame className={getFlameClasses(day)} />
+          <Flame
+            className="w-4 h-4"
+            style={{
+              color: isActive ? 'white' : 'rgba(255,255,255,0.7)',
+              fill: isActive ? 'white' : 'transparent',
+              // For future/empty days, use a muted neutral color
+              ...((!isActive) && { color: '#d1d5db', fill: 'transparent' }),
+            }}
+          />
         )}
       </div>
 
       {/* Day label */}
       <span
         className={`text-caption-2 font-semibold ${
-          day.isToday ? 'text-orange-500' : 'text-neutral-400'
+          day.isToday ? 'text-neutral-500' : 'text-neutral-400'
         }`}
       >
         {day.dayLabel}
@@ -97,6 +143,7 @@ function StreakDay({ day }: { day: WeekDay }) {
 
 function computeStreak(days: WeekDay[]): number {
   // Count consecutive scored (score !== null) days from the most recent non-future day backwards
+  // Today with score=0 still counts as "active" (user is in the game)
   const past = [...days].reverse().filter((d) => !d.isFuture);
   let streak = 0;
   for (const d of past) {
@@ -128,7 +175,7 @@ export function WeeklyStreak() {
       <div className="flex justify-between px-1 py-1 animate-pulse">
         {Array.from({ length: 7 }).map((_, i) => (
           <div key={i} className="flex flex-col items-center gap-1.5">
-            <div className="w-10 h-10 rounded-2xl bg-neutral-200" />
+            <div className="w-10 h-10 rounded-[10px] bg-neutral-200" />
             <div className="w-3 h-2.5 rounded bg-neutral-200" />
           </div>
         ))}

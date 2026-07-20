@@ -112,9 +112,14 @@ export async function getWeeklyProgress(userId: string): Promise<WeekDay[]> {
     const dayLogs = logsByDay.get(dayKey) ?? [];
 
     let score: number | null = null;
-    if (!isFuture && dayLogs.length > 0) {
-      // Delegate ALL math to the existing single source of truth
-      score = historyService.calculateDayScore(dayLogs, userProfile);
+    if (!isFuture) {
+      if (dayLogs.length > 0) {
+        // Delegate ALL math to the existing single source of truth
+        score = historyService.calculateDayScore(dayLogs, userProfile);
+      } else if (isToday) {
+        // Today with no logs yet → show as 0 (not null) so the UI renders the day
+        score = 0;
+      }
     }
 
     weekDays.push({
