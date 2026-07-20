@@ -4,6 +4,7 @@ import { DailyLog } from '@prisma/client';
 import { AiInsightResponse } from '@/schemas/insightSchema';
 import { getLocalStartOfDay } from '@/utils/dateUtils';
 import { createInsightNotification } from './notificationService';
+import { getWeeklyProgress } from './progressService';
 
 export const insightService = {
   /**
@@ -213,6 +214,36 @@ export const insightService = {
       ).length;
     }
 
+    // ── 4b. Progresso semanal (Weekly Streak Context) ─────────────────────
+    const weeklyProgress = await getWeeklyProgress(userId);
+
+    const PT_DAYS_FULL = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    const weeklyProgressSummary = weeklyProgress
+      .map((day, i) => {
+        const label = PT_DAYS_FULL[i];
+        if (day.isFuture) return `${label}: -`;
+        if (day.isToday) {
+          return day.score !== null
+            ? `${label}: Hoje (score parcial ${day.score}/100)`
+            : `${label}: Hoje (sem logs ainda)`;
+        }
+        return day.score !== null ? `${label}: ${day.score}/100` : `${label}: sem registro`;
+      })
+      .join(' | ');
+
+    // Detect streak of consecutive days with score >= 70 (excluding future days)
+    const completedDays = weeklyProgress.filter((d) => !d.isFuture && !d.isToday);
+    let currentStreak = 0;
+    for (let idx = completedDays.length - 1; idx >= 0; idx--) {
+      if ((completedDays[idx].score ?? 0) >= 70) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
+    const yesterdayDay = completedDays[completedDays.length - 1];
+    const yesterdayScore = yesterdayDay?.score ?? null;
+
     // ── 5. Montar o contexto rico ─────────────────────────────────────────────
     const todayLogsSummary =
       todayLogs.length === 0
@@ -242,6 +273,18 @@ ${weeklyFreqSummary}
 - Treinos: ${workoutsThisWeek} de ${workoutGoalPerWeek} na semana (meta semanal)
 - Dias desde o último treino: ${daysSinceLastWorkout !== null ? daysSinceLastWorkout : 'nunca registrou'}
 - Meta de sono: ${sleepGoalHours}h por noite
+
+## [CONTEXTO SEMANAL DO USUÁRIO]
+Score diário consolidado (0–100) de cada dia desta semana ("sem registro" = nenhum log naquele dia):
+${weeklyProgressSummary}
+- Sequência de dias consecutivos com score >= 70 (excluindo hoje): ${currentStreak} dia(s)
+- Score de ontem: ${yesterdayScore !== null ? `${yesterdayScore}/100` : 'sem registro'}
+
+Instruções de uso do contexto semanal:
+- Se currentStreak >= 2, elogie a consistência e motive a manter a sequência hoje.
+- Se yesterdayScore for nulo ou < 40, encoraje o usuário a não quebrar a corrente e recomeçar bem hoje.
+- Se a semana toda não tem registros, seja acolhedora e incentive o primeiro passo.
+- Combine sempre com o contexto de hoje (hora, pilares ausentes, etc.).
 
 ## Regras de priorização (siga na ordem):
 1. Se é manhã (< 10h) e não há NENHUM log hoje → priorize SLEEP (registrar o sono da noite anterior)
