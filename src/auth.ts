@@ -29,17 +29,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               <style>
                 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 40px 20px; }
                 .container { max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
-                .logo { font-size: 22px; font-weight: bold; color: #10b981; margin-bottom: 24px; display: inline-block; }
+                .logo { font-size: 22px; font-weight: bold; color: #f97316; margin-bottom: 24px; display: inline-block; }
                 .title { font-size: 20px; color: #18181b; font-weight: 700; margin-bottom: 12px; }
                 .text { font-size: 15px; color: #71717a; line-height: 1.5; margin-bottom: 28px; }
-                .button { display: inline-block; background: #10b981; color: #ffffff !important; font-weight: 600; font-size: 16px; padding: 14px 28px; border-radius: 12px; text-decoration: none; margin-bottom: 24px; }
+                .button { display: inline-block; background: #f97316; color: #ffffff !important; font-weight: 600; font-size: 16px; padding: 14px 28px; border-radius: 12px; text-decoration: none; margin-bottom: 24px; }
                 .footer { font-size: 12px; color: #a1a1aa; margin-top: 24px; line-height: 1.4; }
                 .link-fallback { font-size: 11px; color: #a1a1aa; word-break: break-all; margin-top: 16px; }
               </style>
             </head>
             <body>
               <div class="container">
-                <div class="logo">🍏 Orgulho da Nutri</div>
+                <div class="logo">
+                  <span style="vertical-align: middle; display: inline-block; padding-bottom: 2px;">🍏</span>
+                  <span style="vertical-align: middle; display: inline-block;">Orgulho da Nutri</span>
+                </div>
                 <div class="title">Seu link de acesso chegou!</div>
                 <div class="text">Clique no botão abaixo para entrar com segurança no seu aplicativo de hábitos.</div>
                 <a href="${url}" class="button" target="_blank">Entrar no Orgulho da Nutri 🚀</a>
