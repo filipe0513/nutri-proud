@@ -191,7 +191,7 @@ export function WeeklyStreak() {
         {/* Header row */}
         <div className="flex items-center justify-between px-1">
           <p className="text-body-2 font-semibold text-neutral-400">
-            Semana em chamas
+            Como está sua semana atual
           </p>
           {streak > 0 && (
             <motion.span
@@ -201,7 +201,7 @@ export function WeeklyStreak() {
               className="inline-flex items-center gap-1 text-caption-1 font-bold text-orange-500"
             >
               <Flame className="w-3.5 h-3.5 fill-orange-500 text-orange-500" />
-              {streak} {streak === 1 ? 'dia' : 'dias'} seguidos
+              {streak} {streak === 1 ? 'dia apenas' : 'dias seguidos'}
             </motion.span>
           )}
         </div>
