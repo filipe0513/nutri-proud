@@ -8,10 +8,29 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title:
-    "Orgulho da Nutri | Cumprir as metas da nutri agora ficou fácil e divertido!",
+  title: {
+    template: "%s | Orgulho da Nutri",
+    default: "Orgulho da Nutri - Gamifique seus Hábitos Saudáveis",
+  },
   description:
-    "Registre sua água, alimentação, sono e treinos com zero atrito. Transforme sua saúde em um jogo.",
+    "O Orgulho da Nutri é o seu parceiro gamificado para rastrear água, sono, alimentação, intestino e treinos. Zero atrito e com IA integrada.",
+  keywords: [
+    "rastreador de hábitos",
+    "saúde",
+    "fitness",
+    "gamificação",
+    "nutrição",
+    "diário de saúde",
+  ],
+  openGraph: {
+    title: "Orgulho da Nutri - Gamifique seus Hábitos Saudáveis",
+    description:
+      "O Orgulho da Nutri é o seu parceiro gamificado para rastrear água, sono, alimentação, intestino e treinos. Zero atrito e com IA integrada.",
+    url: "https://orgulhodanutri.com",
+    siteName: "Orgulho da Nutri",
+    locale: "pt_BR",
+    type: "website",
+  },
   icons: {
     icon: "/icon-192.webp",
     apple: [
