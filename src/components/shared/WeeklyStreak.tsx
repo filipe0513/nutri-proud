@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Flame } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAppStore } from '@/store/store';
 
 interface WeekDay {
   date: string; // ISO string (serialized from Date)
@@ -162,6 +163,7 @@ function computeStreak(days: WeekDay[]): number {
 export function WeeklyStreak() {
   const [days, setDays] = useState<WeekDay[]>([]);
   const [loading, setLoading] = useState(true);
+  const activityLogs = useAppStore((state) => state.activity_logs);
 
   useEffect(() => {
     fetch('/api/progress/weekly')
@@ -171,7 +173,7 @@ export function WeeklyStreak() {
       })
       .catch(() => {/* silent — component simply stays hidden */})
       .finally(() => setLoading(false));
-  }, []);
+  }, [activityLogs]);
 
   if (loading || days.length === 0) {
     // Skeleton placeholder — same height as the real component
