@@ -16,7 +16,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
     Resend({
       apiKey: process.env.RESEND_API_KEY,
-      from: process.env.AUTH_RESEND_FROM ?? "Orgulho da Nutri <onboarding@resend.dev>",
+      from: process.env.AUTH_RESEND_FROM ?? "Orgulho da Nutri <login@orgulhodanutri.com>",
     }),
   ],
   adapter: PrismaAdapter(prisma),
