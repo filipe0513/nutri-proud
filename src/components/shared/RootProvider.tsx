@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/store';
 import { Toaster } from '@/components/ui/sonner';
+import { SuccessOverlay } from './SuccessOverlay';
 
 /**
  * RootProvider — responsável apenas por inicializar os dados do Zustand e
@@ -29,6 +30,7 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
     <>
       {children}
       <Toaster position="top-center" richColors />
+      <SuccessOverlay />
     </>
   );
 }

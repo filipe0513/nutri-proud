@@ -16,6 +16,7 @@ import { calculateGutScore } from '@/utils/scoreUtils';
 import { PoopAnalysisDrawer } from '@/components/shared/PoopAnalysisDrawer';
 import { ApiError } from '@/store/api';
 import { LimitWarningDrawer } from './LimitWarningDrawer';
+import { useRouter } from 'next/navigation';
 
 export function BottomSheet_Poop({ 
   customTrigger,
@@ -35,6 +36,7 @@ export function BottomSheet_Poop({
   const updateLogHistory = useHistoryStore(state => state.updateLogHistory);
   const deleteLogHistory = useHistoryStore(state => state.deleteLogHistory);
   
+  const router = useRouter();
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = open !== undefined;
   const drawerOpen = isControlled ? open : internalOpen;
@@ -125,8 +127,9 @@ export function BottomSheet_Poop({
         if (isControlled && onOpenChange) onOpenChange(false);
       } else {
         const result = await addLog(logData);
-        toast.success('Registro salvo!', {
-          className: 'bg-amber-500 text-white border-transparent'
+        useAppStore.getState().showSuccessOverlay({
+          message: 'Registro salvo!',
+          category: 'poop'
         });
 
         // After saving, trigger AI analysis for non-normal states
@@ -136,6 +139,10 @@ export function BottomSheet_Poop({
           if (closeRef.current) closeRef.current.click();
           if (savedLogId) fetchPoopAnalysis(state, savedLogId);
           return;
+        } else {
+          if (activeDrawerSource === 'STORIES') {
+            router.push('/');
+          }
         }
       }
       

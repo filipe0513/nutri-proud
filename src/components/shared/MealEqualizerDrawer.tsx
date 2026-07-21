@@ -17,6 +17,7 @@ import { toLocalISOString } from '@/lib/utils';
 import { calculateMealQualityScore } from '@/utils/scoreUtils';
 import { ApiError } from '@/store/api';
 import { LimitWarningDrawer } from './LimitWarningDrawer';
+import { useRouter } from 'next/navigation';
 
 /** Fallback set when the user has no planned_meals configured yet */
 const FALLBACK_MEAL_IDS = ['Café da Manhã', 'Almoço', 'Jantar'];
@@ -44,6 +45,7 @@ export function MealEqualizerDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = open !== undefined;
   const drawerOpen = isControlled ? open : internalOpen;
+  const router = useRouter();
 
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -142,7 +144,13 @@ export function MealEqualizerDrawer({
         if (isControlled && onOpenChange) onOpenChange(false);
       } else {
         await addLog(logData);
-        toast.success(`${mealName} registrado!`);
+        useAppStore.getState().showSuccessOverlay({
+          message: `${mealName} registrado!`,
+          category: 'food'
+        });
+        if (activeDrawerSource === 'STORIES') {
+          router.push('/');
+        }
       }
 
       // Slight delay to allow drawer close animation before reset

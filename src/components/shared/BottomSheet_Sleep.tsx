@@ -16,6 +16,7 @@ import { toLocalISOString } from '@/lib/utils';
 import { calculateSleepScore } from '@/utils/scoreUtils';
 import { ApiError } from '@/store/api';
 import { LimitWarningDrawer } from './LimitWarningDrawer';
+import { useRouter } from 'next/navigation';
 
 export function BottomSheet_Sleep({ 
   customTrigger,
@@ -41,6 +42,7 @@ export function BottomSheet_Sleep({
   const isControlled = open !== undefined;
   const drawerOpen = isControlled ? open : internalOpen;
   const [limitWarningOpen, setLimitWarningOpen] = useState(false);
+  const router = useRouter();
 
   const [duration, setDuration] = useState(8);
   const [awokeTimes, setAwokeTimes] = useState(0);
@@ -114,9 +116,13 @@ export function BottomSheet_Sleep({
         if (isControlled && onOpenChange) onOpenChange(false);
       } else {
         await addLog(logData);
-        toast.success('Sono registrado!', {
-          className: 'bg-indigo-500 text-white border-transparent'
+        useAppStore.getState().showSuccessOverlay({
+          message: 'Sono registrado!',
+          category: 'sleep'
         });
+        if (activeDrawerSource === 'STORIES') {
+          router.push('/');
+        }
         if (isControlled && onOpenChange) {
           onOpenChange(false);
         } else {

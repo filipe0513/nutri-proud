@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Droplet, Moon, Utensils, Dumbbell, Smile, CheckCircle2, Lightbulb, ArrowLeft } from 'lucide-react';
+import { Droplet, Moon, Utensils, Dumbbell, Smile, CheckCircle2, Lightbulb, ArrowLeft, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useAppStore } from '@/store/store';
 import { ActivityLog } from '@/store/types';
@@ -78,6 +78,7 @@ export default function PillarInsightsPage() {
   const catKey = category as string;
   const data = PILLAR_DATA[catKey];
   const { user_profile, activity_logs } = useAppStore();
+  const [editingLog, setEditingLog] = useState<ActivityLog | null>(null);
 
   const targetText = useMemo(() => {
     if (!user_profile) return '';
@@ -199,9 +200,19 @@ export default function PillarInsightsPage() {
                       <span className="text-body-2 font-medium text-neutral-600">
                         {formatTime(log.event_time)}
                       </span>
-                      <span className="text-body-2 font-bold text-neutral-700">
-                        {catKey === 'water' && log.details?.quantity_ml ? `${log.details.quantity_ml}ml` : '+1 registro'}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-body-2 font-bold text-neutral-700">
+                          {catKey === 'water' && log.details?.quantity_ml ? `${log.details.quantity_ml}ml` : '+1 registro'}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-neutral-400 hover:text-brand-500 rounded-full"
+                          onClick={() => setEditingLog(log)}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -275,6 +286,15 @@ export default function PillarInsightsPage() {
           } />
         </div>
       </div>
+      
+      {/* Edit Drawer Instance */}
+      <DrawerComp 
+        initialData={editingLog || undefined}
+        open={!!editingLog}
+        onOpenChange={(o: boolean) => {
+          if (!o) setEditingLog(null);
+        }}
+      />
     </div>
   );
 }

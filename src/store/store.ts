@@ -37,6 +37,11 @@ interface AppState {
   /** Dados transitórios de insight para abrir o InsightsDrawer programaticamente (ex: via notificações) */
   pendingInsightData: { message: string; cta: string | null } | null;
   setPendingInsightData: (data: { message: string; cta: string | null } | null) => void;
+
+  /** Success Overlay (Full Screen Toast) */
+  successOverlay: { isOpen: boolean; message: string; submessage?: string; category?: string } | null;
+  showSuccessOverlay: (data: { message: string; submessage?: string; category?: string }) => void;
+  hideSuccessOverlay: () => void;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
@@ -51,6 +56,15 @@ export const useAppStore = create<AppState>()((set, get) => ({
       setActiveDrawerSource: (source) => set({ activeDrawerSource: source || 'UNKNOWN' }),
       pendingInsightData: null,
       setPendingInsightData: (data) => set({ pendingInsightData: data }),
+      successOverlay: null,
+      showSuccessOverlay: (data) => {
+        set({ successOverlay: { isOpen: true, ...data } });
+        // Automatically close after 3 seconds
+        setTimeout(() => {
+          set((state) => (state.successOverlay?.isOpen ? { successOverlay: null } : state));
+        }, 3000);
+      },
+      hideSuccessOverlay: () => set({ successOverlay: null }),
 
       initializeData: async () => {
         const [profile, logs] = await Promise.all([

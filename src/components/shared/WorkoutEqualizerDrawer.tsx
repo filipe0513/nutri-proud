@@ -16,6 +16,7 @@ import { toLocalISOString } from '@/lib/utils';
 import { calculateTrainingScore } from '@/utils/scoreUtils';
 import { ApiError } from '@/store/api';
 import { LimitWarningDrawer } from './LimitWarningDrawer';
+import { useRouter } from 'next/navigation';
 
 export function WorkoutEqualizerDrawer({ 
   customTrigger,
@@ -38,6 +39,7 @@ export function WorkoutEqualizerDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = open !== undefined;
   const drawerOpen = isControlled ? open : internalOpen;
+  const router = useRouter();
 
   // Equalizer states
   const [cardio, setCardio] = useState(0);
@@ -133,7 +135,13 @@ export function WorkoutEqualizerDrawer({
         if (isControlled && onOpenChange) onOpenChange(false);
       } else {
         await addLog(logData);
-        toast.success('Treino registrado com sucesso!');
+        useAppStore.getState().showSuccessOverlay({
+          message: 'Treino registrado com sucesso!',
+          category: 'workout'
+        });
+        if (activeDrawerSource === 'STORIES') {
+          router.push('/');
+        }
       }
 
       setTimeout(resetState, 300);

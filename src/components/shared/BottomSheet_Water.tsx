@@ -15,6 +15,7 @@ import { toLocalISOString } from '@/lib/utils';
 import { calculateWaterScore } from '@/utils/scoreUtils';
 import { ApiError } from '@/store/api';
 import { LimitWarningDrawer } from './LimitWarningDrawer';
+import { useRouter } from 'next/navigation';
 
 export function BottomSheet_Water({ 
   customTrigger, 
@@ -40,6 +41,7 @@ export function BottomSheet_Water({
   const isControlled = open !== undefined;
   const drawerOpen = isControlled ? open : internalOpen;
   const [limitWarningOpen, setLimitWarningOpen] = useState(false);
+  const router = useRouter();
 
   const [customInput, setCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState('');
@@ -85,9 +87,13 @@ export function BottomSheet_Water({
         });
       } else {
         await addLog(logData);
-        toast.success(`${ml}ml registrados!`, {
-          className: 'bg-blue-500 text-white border-transparent'
+        useAppStore.getState().showSuccessOverlay({
+          message: `${ml}ml registrados!`,
+          category: 'water'
         });
+        if (activeDrawerSource === 'STORIES') {
+          router.push('/');
+        }
       }
       
       closeDrawer();
@@ -126,10 +132,14 @@ export function BottomSheet_Water({
     try {
       setIsSubmitting(true);
       await setWaterToTarget(selectedDate, activeDrawerSource || undefined);
-      toast.success('Meta de Água Batida!', {
-        description: 'Orgulho da Nutri! 👏',
-        className: 'bg-orange-500 text-white border-transparent'
+      useAppStore.getState().showSuccessOverlay({
+        message: 'Meta de Água Batida!',
+        submessage: 'Orgulho da Nutri! 👏',
+        category: 'water'
       });
+      if (activeDrawerSource === 'STORIES') {
+        router.push('/');
+      }
       closeDrawer();
     } catch (err) {
       console.error(err);
