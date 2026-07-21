@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { cookies } from 'next/headers';
+import { profileSettingsSchema } from '@/schemas/profileSchema';
 
 async function getUserId() {
   const session = await auth();
@@ -13,19 +14,39 @@ async function getUserId() {
 
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
+    const body = await request.json();
 
     const userId = await getUserId();
     if (!userId) {
       return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
     }
 
+    // Validate with Zod to prevent mass assignment (e.g. setting role/is_anonymous)
+    const parsed = profileSettingsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Dados inválidos.', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const data = parsed.data;
+
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
         name: data.name,
-        profile: data.profile,
-        targets: data.targets,
+        profile: {
+          weight_kg: data.weight_kg,
+          height_cm: data.height_cm,
+          main_goal: data.goal,
+        },
+        targets: {
+          water_ml_per_day: data.water_target_ml,
+          sleep_hours_per_night: data.sleep_target_hours,
+          weekly_workouts: data.weekly_workouts,
+          planned_meals: data.planned_meals,
+        },
       }
     });
     

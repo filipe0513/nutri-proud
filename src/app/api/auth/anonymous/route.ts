@@ -3,9 +3,20 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { userService } from '@/services/userService';
+import { rateLimit, getClientIp } from '@/lib/rateLimit';
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    // Rate limit: 5 anonymous session creations per minute per IP
+    const ip = getClientIp(request);
+    const rl = rateLimit(`anon-auth:${ip}`, 5, 60_000);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: 'Muitas requisições. Tente novamente em 1 minuto.' },
+        { status: 429 }
+      );
+    }
+
     const cookieStore = await cookies();
     const existingAnonId = cookieStore.get('anon_user_id')?.value;
 

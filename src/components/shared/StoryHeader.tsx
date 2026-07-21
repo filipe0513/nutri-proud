@@ -16,7 +16,7 @@ export function StoryHeader() {
     const userId = match ? decodeURIComponent(match[1]) : null;
     if (!userId) return;
 
-    fetch(`/api/streaks?userId=${userId}`)
+    fetch('/api/streaks')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!data) return;

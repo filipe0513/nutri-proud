@@ -28,7 +28,7 @@ export function DynamicStreakCard({ userId }: DynamicStreakCardProps) {
   useEffect(() => {
     if (!userId) return;
 
-    fetch(`/api/streaks?userId=${userId}`)
+    fetch('/api/streaks')
       .then((res) => (res.ok ? res.json() : null))
       .then((data: StreakData | null) => {
         if (!data) return;

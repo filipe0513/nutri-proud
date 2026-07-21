@@ -4,9 +4,18 @@ import { auth } from '@/auth';
 import { cookies } from 'next/headers';
 import { createJacadaNotification } from '@/services/notificationService';
 import { prisma } from '@/lib/prisma';
+import { rateLimit } from '@/lib/rateLimit';
+import { z } from 'zod';
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+
+const jacadaReactionSchema = z.object({
+  sugar: z.number().min(0).max(5),
+  fat: z.number().min(0).max(5),
+  alcohol: z.number().min(0).max(5),
+  logId: z.string().uuid().optional(),
+}).strict();
 
 async function getUserId(): Promise<string | undefined> {
   const session = await auth();
@@ -46,55 +55,63 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-    const { sugar, fat, alcohol, logId } = body as {
-      sugar: number;
-      fat: number;
-      alcohol: number;
-      logId?: string;
-    };
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
+    }
 
-    if (sugar === undefined || fat === undefined || alcohol === undefined) {
+    // Rate limit: 3 requests per minute per user
+    const rl = rateLimit(`ai-jacada:${userId}`, 3, 60_000);
+    if (!rl.success) {
       return NextResponse.json(
-        { error: 'Os campos sugar, fat e alcohol são obrigatórios.' },
+        { error: 'Muitas requisições. Tente novamente em 1 minuto.' },
+        { status: 429 }
+      );
+    }
+
+    const body = await request.json();
+    const parsed = jacadaReactionSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Dados inválidos.', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
 
+    const { sugar, fat, alcohol, logId } = parsed.data;
+
     // Busca histórico dos últimos 7 dias para contextualizar a bronca
-    const userId = await getUserId();
     let historySummary = 'Nenhuma jacada registrada nos últimos 7 dias.';
     let consecutiveDays = 0;
 
-    if (userId) {
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      const recentJacadas = await prisma.dailyLog.findMany({
-        where: {
-          userId,
-          category: 'jacada',
-          eventTime: { gte: sevenDaysAgo },
-        },
-        orderBy: { eventTime: 'desc' },
-        select: { eventTime: true, details: true },
-      });
+    const recentJacadas = await prisma.dailyLog.findMany({
+      where: {
+        userId,
+        category: 'jacada',
+        eventTime: { gte: sevenDaysAgo },
+      },
+      orderBy: { eventTime: 'desc' },
+      select: { eventTime: true, details: true },
+    });
 
-      historySummary = buildHistorySummary(recentJacadas);
+    historySummary = buildHistorySummary(recentJacadas);
 
-      // Contar dias consecutivos com jacada (incluindo hoje)
-      const uniqueDays = new Set(
-        recentJacadas.map((l) => new Date(l.eventTime).toDateString())
-      );
-      const today = new Date();
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(today);
-        d.setDate(d.getDate() - i);
-        if (uniqueDays.has(d.toDateString())) {
-          consecutiveDays++;
-        } else {
-          break;
-        }
+    // Contar dias consecutivos com jacada (incluindo hoje)
+    const uniqueDays = new Set(
+      recentJacadas.map((l) => new Date(l.eventTime).toDateString())
+    );
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      if (uniqueDays.has(d.toDateString())) {
+        consecutiveDays++;
+      } else {
+        break;
       }
     }
 
@@ -135,7 +152,7 @@ REGRAS OBRIGATÓRIAS:
     const text = response.text().trim();
 
     // Se logId foi fornecido, persiste a reação no DailyLog (fire-and-forget, silencioso)
-    if (logId && userId) {
+    if (logId) {
       prisma.dailyLog.findUnique({ where: { id: logId, userId } })
         .then((log) => {
           if (!log) return;
@@ -151,9 +168,7 @@ REGRAS OBRIGATÓRIAS:
     }
 
     // Persiste a reação como notificação (fire-and-forget, silencioso)
-    if (userId) {
-      createJacadaNotification(userId, text).catch(() => {/* silent */});
-    }
+    createJacadaNotification(userId, text).catch(() => {/* silent */});
 
     return NextResponse.json({ message: text });
   } catch (error) {

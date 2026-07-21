@@ -1,8 +1,30 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { auth } from '@/auth';
+import { cookies } from 'next/headers';
+import { rateLimit } from '@/lib/rateLimit';
+import { z } from 'zod';
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+
+const lifesaverSchema = z.object({
+  scores: z.object({
+    water: z.number().min(0).max(100),
+    food: z.number().min(0).max(100),
+    workout: z.number().min(0).max(100),
+    sleep: z.number().min(0).max(100),
+    poop: z.number().min(0).max(100),
+  }),
+}).strict();
+
+async function getUserId(): Promise<string | undefined> {
+  const session = await auth();
+  if (session?.user?.id) return session.user.id;
+
+  const cookieStore = await cookies();
+  return cookieStore.get('anon_user_id')?.value;
+}
 
 export async function POST(request: Request) {
   try {
@@ -13,14 +35,32 @@ export async function POST(request: Request) {
       );
     }
 
-    const { scores } = await request.json();
+    // Auth check — prevent unauthenticated Gemini credit consumption
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
+    }
 
-    if (!scores) {
+    // Rate limit: 5 requests per minute per user
+    const rl = rateLimit(`ai-lifesaver:${userId}`, 5, 60_000);
+    if (!rl.success) {
       return NextResponse.json(
-        { error: 'Os scores são obrigatórios.' },
+        { error: 'Muitas requisições. Tente novamente em 1 minuto.' },
+        { status: 429 }
+      );
+    }
+
+    const body = await request.json();
+    const parsed = lifesaverSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Dados inválidos.', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
+
+    const { scores } = parsed.data;
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     

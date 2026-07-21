@@ -46,8 +46,8 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '15', 10);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '15', 10)));
     const categoriesParam = searchParams.get('categories');
     const startDateParam = searchParams.get('startDate');
     const endDateParam = searchParams.get('endDate');

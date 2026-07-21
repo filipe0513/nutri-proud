@@ -15,8 +15,10 @@ export const ALL_MEALS = [
 
 export type MealId = (typeof ALL_MEALS)[number]['id'];
 
+const validMealIds = ALL_MEALS.map((m) => m.id) as [string, ...string[]];
+
 export const profileSettingsSchema = z.object({
-  name: z.string().min(2, "Nome deve ter pelo menos 2 letras"),
+  name: z.string().min(2, "Nome deve ter pelo menos 2 letras").max(100, "Nome muito longo"),
   weight_kg: z.number().min(30, "Peso inválido").max(300, "Peso inválido"),
   height_cm: z.number().min(100, "Altura inválida").max(250, "Altura inválida"),
   goal: z.enum(['fat_loss', 'muscle_gain', 'health']),
@@ -24,9 +26,9 @@ export const profileSettingsSchema = z.object({
   sleep_target_hours: z.number().min(4).max(12),
   weekly_workouts: z.number().min(3, 'Mínimo 3 dias').max(7, 'Máximo 7 dias'),
   planned_meals: z
-    .array(z.string())
+    .array(z.enum(validMealIds))
     .min(1, 'Selecione pelo menos 1 refeição')
     .max(10, 'Máximo 10 refeições'),
-});
+}).strict();
 
 export type ProfileSettingsForm = z.infer<typeof profileSettingsSchema>;

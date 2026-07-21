@@ -1,15 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { streakService } from '@/services/streakService';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/auth';
+import { cookies } from 'next/headers';
+
+async function getUserId(): Promise<string | undefined> {
+  const session = await auth();
+  if (session?.user?.id) return session.user.id;
+
+  const cookieStore = await cookies();
+  return cookieStore.get('anon_user_id')?.value;
+}
 
 /**
- * GET /api/streaks?userId=...
- * Returns the best streak across all categories for the user.
+ * GET /api/streaks
+ * Returns the best streak across all categories for the authenticated user.
  */
-export async function GET(request: NextRequest) {
-  const userId = request.nextUrl.searchParams.get('userId');
+export async function GET() {
+  const userId = await getUserId();
   if (!userId) {
-    return NextResponse.json({ error: 'userId é obrigatório' }, { status: 400 });
+    return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
   }
 
   try {

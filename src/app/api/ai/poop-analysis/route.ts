@@ -5,9 +5,16 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { rateLimit } from '@/lib/rateLimit';
+import { z } from 'zod';
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+
+const poopAnalysisSchema = z.object({
+  state: z.enum(['hard', 'liquid', 'gas', 'normal']),
+  logId: z.string().uuid().optional(),
+}).strict();
 
 async function getUserId(): Promise<string | undefined> {
   const session = await auth();
@@ -156,40 +163,53 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-    const { state, logId } = body as { state: string; logId?: string };
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
+    }
 
-    if (!state) {
+    // Rate limit: 3 requests per minute per user
+    const rl = rateLimit(`ai-poop:${userId}`, 3, 60_000);
+    if (!rl.success) {
       return NextResponse.json(
-        { error: 'O campo state é obrigatório.' },
+        { error: 'Muitas requisições. Tente novamente em 1 minuto.' },
+        { status: 429 },
+      );
+    }
+
+    const body = await request.json();
+    const parsed = poopAnalysisSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Dados inválidos.', details: parsed.error.flatten() },
         { status: 400 },
       );
     }
+
+    const { state, logId } = parsed.data;
 
     // Only analyse non-normal states
     if (state === 'normal') {
       return NextResponse.json({ analysis: null });
     }
 
-    const userId = await getUserId();
     let contextSummary = 'Nenhum dado disponível.';
 
-    if (userId) {
-      const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-      const recentLogs = await prisma.dailyLog.findMany({
-        where: {
-          userId,
-          category: { in: ['poop', 'food', 'jacada', 'water'] },
-          eventTime: { gte: threeDaysAgo },
-        },
-        orderBy: { eventTime: 'asc' },
-        select: { eventTime: true, category: true, details: true },
-      });
+    const recentLogs = await prisma.dailyLog.findMany({
+      where: {
+        userId,
+        category: { in: ['poop', 'food', 'jacada', 'water'] },
+        eventTime: { gte: threeDaysAgo },
+      },
+      orderBy: { eventTime: 'asc' },
+      select: { eventTime: true, category: true, details: true },
+    });
 
-      contextSummary = buildDailyContextSummary(recentLogs as DailyLogRow[]);
-    }
+    contextSummary = buildDailyContextSummary(recentLogs as DailyLogRow[]);
 
     const currentStateLabel = STATE_LABELS[state] ?? state;
 
@@ -226,15 +246,15 @@ REGRAS OBRIGATÓRIAS:
 
     let analysis: string | null = null;
     try {
-      const parsed = JSON.parse(rawText) as { analysis: string | null };
-      analysis = parsed.analysis ?? null;
+      const parsedJson = JSON.parse(rawText) as { analysis: string | null };
+      analysis = parsedJson.analysis ?? null;
     } catch {
       // JSON parsing failed → treat as no correlation found
       analysis = null;
     }
 
     // Persist the analysis in the DailyLog (fire-and-forget, does not block response)
-    if (logId && userId && analysis) {
+    if (logId && analysis) {
       prisma.dailyLog
         .findUnique({ where: { id: logId, userId } })
         .then((log) => {

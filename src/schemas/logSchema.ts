@@ -2,38 +2,39 @@ import { z } from 'zod';
 
 // Schema para os detalhes de Comida (JSONB)
 export const foodDetailsSchema = z.object({
-  meal_type: z.string().min(1, 'Tipo de refeição é obrigatório'),
+  meal_type: z.string().min(1, 'Tipo de refeição é obrigatório').max(100),
   factors: z.object({
     carbs: z.number().min(-50).max(50),
     protein: z.number().min(-50).max(50),
     fats: z.number().min(-50).max(50),
     fiber: z.number().min(-50).max(50),
   }).optional(),
-  note: z.string().optional(),
-});
+  note: z.string().max(500).optional(),
+}).strict();
 
 // Schema para os detalhes de Sono
 export const sleepDetailsSchema = z.object({
   duration_hours: z.number().min(0).max(24),
-  awoke_times: z.number().min(0),
+  awoke_times: z.number().min(0).max(50),
   quality_feeling: z.enum(['cansado', 'normal', 'revigorado']),
-});
+}).strict();
 
 // Schema Principal do Log
 export const logSchema = z.object({
   category: z.enum(['water', 'sleep', 'poop', 'food', 'workout', 'note', 'jacada']),
   primary_value: z.number().min(0).max(100),
-  details: z.any(),
+  details: z.record(z.string(), z.unknown()).optional(),
   // event_time is optional; when provided it must not be in the future
   event_time: z
     .string()
+    .max(100)
     .datetime({ offset: true, message: 'event_time deve ser uma data ISO válida.' })
     .refine((val) => new Date(val) <= new Date(), {
       message: 'Não é possível registrar eventos em datas futuras.',
     })
     .optional(),
-  source: z.string().optional(),
-});
+  source: z.string().max(100).optional(),
+}).strict();
 
 // Schema para os detalhes da Jacada
 export const jacadaSchema = z.object({
@@ -42,10 +43,11 @@ export const jacadaSchema = z.object({
   alcohol: z.number().min(0).max(5),
   event_time: z
     .string()
+    .max(100)
     .datetime({ offset: true, message: 'event_time deve ser uma data ISO válida.' })
     .refine((val) => new Date(val) <= new Date(), {
       message: 'Não é possível registrar eventos em datas futuras.',
     })
     .optional(),
-  source: z.string().optional(),
-});
+  source: z.string().max(100).optional(),
+}).strict();
