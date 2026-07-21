@@ -61,7 +61,11 @@ export function SuccessOverlay() {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1, rotate: [0, -10, 10, -10, 10, 0] }}
-              transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 10 }}
+              transition={{ 
+                delay: 0.2,
+                scale: { type: 'spring', stiffness: 200, damping: 10 },
+                rotate: { duration: 0.5, ease: 'easeInOut' }
+              }}
               className="bg-white/20 p-6 rounded-full mb-6 backdrop-blur-sm"
             >
               <Icon size={64} className="text-white drop-shadow-md" strokeWidth={2.5} />
