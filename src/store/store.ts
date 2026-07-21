@@ -59,10 +59,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
       successOverlay: null,
       showSuccessOverlay: (data) => {
         set({ successOverlay: { isOpen: true, ...data } });
-        // Automatically close after 3 seconds
         setTimeout(() => {
           set((state) => (state.successOverlay?.isOpen ? { successOverlay: null } : state));
-        }, 3000);
+        }, 1500);
       },
       hideSuccessOverlay: () => set({ successOverlay: null }),
 
