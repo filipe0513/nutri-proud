@@ -7,39 +7,57 @@ datasource db {
   provider = "postgresql"
 }
 
+// ── Enums ──────────────────────────────────────────────────
+
+enum SquadRole {
+  ADMIN
+  MEMBER
+}
+
+enum PostType {
+  USER_GENERATED
+  SYSTEM_MILESTONE
+}
+
+// ── Auth & Core ────────────────────────────────────────────
 
 model User {
-  id            String    @id @default(uuid())
-  email         String?   @unique
+  id            String         @id @default(uuid())
+  email         String?        @unique
   name          String?
   image         String?
-  is_anonymous  Boolean   @default(false)
-  role          String    @default("USER")
+  is_anonymous  Boolean        @default(false)
+  role          String         @default("USER")
+  oneSignalId   String?        @map("one_signal_id")
   emailVerified DateTime?
   profile       Json?
   targets       Json?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   logs          DailyLog[]
   accounts      Account[]
   sessions      Session[]
   notifications Notification[]
   aiInsights    AiInsight[]
+  squadMembers  SquadMember[]
+  posts         Post[]
+  reactions     Reaction[]
+  comments      Comment[]
 }
 
 model Account {
-  id                 String  @id @default(uuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -62,46 +80,120 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// ── Health Logs ────────────────────────────────────────────
+
 model DailyLog {
   id           String   @id @default(uuid())
   createdAt    DateTime @default(now())
   eventTime    DateTime
-  category     String   // "water", "sleep", "poop", "food", "workout", "note"
+  category     String // "water", "sleep", "poop", "food", "workout", "note"
   primaryValue Int
-  details      Json     // JSONB field
+  details      Json // JSONB field
   source       String   @default("UNKNOWN")
-  
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// ── Notifications & AI ────────────────────────────────────
+
 model Notification {
-  id          String   @id @default(uuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title       String
-  message     String
-  isRead      Boolean  @default(false) @map("is_read")
-  category    String   // "REMINDER", "ACHIEVEMENT", "SYSTEM", "ALERT"
-  actionType  String?  @map("action_type")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String
+  message    String
+  isRead     Boolean  @default(false) @map("is_read")
+  category   String // "REMINDER", "ACHIEVEMENT", "SYSTEM", "ALERT"
+  actionType String?  @map("action_type")
+  createdAt  DateTime @default(now()) @map("created_at")
 }
 
 model AiInsight {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
   message   String   @db.Text
-  cta       String?  // Nome do hábito/pilar ou null
+  cta       String? // Nome do hábito/pilar ou null
   isViewed  Boolean  @default(false) @map("is_viewed")
   createdAt DateTime @default(now()) @map("created_at")
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SystemEvent {
-  id         String   @id @default(uuid())
-  userId     String?  // Nullable para eventos de quem ainda não logou
-  eventName  String   // Nome do evento (ex: AUTH_EMAIL_STARTED)
-  metadata   Json?    // Detalhes extras opcionais
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  userId    String? // Nullable para eventos de quem ainda não logou
+  eventName String // Nome do evento (ex: AUTH_EMAIL_STARTED)
+  metadata  Json? // Detalhes extras opcionais
+  createdAt DateTime @default(now())
+}
+
+// ── Squads (Social) ───────────────────────────────────────
+
+model Squad {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  inviteCode  String   @unique @default(uuid()) @map("invite_code")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  members SquadMember[]
+  posts   Post[]
+}
+
+model SquadMember {
+  id                String    @id @default(uuid())
+  squadId           String    @map("squad_id")
+  userId            String    @map("user_id")
+  role              SquadRole @default(MEMBER)
+  muteNotifications Boolean   @default(false) @map("mute_notifications")
+  joinedAt          DateTime  @default(now()) @map("joined_at")
+
+  squad Squad @relation(fields: [squadId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([squadId, userId])
+}
+
+// ── Posts & Engagement ────────────────────────────────────
+
+model Post {
+  id        String   @id @default(uuid())
+  content   String?
+  imageUrl  String?  @map("image_url")
+  type      PostType @default(USER_GENERATED)
+  squadId   String   @map("squad_id")
+  authorId  String   @map("author_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  squad     Squad      @relation(fields: [squadId], references: [id], onDelete: Cascade)
+  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
+  comments  Comment[]
+}
+
+model Reaction {
+  id        String   @id @default(uuid())
+  emoji     String
+  postId    String   @map("post_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId, emoji])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  text      String
+  postId    String   @map("post_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
