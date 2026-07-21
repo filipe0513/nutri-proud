@@ -1,4 +1,5 @@
 import { UserProfile, ActivityLog } from './types';
+import type { SquadSummary, PostWithAuthor } from '@/types/squadTypes';
 
 /** Erro tipado para respostas HTTP não-ok da API. Permite detectar status 403 nos componentes. */
 export class ApiError extends Error {
@@ -117,3 +118,75 @@ export const deleteActivityLog = async (id: string): Promise<void> => {
   }
 };
 
+// ── Squads API (UI Mocks for now) ──────────────────────────
+
+export const fetchMySquads = async (): Promise<SquadSummary[]> => {
+  const res = await fetch('/api/squads');
+  if (!res.ok) {
+    console.warn('Falha ao buscar squads, usando mock');
+    return []; // Return empty array if backend not implemented
+  }
+  const data = await res.json();
+  return data.squads || [];
+};
+
+export const createSquad = async (data: { name: string; description?: string }): Promise<SquadSummary> => {
+  const res = await fetch('/api/squads', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Erro ao criar squad');
+  }
+  return res.json();
+};
+
+export const joinSquadByCode = async (inviteCode: string): Promise<SquadSummary> => {
+  const res = await fetch('/api/squads/join', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ inviteCode }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Código inválido ou expirado');
+  }
+  return res.json();
+};
+
+export const fetchSquadFeed = async (squadId: string): Promise<PostWithAuthor[]> => {
+  const res = await fetch(`/api/squads/${squadId}/posts`);
+  if (!res.ok) {
+    console.warn('Falha ao buscar feed do squad, usando mock vazio');
+    return [];
+  }
+  const data = await res.json();
+  return data.posts || [];
+};
+
+export const createPost = async (squadId: string, data: { content?: string; imageUrl?: string }): Promise<PostWithAuthor> => {
+  const res = await fetch(`/api/squads/${squadId}/posts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Erro ao publicar');
+  }
+  return res.json();
+};
+
+export const toggleReaction = async (postId: string, emoji: string): Promise<void> => {
+  const res = await fetch(`/api/posts/${postId}/reactions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ emoji }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Erro ao reagir');
+  }
+};

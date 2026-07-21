@@ -13,10 +13,11 @@ interface BottomNavProps {
 export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
   const pathname = usePathname();
 
-  // Hide nav when inside a Story/Pillar screen
+  // Hide nav when inside a Story/Pillar screen or a specific Squad feed
   if (
     pathname.startsWith('/pillar') ||
-    pathname.startsWith('/profile')
+    pathname.startsWith('/profile') ||
+    (pathname.startsWith('/squads/') && pathname !== '/squads')
   )
     return null;
 
