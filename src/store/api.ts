@@ -73,7 +73,9 @@ export const fetchActivityLogs = async (): Promise<ActivityLog[]> => {
 /**
  * Salva um novo registro de atividade no servidor (Mock)
  */
-export const saveActivityLog = async (log: ActivityLog): Promise<void> => {
+export const saveActivityLog = async (fullLog: ActivityLog): Promise<void> => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id, created_at, ...log } = fullLog;
   const res = await fetch('/api/logs', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -88,7 +90,9 @@ export const saveActivityLog = async (log: ActivityLog): Promise<void> => {
 /**
  * Atualiza um registro de atividade no servidor
  */
-export const updateActivityLog = async (id: string, log: ActivityLog): Promise<void> => {
+export const updateActivityLog = async (id: string, fullLog: ActivityLog): Promise<void> => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id: _id, created_at, ...log } = fullLog;
   const res = await fetch(`/api/logs/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
