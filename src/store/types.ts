@@ -1,5 +1,7 @@
 export interface UserProfile {
   name: string;
+  email?: string | null;
+  image?: string | null;
   is_anonymous?: boolean;
   profile: {
     weight_kg: number;

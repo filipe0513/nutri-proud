@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, History, Settings, Share2, Plus } from 'lucide-react';
+import { Home, History, Share2, Users, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BottomNavProps {
@@ -13,10 +13,9 @@ interface BottomNavProps {
 export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
   const pathname = usePathname();
 
-  // Hide nav when inside a Story/Pillar screen or Settings
+  // Hide nav when inside a Story/Pillar screen
   if (
     pathname.startsWith('/pillar') ||
-    pathname.startsWith('/settings') ||
     pathname.startsWith('/profile')
   )
     return null;
@@ -28,7 +27,7 @@ export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
 
   const rightItems = [
     { label: 'Nutri', icon: Share2, href: null as null, onClick: onShareClick },
-    { label: 'Config', icon: Settings, href: '/settings' },
+    { label: 'Squads', icon: Users, href: '/squads' },
   ];
 
   return (
@@ -70,7 +69,7 @@ export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
         <Plus className="h-7 w-7 stroke-[2.5px]" />
       </button>
 
-      {/* Right: Compartilhar + Config */}
+      {/* Right: Compartilhar + Squads */}
       {rightItems.map((item) => {
         const isActive = item.href ? pathname === item.href : false;
 
