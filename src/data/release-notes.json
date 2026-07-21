@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.22.0",
+    "date": "2026-07-21",
+    "highlights": [
+      "✨ Nova experiência: Avisos visuais aprimorados em tela cheia e opção de editar ações diretamente nos Stories!",
+      "🛡️ Segurança reforçada: Novo controle de acesso e validação estrita de dados para manter seu app ainda mais seguro.",
+      "⚡ Navegação mais ágil: Reduzimos o tempo do aviso de sucesso na tela para você não perder tempo.",
+      "🛠️ Estabilidade: Diversas correções na sincronização do diário, atualização de perfil e inclusão de testes automatizados."
+    ]
+  },
+  {
     "version": "1.21.0",
     "date": "2026-07-20",
     "highlights": [
