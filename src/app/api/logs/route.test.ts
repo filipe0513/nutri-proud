@@ -1,8 +1,7 @@
-import { test, expect, vi, describe, beforeEach } from 'vitest';
+import { test, expect, vi, describe, beforeEach, Mock } from 'vitest';
 import { POST, GET } from './route';
 import { logService } from '@/services/logService';
 import { auth } from '@/auth';
-import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 
 vi.mock('@/auth', () => ({ auth: vi.fn() }));
@@ -31,8 +30,8 @@ describe('Logs API', () => {
 
   test('POST /api/logs - success with valid log payload', async () => {
     // Arrange
-    (auth as any).mockResolvedValue({ user: { id: 'user-123' } });
-    (logService.saveLog as any).mockResolvedValue({ id: 'log-1', category: 'water' });
+    (auth as Mock).mockResolvedValue({ user: { id: 'user-123' } });
+    (logService.saveLog as Mock).mockResolvedValue({ id: 'log-1', category: 'water' });
 
     const payload = {
       event_time: '2026-07-21T10:00:00.000Z',
@@ -57,7 +56,7 @@ describe('Logs API', () => {
 
   test('GET /api/logs - success', async () => {
     // Arrange
-    (auth as any).mockResolvedValue({ user: { id: 'user-123' } });
+    (auth as Mock).mockResolvedValue({ user: { id: 'user-123' } });
     const mockDbLog = {
       id: 'log-1',
       createdAt: new Date('2026-07-21T10:00:00.000Z'),
@@ -66,7 +65,7 @@ describe('Logs API', () => {
       primaryValue: 50,
       details: { quantity_ml: 1000 },
     };
-    (prisma.dailyLog.findMany as any).mockResolvedValue([mockDbLog]);
+    (prisma.dailyLog.findMany as Mock).mockResolvedValue([mockDbLog]);
 
     // Act
     const req = new Request('http://localhost/api/logs?page=1&limit=15');

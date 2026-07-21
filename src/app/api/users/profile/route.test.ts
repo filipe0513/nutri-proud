@@ -1,8 +1,7 @@
-import { test, expect, vi, describe, beforeEach } from 'vitest';
+import { test, expect, vi, describe, beforeEach, Mock } from 'vitest';
 import { POST, GET } from './route';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
-import { cookies } from 'next/headers';
 
 vi.mock('@/auth', () => ({ auth: vi.fn() }));
 vi.mock('next/headers', () => ({ cookies: vi.fn() }));
@@ -22,11 +21,10 @@ describe('Profile API', () => {
 
   test('GET /api/users/profile - user exists', async () => {
     // Arrange
-    (auth as any).mockResolvedValue({ user: { id: 'user-123' } });
-    (prisma.user.findUnique as any).mockResolvedValue({ id: 'user-123', profile: { weight_kg: 70 } });
+    (auth as Mock).mockResolvedValue({ user: { id: 'user-123' } });
+    (prisma.user.findUnique as Mock).mockResolvedValue({ id: 'user-123', profile: { weight_kg: 70 } });
 
     // Act
-    const req = new Request('http://localhost/api/users/profile');
     const res = await GET();
     const data = await res.json();
 
@@ -38,8 +36,8 @@ describe('Profile API', () => {
 
   test('POST /api/users/profile - success with correct payload', async () => {
     // Arrange
-    (auth as any).mockResolvedValue({ user: { id: 'user-123' } });
-    (prisma.user.update as any).mockResolvedValue({ id: 'user-123' });
+    (auth as Mock).mockResolvedValue({ user: { id: 'user-123' } });
+    (prisma.user.update as Mock).mockResolvedValue({ id: 'user-123' });
 
     const payload = {
       name: 'Filipe',
@@ -72,7 +70,7 @@ describe('Profile API', () => {
 
   test('POST /api/users/profile - fails with flat payload (old bug)', async () => {
     // Arrange
-    (auth as any).mockResolvedValue({ user: { id: 'user-123' } });
+    (auth as Mock).mockResolvedValue({ user: { id: 'user-123' } });
 
     const payload = {
       name: 'Filipe',
