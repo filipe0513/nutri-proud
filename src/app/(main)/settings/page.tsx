@@ -13,8 +13,10 @@ import {
   ALL_MEALS,
 } from "@/schemas/profileSchema";
 import { toast } from "sonner";
-import { Pencil } from "lucide-react";
+import { Pencil, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
+import packageInfo from "../../../../package.json";
 import { AvatarUploadButton } from "@/components/shared/AvatarUploadButton";
 import {
   Drawer,
@@ -98,7 +100,7 @@ export default function SettingsPage() {
 
   return (
     <div className="pb-32 pt-24 px-6 max-w-lg mx-auto space-y-6">
-      <TopHeader leftAction="back" title="Configurações" />
+      <TopHeader leftAction="back" title="Configurações" rightAction="none" />
 
       {/* Profile Header Card */}
       <Card className="bg-glass-light-2 backdrop-blur-md border-white/40 shadow-sm rounded-3xl overflow-hidden">
@@ -186,6 +188,23 @@ export default function SettingsPage() {
       </SemanticBlock>
 
       <div className="h-4" />
+
+      {/* Logout & Version */}
+      <div className="space-y-4 pt-4">
+        <button
+          onClick={async () => {
+            await fetch('/api/sessions', { method: 'DELETE' });
+            signOut({ callbackUrl: '/welcome' });
+          }}
+          className="w-full flex items-center justify-center space-x-2 text-red-500 hover:bg-red-50/50 py-4 rounded-3xl transition-colors font-bold text-button-1 border border-red-100 bg-white/40 backdrop-blur-sm"
+        >
+          <LogOut className="h-5 w-5" />
+          <span>Sair do App</span>
+        </button>
+        <p className="text-center text-caption-2 text-neutral-400">
+          Versão {packageInfo.version}
+        </p>
+      </div>
 
       {/* ── Drawer: Dados Pessoais ── */}
       <PersonalDrawer

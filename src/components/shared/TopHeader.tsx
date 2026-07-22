@@ -4,12 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserAvatar } from './UserAvatar';
 import { NotificationsSheet } from './NotificationsSheet';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { ArrowLeft, LogOut, Settings, Clock, Users } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useAppStore } from '@/store/store';
-import { signOut } from 'next-auth/react';
 
 export type TopHeaderLeftAction = 'avatar' | 'back' | 'none';
 export type TopHeaderRightAction = 'notifications' | 'none';
@@ -30,18 +27,11 @@ export function TopHeader({
   onBack,
 }: TopHeaderProps) {
   const router = useRouter();
-  const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
-  const { user_profile } = useAppStore();
 
   const handleBack = () => {
     if (onBack) onBack();
     else router.push('/');
-  };
-
-  const handleLogout = async () => {
-    await fetch('/api/sessions', { method: 'DELETE' });
-    signOut({ callbackUrl: '/welcome' });
   };
 
   return (
@@ -51,69 +41,13 @@ export function TopHeader({
         {/* Left Action */}
         <div className="flex items-center w-12">
           {leftAction === 'avatar' && (
-            <Sheet open={leftOpen} onOpenChange={setLeftOpen}>
-              <SheetTrigger asChild>
-                <button 
-                  aria-label="Menu Principal"
-                  className="flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-full w-10 h-10 hover:bg-glass-light-2 transition-all group"
-                >
-                  <UserAvatar size="sm" className="ring-2 ring-white/60 group-hover:scale-105 transition-transform" />
-                </button>
-              </SheetTrigger>
-
-              <SheetContent side="left" className="w-72 sm:max-w-md bg-glass-light-3 backdrop-blur-lg border-r border-white/40 p-0 flex flex-col">
-                <SheetHeader className="p-6 border-b border-white/20 relative text-left">
-                  <div className="flex items-center space-x-4">
-                    <UserAvatar size="lg" />
-                    <div>
-                      <SheetTitle className="text-title-2 text-neutral-500 leading-tight">
-                        {user_profile?.name || 'Explorador'}
-                      </SheetTitle>
-                      <p className="text-caption-1 text-neutral-400 truncate">
-                        {user_profile?.email || 'Sem email'}
-                      </p>
-                    </div>
-                  </div>
-                </SheetHeader>
-
-                <div className="flex-1 overflow-y-auto py-4 flex flex-col space-y-1 px-3">
-                  <SheetClose asChild>
-                    <Link href="/settings" className="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-white/40 transition-colors text-neutral-500 font-medium active:scale-[0.98]">
-                      <div className="h-8 w-8 rounded-full bg-white/50 flex items-center justify-center text-neutral-400">
-                        <Settings className="h-4 w-4" />
-                      </div>
-                      <span>Configurações</span>
-                    </Link>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Link href="/history" className="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-white/40 transition-colors text-neutral-500 font-medium active:scale-[0.98]">
-                      <div className="h-8 w-8 rounded-full bg-white/50 flex items-center justify-center text-neutral-400">
-                        <Clock className="h-4 w-4" />
-                      </div>
-                      <span>Histórico</span>
-                    </Link>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Link href="/squads" className="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-white/40 transition-colors text-neutral-500 font-medium active:scale-[0.98]">
-                      <div className="h-8 w-8 rounded-full bg-white/50 flex items-center justify-center text-neutral-400">
-                        <Users className="h-4 w-4" />
-                      </div>
-                      <span>Comunidade (Squads)</span>
-                    </Link>
-                  </SheetClose>
-                </div>
-
-                <div className="p-6 border-t border-white/20">
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full flex items-center justify-center space-x-2 text-red-500 hover:bg-red-50 py-3 rounded-2xl transition-colors font-semibold"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Sair</span>
-                  </button>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <Link 
+              href="/settings"
+              aria-label="Configurações"
+              className="flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-full w-10 h-10 hover:bg-glass-light-2 transition-all group"
+            >
+              <UserAvatar size="sm" className="ring-2 ring-white/60 group-hover:scale-105 transition-transform" />
+            </Link>
           )}
 
           {leftAction === 'back' && (

@@ -1,7 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { TopHeader } from '@/components/shared/TopHeader';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProfileCalendar } from '@/components/shared/ProfileCalendar';
 import { PostCard } from '@/components/shared/PostCard';
@@ -30,7 +29,6 @@ function getInitials(name: string | null): string {
 }
 
 export function ProfileClient({ user, scoresByDate, initialPosts, isMe }: ProfileClientProps) {
-  const router = useRouter();
   const posts = initialPosts;
 
   const handleToggleReaction = async (postId: string, emoji: string) => {
@@ -49,20 +47,9 @@ export function ProfileClient({ user, scoresByDate, initialPosts, isMe }: Profil
   return (
     <div className="min-h-screen bg-mesh-sunset flex flex-col relative pb-32">
       {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-glass-light-2 backdrop-blur-md border-b border-white/20 px-4 py-4 flex items-center shadow-sm">
-        <button
-          onClick={() => router.back()}
-          className="mr-3 w-10 h-10 flex items-center justify-center bg-white/40 hover:bg-white/60 rounded-full transition-colors"
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="w-5 h-5 text-neutral-500" />
-        </button>
-        <h1 className="text-title-3 font-semibold text-neutral-500">
-          {isMe ? 'Meu Perfil' : 'Perfil do Usuário'}
-        </h1>
-      </header>
+      <TopHeader leftAction="back" title={isMe ? 'Meu Perfil' : 'Perfil do Usuário'} rightAction="none" />
       
-      <main className="flex-1 px-4 pt-6 max-w-xl mx-auto w-full">
+      <main className="flex-1 px-4 pt-24 max-w-xl mx-auto w-full">
         {/* User Info */}
         <section className="flex flex-col items-center mb-8">
           <Avatar className="w-24 h-24 shadow-md border-4 border-white mb-4">
