@@ -19,6 +19,8 @@ import {
   ImageIcon,
   Download,
   Users,
+  Camera,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toBlob } from 'html-to-image';
@@ -194,6 +196,9 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
   } | null>(null);
   const [selectedExport, setSelectedExport] = useState<string>('CARD');
 
+  const [bgPhoto, setBgPhoto] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // ── Squad publish state ──
   const [squadPickerOpen, setSquadPickerOpen] = useState(false);
   const [publishingSquadId, setPublishingSquadId] = useState<string | null>(null);
@@ -201,6 +206,15 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
   const nodeRef = useRef<HTMLDivElement>(null);
 
   const today = getTodayLocal();
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setBgPhoto(url);
+    }
+  };
+
   // ── Report handlers ──────────────────────────────────────────────────────
 
   const handleGenerateReport = async () => {
@@ -408,6 +422,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
         setSelectedExport('CARD');
         setActiveTab('infographic');
         setSquadPickerOpen(false);
+        setBgPhoto(null);
       }, 300);
     }
     onOpenChange(v);
@@ -648,7 +663,45 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-center gap-3">
+                  {selectedExport === 'CARD' && (
+                    <div className="space-y-2 mt-2">
+                      <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide">
+                        Foto de Fundo (Opcional)
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex-1 h-12 rounded-2xl border border-purple-300 bg-white/60 text-purple-800 hover:bg-purple-100 flex items-center justify-center gap-2 text-button-1"
+                        >
+                          <Camera className="h-4 w-4" />
+                          {bgPhoto ? 'Trocar Foto' : 'Adicionar Foto de Fundo'}
+                        </Button>
+                        {bgPhoto && (
+                          <Button
+                            variant="ghost"
+                            onClick={() => {
+                              setBgPhoto(null);
+                              if (fileInputRef.current) fileInputRef.current.value = '';
+                            }}
+                            className="h-12 w-12 shrink-0 rounded-2xl text-red-500 hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-200"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col items-center gap-3 mt-2">
                     <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide self-start">
                       Pré-visualização
                     </p>
@@ -669,12 +722,46 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
                     >
                       {selectedExport === 'CARD' ? (
                         <div style={{ transform: 'scale(0.533)', transformOrigin: 'top left', width: '375px', height: '667px' }}>
-                          <ShareableInfographic
-                            periodName={infographicData.periodName}
-                            scores={infographicData.scores}
-                            globalScore={infographicData.globalScore}
-                            bestPillars={infographicData.bestPillars}
-                          />
+                          {bgPhoto ? (
+                            <div
+                              style={{
+                                width: '375px',
+                                height: '667px',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                backgroundColor: '#000',
+                              }}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={bgPhoto}
+                                alt="Background"
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                  position: 'absolute',
+                                  inset: 0,
+                                  zIndex: 1,
+                                }}
+                              />
+                              <div style={{ position: 'absolute', bottom: '16px', right: '16px', zIndex: 10, filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))' }}>
+                                <ShareableSticker
+                                  type="GLOBAL"
+                                  score={infographicData.globalScore}
+                                  metadata={infographicData.periodName}
+                                  pillarScores={infographicData.scores}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <ShareableInfographic
+                              periodName={infographicData.periodName}
+                              scores={infographicData.scores}
+                              globalScore={infographicData.globalScore}
+                              bestPillars={infographicData.bestPillars}
+                            />
+                          )}
                         </div>
                       ) : (
                         <div style={{ transform: 'scale(0.8)', transformOrigin: 'center' }}>
@@ -773,13 +860,48 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
           }}
         >
           {selectedExport === 'CARD' ? (
-            <ShareableInfographic
-              ref={nodeRef}
-              periodName={infographicData.periodName}
-              scores={infographicData.scores}
-              globalScore={infographicData.globalScore}
-              bestPillars={infographicData.bestPillars}
-            />
+            bgPhoto ? (
+              <div
+                ref={nodeRef}
+                style={{
+                  width: '375px',
+                  height: '667px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  backgroundColor: '#000',
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={bgPhoto}
+                  alt="Background"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: 1,
+                  }}
+                />
+                <div style={{ position: 'absolute', bottom: '16px', right: '16px', zIndex: 10, filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))' }}>
+                  <ShareableSticker
+                    type="GLOBAL"
+                    score={infographicData.globalScore}
+                    metadata={infographicData.periodName}
+                    pillarScores={infographicData.scores}
+                  />
+                </div>
+              </div>
+            ) : (
+              <ShareableInfographic
+                ref={nodeRef}
+                periodName={infographicData.periodName}
+                scores={infographicData.scores}
+                globalScore={infographicData.globalScore}
+                bestPillars={infographicData.bestPillars}
+              />
+            )
           ) : (
             <ShareableSticker
               ref={nodeRef}
