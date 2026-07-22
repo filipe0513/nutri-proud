@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useAppStore } from "@/store/store";
 import { Flame } from "lucide-react";
 import { ReleaseNotesDrawer } from "./ReleaseNotesDrawer";
@@ -37,22 +36,7 @@ export function StoryHeader() {
 
   return (
     <div className="space-y-3">
-      {/* Top Row: Center Logo (Mobile Only, on Desktop it is in EdgeFloatingHandles) */}
-      <div className="flex items-center justify-center md:hidden">
-        <div className="inline-flex items-center px-5 py-2.5 rounded-full bg-glass-light-2 backdrop-blur-md border border-white/60 shadow-sm">
-          <Image
-            src="/logo-color-h.webp"
-            alt="Orgulho da Nutri"
-            width={1332}
-            height={281}
-            priority
-            unoptimized
-            className="h-7 w-auto"
-          />
-        </div>
-      </div>
-
-      {/* Greeting Row */}
+      {/* 2nd Row: Avatar, Greeting, Date & Versions */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-title-1 text-neutral-500">

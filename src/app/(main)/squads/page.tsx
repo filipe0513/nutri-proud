@@ -9,7 +9,7 @@ import type { SquadSummary } from '@/types/squadTypes';
 import { toast } from 'sonner';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
-import { EdgeFloatingHandles } from '@/components/shared/EdgeFloatingHandles';
+import { TopHeader } from '@/components/shared/TopHeader';
 
 export default function SquadsHubPage() {
   const [squads, setSquads] = useState<SquadSummary[]>([]);
@@ -98,11 +98,22 @@ export default function SquadsHubPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 pt-12 pb-32">
-      <EdgeFloatingHandles leftType="back" rightType="none" />
+    <div className="min-h-screen max-w-lg mx-auto px-4 pt-24 pb-32">
+      <TopHeader 
+        leftAction="back" 
+        title="Squads" 
+        rightElement={
+          <button 
+            onClick={() => setCreateDrawerOpen(true)}
+            aria-label="Criar Novo Squad"
+            className="flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-full w-10 h-10 hover:bg-glass-light-2 transition-all text-neutral-500 hover:text-brand-500 active:scale-95"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        }
+      />
       {/* Header */}
-      <header className="mb-8">
-        <h1 className="text-title-1 font-bold text-neutral-500 mb-2">Squads</h1>
+      <header className="mb-6">
         <p className="text-body-1 text-neutral-400">
           Compartilhe sua jornada com amigos.
         </p>
@@ -140,14 +151,6 @@ export default function SquadsHubPage() {
         <div className="space-y-4">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-title-3 font-semibold text-neutral-500">Seus Grupos</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCreateDrawerOpen(true)}
-              className="text-brand-500 hover:text-brand-600 hover:bg-brand-50"
-            >
-              + Novo
-            </Button>
           </div>
           <div className="grid gap-4">
             {squads.map((squad) => (

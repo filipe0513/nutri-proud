@@ -11,19 +11,24 @@ import Image from 'next/image';
 import { useAppStore } from '@/store/store';
 import { signOut } from 'next-auth/react';
 
-export type EdgeHandleType = 'avatar' | 'back' | 'notifications' | 'none';
+export type TopHeaderLeftAction = 'avatar' | 'back' | 'none';
+export type TopHeaderRightAction = 'notifications' | 'none';
 
-interface EdgeFloatingHandlesProps {
-  leftType?: EdgeHandleType;
-  rightType?: EdgeHandleType;
+interface TopHeaderProps {
+  leftAction?: TopHeaderLeftAction;
+  rightAction?: TopHeaderRightAction;
+  title?: string;
+  rightElement?: React.ReactNode;
   onBack?: () => void;
 }
 
-export function EdgeFloatingHandles({
-  leftType = 'avatar',
-  rightType = 'notifications',
+export function TopHeader({
+  leftAction = 'avatar',
+  rightAction = 'notifications',
+  title,
+  rightElement,
   onBack,
-}: EdgeFloatingHandlesProps) {
+}: TopHeaderProps) {
   const router = useRouter();
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
@@ -40,28 +45,21 @@ export function EdgeFloatingHandles({
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 w-full pointer-events-none md:pointer-events-auto md:bg-glass-light-1/80 md:backdrop-blur-md md:border-b md:border-white/20">
-      <div className="mx-auto w-full md:max-w-lg md:px-6 flex justify-between items-start md:items-center pointer-events-none md:h-16">
+    <div className="fixed top-0 left-0 right-0 z-50 w-full bg-glass-light-1/80 backdrop-blur-md border-b border-white/20">
+      <div className="mx-auto w-full max-w-lg px-4 md:px-6 flex justify-between items-center h-16">
         
-        {/* Left Handle Container */}
-        {leftType !== 'none' && (
-          <div className="pointer-events-auto fixed left-0 top-16 md:static md:flex md:items-center">
-            {leftType === 'avatar' && (
-              <Sheet open={leftOpen} onOpenChange={setLeftOpen}>
-                <div 
-                  className={`transition-transform duration-300 ease-in-out ${
-                    leftOpen ? 'translate-x-[288px] sm:translate-x-[384px] md:translate-x-0' : 'translate-x-0'
-                  }`}
+        {/* Left Action */}
+        <div className="flex items-center w-12">
+          {leftAction === 'avatar' && (
+            <Sheet open={leftOpen} onOpenChange={setLeftOpen}>
+              <SheetTrigger asChild>
+                <button 
+                  aria-label="Menu Principal"
+                  className="flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-full w-10 h-10 hover:bg-glass-light-2 transition-all group"
                 >
-                <SheetTrigger asChild>
-                  <button 
-                    aria-label="Menu Principal"
-                    className="flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-r-full md:rounded-full py-1.5 px-2 pl-1 pr-3 md:px-2 md:py-1.5 hover:bg-glass-light-2 transition-all group"
-                  >
-                    <UserAvatar size="sm" className="ring-2 ring-white/60 group-hover:scale-105 transition-transform" />
-                  </button>
-                </SheetTrigger>
-              </div>
+                  <UserAvatar size="sm" className="ring-2 ring-white/60 group-hover:scale-105 transition-transform" />
+                </button>
+              </SheetTrigger>
 
               <SheetContent side="left" className="w-72 sm:max-w-md bg-glass-light-3 backdrop-blur-lg border-r border-white/40 p-0 flex flex-col">
                 <SheetHeader className="p-6 border-b border-white/20 relative text-left">
@@ -118,56 +116,53 @@ export function EdgeFloatingHandles({
             </Sheet>
           )}
 
-            {leftType === 'back' && (
-              <button 
-                onClick={handleBack}
-                aria-label="Voltar"
-                className="flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-r-full md:rounded-full py-2 px-3 pl-2 pr-4 md:px-3 md:py-2 hover:bg-glass-light-2 transition-all text-neutral-500 active:scale-95"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Center Logo (Desktop Only) */}
-        <div className="hidden md:flex pointer-events-auto items-center justify-center">
-          <Image
-            src="/logo-color-h.webp"
-            alt="Orgulho da Nutri"
-            width={1332}
-            height={281}
-            priority
-            unoptimized
-            className="h-6 w-auto"
-          />
-        </div>
-
-        {/* Right Handle Container */}
-        {rightType !== 'none' && (
-          <div className="pointer-events-auto fixed right-0 top-16 md:static md:flex md:items-center">
-            {rightType === 'notifications' && (
-              <div 
-                className={`transition-transform duration-300 ease-in-out ${
-                  rightOpen ? '-translate-x-[85vw] sm:-translate-x-[28rem] md:translate-x-0' : 'translate-x-0'
-                }`}
-              >
-              <NotificationsSheet 
-                open={rightOpen} 
-                onOpenChange={setRightOpen}
-                customTrigger={
-                  <button 
-                    aria-label="Abrir notificações"
-                    className="relative flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-l-full md:rounded-full py-2 px-3 pl-4 pr-2 md:px-3 md:py-2 hover:bg-glass-light-2 transition-all group"
-                  >
-                    <NotificationsUnreadBadge />
-                  </button>
-                }
-              />
-            </div>
+          {leftAction === 'back' && (
+            <button 
+              onClick={handleBack}
+              aria-label="Voltar"
+              className="flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-full w-10 h-10 hover:bg-glass-light-2 transition-all text-neutral-500 active:scale-95"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
           )}
         </div>
-      )}
+
+        {/* Center Content: Title or Logo */}
+        <div className="flex-1 flex justify-center items-center">
+          {title ? (
+            <h1 className="text-title-3 font-bold text-neutral-500">{title}</h1>
+          ) : (
+            <Image
+              src="/logo-color-h.webp"
+              alt="Orgulho da Nutri"
+              width={1332}
+              height={281}
+              priority
+              unoptimized
+              className="h-6 w-auto"
+            />
+          )}
+        </div>
+
+        {/* Right Action */}
+        <div className="flex items-center justify-end w-12">
+          {rightElement ? (
+            rightElement
+          ) : rightAction === 'notifications' ? (
+            <NotificationsSheet 
+              open={rightOpen} 
+              onOpenChange={setRightOpen}
+              customTrigger={
+                <button 
+                  aria-label="Abrir notificações"
+                  className="relative flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-full w-10 h-10 hover:bg-glass-light-2 transition-all group"
+                >
+                  <NotificationsUnreadBadge />
+                </button>
+              }
+            />
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -195,7 +190,7 @@ function NotificationsUnreadBadge() {
         <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
       </svg>
       {unreadCount > 0 && (
-        <span className="absolute top-1 right-1 min-w-[16px] h-[16px] bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+        <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
           <span className="text-white text-[9px] font-bold leading-none px-0.5">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>

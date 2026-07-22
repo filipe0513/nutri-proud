@@ -13,8 +13,7 @@ import {
   ALL_MEALS,
 } from "@/schemas/profileSchema";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil } from "lucide-react";
-import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AvatarUploadButton } from "@/components/shared/AvatarUploadButton";
 import {
@@ -24,6 +23,7 @@ import {
   DrawerTitle,
   DrawerDescription,
 } from "@/components/ui/drawer";
+import { TopHeader } from "@/components/shared/TopHeader";
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -97,19 +97,8 @@ export default function SettingsPage() {
   );
 
   return (
-    <div className="py-8 px-6 max-w-lg mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Link
-          href="/"
-          className="h-10 w-10 bg-glass-light-2 backdrop-blur-md border border-white/40 rounded-full flex items-center justify-center text-neutral-500 hover:scale-105 transition-transform"
-        >
-          <ArrowLeft size={20} />
-        </Link>
-        <h1 className="text-title-1 font-bold text-neutral-500">
-          Configurações
-        </h1>
-      </div>
+    <div className="pb-32 pt-24 px-6 max-w-lg mx-auto space-y-6">
+      <TopHeader leftAction="back" title="Configurações" />
 
       {/* Profile Header Card */}
       <Card className="bg-glass-light-2 backdrop-blur-md border-white/40 shadow-sm rounded-3xl overflow-hidden">
