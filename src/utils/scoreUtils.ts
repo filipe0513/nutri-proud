@@ -189,3 +189,15 @@ export function getScoreGradient(score: number): string {
   }
   return 'linear-gradient(135deg, #16a34a 0%, #4ade80 100%)';
 }
+
+/**
+ * Returns raw hex colors based on the given score (0-100) for custom fills.
+ */
+export function getScoreColors(score: number): { from: string; to: string } {
+  if (score <= 50) return { from: '#7c3aed', to: '#a855f7' };
+  if (score <= 60) return { from: '#dc2626', to: '#f87171' };
+  if (score <= 70) return { from: '#ea580c', to: '#fb923c' };
+  if (score <= 80) return { from: '#d97706', to: '#fbbf24' };
+  if (score <= 90) return { from: '#2563eb', to: '#60a5fa' };
+  return { from: '#16a34a', to: '#4ade80' };
+}

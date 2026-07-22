@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { Flame } from 'lucide-react';
-import { getScoreGradient } from '@/utils/scoreUtils';
+import { getScoreColors } from '@/utils/scoreUtils';
 
 interface ProfileCalendarProps {
   /** Record of date strings (YYYY-MM-DD) mapped to their daily score (0-100) */
@@ -68,20 +68,43 @@ export function ProfileCalendar({ scoresByDate }: ProfileCalendarProps) {
           const d = dateNum.toString().padStart(2, '0');
           const dateStr = `${year}-${m}-${d}`;
           
-          const score = scoresByDate[dateStr];
-          const hasScore = score !== undefined && score !== null;
+          const rawScore = scoresByDate[dateStr];
+          const hasScore = rawScore !== undefined && rawScore !== null;
+          const score = hasScore ? rawScore : 0;
+
+          const colors = hasScore ? getScoreColors(score) : { from: 'transparent', to: 'transparent' };
+          const isGlory = hasScore && score === 100;
           
           return (
-            <div key={dateStr} className="flex justify-center items-center">
+            <div key={dateStr} className="flex justify-center items-center relative">
+              {/* SVG Definitions for the Flame Gradient (Glory State) */}
+              {isGlory && (
+                <svg width="0" height="0" className="absolute">
+                  <defs>
+                    <linearGradient id={`cal-glory-${dateStr}`} x1="0%" y1="100%" x2="0%" y2="0%">
+                      <stop offset="0%" stopColor="#f59e0b" />
+                      <stop offset="100%" stopColor="#fbbf24" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              )}
+
               <div 
-                className="w-8 h-8 flex items-center justify-center rounded-xl transition-all relative"
+                className={`w-8 h-8 flex items-center justify-center rounded-xl transition-all relative ${
+                  isGlory ? 'ring-2 ring-green-400 ring-offset-2 ring-offset-neutral-50' : ''
+                } ${!hasScore ? (isFuture ? 'bg-neutral-200/50 border border-dashed border-neutral-300' : 'bg-neutral-200') : 'bg-neutral-200/40 border'}`}
                 style={{
-                  background: hasScore ? getScoreGradient(score) : undefined,
-                  boxShadow: hasScore ? '0 2px 8px rgba(0,0,0,0.15)' : undefined,
+                  background: hasScore ? `linear-gradient(to top, ${colors.from} 0%, ${colors.to} ${score}%, transparent ${score}%)` : undefined,
+                  boxShadow: isGlory ? '0 0 12px 2px rgba(74, 222, 128, 0.4)' : hasScore ? '0 2px 8px rgba(0,0,0,0.12)' : undefined,
+                  borderColor: isGlory ? 'rgba(74, 222, 128, 0.5)' : hasScore ? 'rgba(0,0,0,0.05)' : undefined,
                 }}
               >
                 {hasScore ? (
-                  <Flame className="w-4 h-4 text-white fill-white drop-shadow-sm" />
+                  <Flame 
+                    className={`w-4 h-4 ${isGlory ? 'drop-shadow-md' : 'drop-shadow-sm'}`} 
+                    stroke={isGlory ? `url(#cal-glory-${dateStr})` : 'white'}
+                    fill={isGlory ? `url(#cal-glory-${dateStr})` : 'white'}
+                  />
                 ) : (
                   <Flame 
                     className="w-4 h-4" 
@@ -93,7 +116,7 @@ export function ProfileCalendar({ scoresByDate }: ProfileCalendarProps) {
                 )}
                 {/* Optional: Add a small dot or style if it is today */}
                 {dateNum === currentDay && (
-                  <div className="absolute -bottom-1 w-1 h-1 rounded-full bg-neutral-300" />
+                  <div className="absolute -bottom-1.5 w-1 h-1 rounded-full bg-neutral-400" />
                 )}
               </div>
             </div>

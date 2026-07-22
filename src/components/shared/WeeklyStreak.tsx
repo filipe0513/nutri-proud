@@ -14,7 +14,7 @@ interface WeekDay {
   isFuture: boolean;
 }
 
-import { getScoreGradient } from '@/utils/scoreUtils';
+import { getScoreColors } from '@/utils/scoreUtils';
 
 // ─── Stagger animation variants ───────────────────────────────────────────────
 
@@ -41,12 +41,17 @@ const itemVariants = {
 function StreakDay({ day }: { day: WeekDay }) {
   const hasScore = day.score !== null;
   const isActive = !day.isFuture && hasScore;
+  const score = day.score ?? 0;
 
-  // Squircle inline style — gradient when active, neutral-200 when not
+  const colors = isActive ? getScoreColors(score) : { from: 'transparent', to: 'transparent' };
+  const isGlory = isActive && score === 100;
+
+  // Squircle inline style — bottom-up gradient when active
   const squircleStyle: React.CSSProperties = isActive
     ? {
-        background: getScoreGradient(day.score!),
-        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+        background: `linear-gradient(to top, ${colors.from} 0%, ${colors.to} ${score}%, transparent ${score}%)`,
+        boxShadow: isGlory ? '0 0 12px 2px rgba(74, 222, 128, 0.4)' : '0 2px 8px rgba(0,0,0,0.12)',
+        borderColor: isGlory ? 'rgba(74, 222, 128, 0.5)' : 'rgba(0,0,0,0.05)',
       }
     : {};
 
@@ -58,7 +63,7 @@ function StreakDay({ day }: { day: WeekDay }) {
   const squircleRadius = 'rounded-[10px]'; // ~squircle
 
   const squircleBg = isActive
-    ? '' // handled by inline style
+    ? 'bg-neutral-200/40 border' // Empty part gets a subtle background and border
     : day.isFuture
       ? 'bg-neutral-200/50 border border-dashed border-neutral-300'
       : 'bg-neutral-200'; // past day with no logs
@@ -66,11 +71,23 @@ function StreakDay({ day }: { day: WeekDay }) {
   return (
     <motion.div
       variants={itemVariants}
-      className="flex flex-col items-center gap-1.5"
+      className="flex flex-col items-center gap-1.5 relative"
     >
+      {/* SVG Definitions for the Flame Gradient (Glory State) */}
+      {isGlory && (
+        <svg width="0" height="0" className="absolute">
+          <defs>
+            <linearGradient id="glory-flame-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+          </defs>
+        </svg>
+      )}
+
       {/* Squircle */}
       <div
-        className={`${squircleBase} ${squircleRadius} ${squircleBg}`}
+        className={`${squircleBase} ${squircleRadius} ${squircleBg} ${isGlory ? 'ring-2 ring-green-400 ring-offset-2 ring-offset-neutral-50' : ''}`}
         style={squircleStyle}
       >
         {/* Today ring pulse */}
@@ -89,18 +106,18 @@ function StreakDay({ day }: { day: WeekDay }) {
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           >
             <Flame
-              className="w-4 h-4 drop-shadow-sm"
-              style={{ color: 'white', fill: 'white' }}
+              className={`w-4 h-4 ${isGlory ? 'drop-shadow-md' : 'drop-shadow-sm'}`}
+              stroke={isGlory ? 'url(#glory-flame-grad)' : 'white'}
+              fill={isGlory ? 'url(#glory-flame-grad)' : 'white'}
             />
           </motion.div>
         ) : (
           <Flame
             className="w-4 h-4"
+            stroke={isGlory ? 'url(#glory-flame-grad)' : isActive ? 'white' : 'rgba(255,255,255,0.7)'}
+            fill={isGlory ? 'url(#glory-flame-grad)' : isActive ? 'white' : 'transparent'}
             style={{
-              color: isActive ? 'white' : 'rgba(255,255,255,0.7)',
-              fill: isActive ? 'white' : 'transparent',
-              // For future/empty days, use a muted neutral color
-              ...((!isActive) && { color: '#d1d5db', fill: 'transparent' }),
+              ...(!isActive && { color: '#d1d5db', fill: 'transparent' }),
             }}
           />
         )}
