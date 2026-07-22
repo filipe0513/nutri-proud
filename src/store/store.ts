@@ -42,6 +42,10 @@ interface AppState {
   successOverlay: { isOpen: boolean; message: string; submessage?: string; category?: string } | null;
   showSuccessOverlay: (data: { message: string; submessage?: string; category?: string }) => void;
   hideSuccessOverlay: () => void;
+
+  /** Animação condicional para Squircle (Streak) após log */
+  justLoggedAnimate: boolean;
+  setJustLoggedAnimate: (animate: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
@@ -57,10 +61,17 @@ export const useAppStore = create<AppState>()((set, get) => ({
       pendingInsightData: null,
       setPendingInsightData: (data) => set({ pendingInsightData: data }),
       successOverlay: null,
+      justLoggedAnimate: false,
+      setJustLoggedAnimate: (animate) => set({ justLoggedAnimate: animate }),
       showSuccessOverlay: (data) => {
         set({ successOverlay: { isOpen: true, ...data } });
         setTimeout(() => {
-          set((state) => (state.successOverlay?.isOpen ? { successOverlay: null } : state));
+          set((state) => {
+            if (state.successOverlay?.isOpen) {
+              return { successOverlay: null, justLoggedAnimate: true };
+            }
+            return state;
+          });
         }, 1500);
       },
       hideSuccessOverlay: () => set({ successOverlay: null }),

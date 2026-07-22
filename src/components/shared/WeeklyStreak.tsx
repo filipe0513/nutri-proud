@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { Flame } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/store';
 
 interface WeekDay {
@@ -38,7 +38,7 @@ const itemVariants = {
 
 // ─── Sub-component: single squircle day ──────────────────────────────────────
 
-function StreakDay({ day }: { day: WeekDay }) {
+function StreakDay({ day, activeAnimation }: { day: WeekDay, activeAnimation?: 'bump' | 'glory' | null }) {
   const hasScore = day.score !== null;
   const isActive = !day.isFuture && hasScore;
   const score = day.score ?? 0;
@@ -86,10 +86,30 @@ function StreakDay({ day }: { day: WeekDay }) {
       )}
 
       {/* Squircle */}
-      <div
+      <motion.div
+        animate={
+          activeAnimation === 'glory'
+            ? { scale: [1, 1.25, 1] }
+            : activeAnimation === 'bump'
+              ? { scale: [1, 1.15, 1] }
+              : { scale: 1 }
+        }
+        transition={{ duration: 0.5, type: 'spring', bounce: 0.5 }}
         className={`${squircleBase} ${squircleRadius} ${squircleBg} ${isGlory ? 'ring-2 ring-green-400 ring-offset-2 ring-offset-neutral-50' : ''}`}
         style={squircleStyle}
       >
+        <AnimatePresence>
+          {activeAnimation === 'glory' && (
+            <motion.div
+              initial={{ opacity: 0.8, scale: 1 }}
+              animate={{ opacity: 0, scale: 1.6 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              className="absolute inset-0 rounded-[10px] border-2 border-green-400"
+            />
+          )}
+        </AnimatePresence>
+
         {/* Today ring pulse */}
         {day.isToday && (
           <motion.div
@@ -121,7 +141,7 @@ function StreakDay({ day }: { day: WeekDay }) {
             }}
           />
         )}
-      </div>
+      </motion.div>
 
       {/* Day label */}
       <span
@@ -155,16 +175,46 @@ export function WeeklyStreak() {
   const [days, setDays] = useState<WeekDay[]>([]);
   const [loading, setLoading] = useState(true);
   const activityLogs = useAppStore((state) => state.activity_logs);
+  
+  const justLoggedAnimate = useAppStore((state) => state.justLoggedAnimate);
+  const setJustLoggedAnimate = useAppStore((state) => state.setJustLoggedAnimate);
+
+  const previousTodayScoreRef = useRef<number | null>(null);
+  const pendingAnimationRef = useRef<'bump' | 'glory' | null>(null);
+  const [activeAnimation, setActiveAnimation] = useState<'bump' | 'glory' | null>(null);
 
   useEffect(() => {
     fetch('/api/progress/weekly')
       .then((res) => (res.ok ? res.json() : null))
       .then((data: WeekDay[] | null) => {
-        if (data) setDays(data);
+        if (data) {
+          setDays(data);
+          const today = data.find(d => d.isToday);
+          if (today && today.score !== null) {
+            if (previousTodayScoreRef.current !== null && today.score > previousTodayScoreRef.current) {
+              pendingAnimationRef.current = today.score === 100 ? 'glory' : 'bump';
+            }
+            previousTodayScoreRef.current = today.score;
+          }
+        }
       })
       .catch(() => {/* silent — component simply stays hidden */})
       .finally(() => setLoading(false));
   }, [activityLogs]);
+
+  useEffect(() => {
+    if (justLoggedAnimate) {
+      const pending = pendingAnimationRef.current;
+      if (pending) {
+        setTimeout(() => {
+          setActiveAnimation(pending);
+          pendingAnimationRef.current = null;
+        }, 0);
+        setTimeout(() => setActiveAnimation(null), 1000);
+      }
+      setJustLoggedAnimate(false);
+    }
+  }, [justLoggedAnimate, setJustLoggedAnimate]);
 
   if (loading || days.length === 0) {
     // Skeleton placeholder — same height as the real component
@@ -211,7 +261,7 @@ export function WeeklyStreak() {
           className="flex justify-between"
         >
           {days.map((day, i) => (
-            <StreakDay key={i} day={day} />
+            <StreakDay key={i} day={day} activeAnimation={day.isToday ? activeAnimation : null} />
           ))}
         </motion.div>
       </div>
