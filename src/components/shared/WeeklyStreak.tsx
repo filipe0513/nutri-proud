@@ -195,37 +195,59 @@ export function WeeklyStreak() {
   const setJustLoggedAnimate = useAppStore((state) => state.setJustLoggedAnimate);
 
   const previousTodayScoreRef = useRef<number | null>(null);
-  const pendingAnimationRef = useRef<'bump' | 'glory' | null>(null);
+  const pendingDaysUpdateRef = useRef<WeekDay[] | null>(null);
   const [activeAnimation, setActiveAnimation] = useState<'bump' | 'glory' | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     fetch('/api/progress/weekly')
       .then((res) => (res.ok ? res.json() : null))
       .then((data: WeekDay[] | null) => {
+        if (!isMounted) return;
         if (data) {
-          setDays(data);
-          const today = data.find(d => d.isToday);
-          if (today && today.score !== null) {
-            if (previousTodayScoreRef.current !== null && today.score > previousTodayScoreRef.current) {
-              pendingAnimationRef.current = today.score === 100 ? 'glory' : 'bump';
+          const isOverlayOpen = useAppStore.getState().successOverlay?.isOpen;
+          if (isOverlayOpen) {
+            pendingDaysUpdateRef.current = data;
+          } else {
+            setDays(data);
+            const today = data.find((d) => d.isToday);
+            if (today && today.score !== null) {
+              previousTodayScoreRef.current = today.score;
             }
-            previousTodayScoreRef.current = today.score;
+            setLoading(false);
           }
         }
       })
-      .catch(() => {/* silent — component simply stays hidden */})
-      .finally(() => setLoading(false));
+      .catch(() => {/* silent */})
+      .finally(() => {
+        if (isMounted && !useAppStore.getState().successOverlay?.isOpen) {
+          setLoading(false);
+        }
+      });
+      
+    return () => {
+      isMounted = false;
+    };
   }, [activityLogs]);
 
   useEffect(() => {
     if (justLoggedAnimate) {
-      const pending = pendingAnimationRef.current;
-      if (pending) {
-        setTimeout(() => {
-          setActiveAnimation(pending);
-          pendingAnimationRef.current = null;
-        }, 0);
-        setTimeout(() => setActiveAnimation(null), 1000);
+      const data = pendingDaysUpdateRef.current;
+      if (data) {
+        setDays(data);
+        const today = data.find((d) => d.isToday);
+        if (today && today.score !== null) {
+          if (previousTodayScoreRef.current !== null && today.score > previousTodayScoreRef.current) {
+            const animType = today.score === 100 ? 'glory' : 'bump';
+            setTimeout(() => {
+              setActiveAnimation(animType);
+              setTimeout(() => setActiveAnimation(null), 1000);
+            }, 400); // 400ms delay after score visual increment
+          }
+          previousTodayScoreRef.current = today.score;
+        }
+        pendingDaysUpdateRef.current = null;
+        setLoading(false);
       }
       setJustLoggedAnimate(false);
     }
