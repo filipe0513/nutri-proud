@@ -14,33 +14,7 @@ interface WeekDay {
   isFuture: boolean;
 }
 
-// ─── Score → gradient mapping ─────────────────────────────────────────────────
-// roxo <50 | vermelho <60 | amarelo <70 | azul <80 | verde >=80
-
-function getScoreGradient(score: number): string {
-  if (score <= 50) {
-    // Roxo — crítico
-    return 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)';
-  }
-  if (score <= 60) {
-    // Vermelho — ruim
-    return 'linear-gradient(135deg, #dc2626 0%, #f87171 100%)';
-  }
-  if (score <= 70) {
-    // Laranja — razoável
-    return 'linear-gradient(135deg, #ea580c 0%, #fb923c 100%)';
-  }
-  if (score <= 80) {
-    // Amarelo/âmbar — bom
-    return 'linear-gradient(135deg, #d97706 0%, #fbbf24 100%)';
-  }
-  if (score <= 90) {
-    // Azul — muito bom
-    return 'linear-gradient(135deg, #2563eb 0%, #60a5fa 100%)';
-  }
-  // Verde — excelente
-  return 'linear-gradient(135deg, #16a34a 0%, #4ade80 100%)';
-}
+import { getScoreGradient } from '@/utils/scoreUtils';
 
 // ─── Stagger animation variants ───────────────────────────────────────────────
 
@@ -192,7 +166,7 @@ export function WeeklyStreak() {
   const streak = computeStreak(days);
 
   return (
-    <Link href="/history" aria-label="Ver histórico semanal" className="block group">
+    <Link href="/profile/me" aria-label="Ver meu perfil" className="block group">
       <div className="space-y-2">
         {/* Header row */}
         <div className="flex items-center justify-between px-1">

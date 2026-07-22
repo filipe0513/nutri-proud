@@ -155,3 +155,37 @@ const GUT_SCORE_MAP: Record<string, number> = {
 export function calculateGutScore(aspect: string): number {
   return GUT_SCORE_MAP[aspect] ?? 80;
 }
+
+// ---------------------------------------------------------------------------
+// 🎨 UI GRADIENTS
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns a CSS linear-gradient string based on the given score (0-100).
+ *
+ * Mapping:
+ * <= 50: Purple (Critical)
+ * <= 60: Red (Bad)
+ * <= 70: Orange (Reasonable)
+ * <= 80: Yellow/Amber (Good)
+ * <= 90: Blue (Very Good)
+ * > 90: Green (Excellent)
+ */
+export function getScoreGradient(score: number): string {
+  if (score <= 50) {
+    return 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)';
+  }
+  if (score <= 60) {
+    return 'linear-gradient(135deg, #dc2626 0%, #f87171 100%)';
+  }
+  if (score <= 70) {
+    return 'linear-gradient(135deg, #ea580c 0%, #fb923c 100%)';
+  }
+  if (score <= 80) {
+    return 'linear-gradient(135deg, #d97706 0%, #fbbf24 100%)';
+  }
+  if (score <= 90) {
+    return 'linear-gradient(135deg, #2563eb 0%, #60a5fa 100%)';
+  }
+  return 'linear-gradient(135deg, #16a34a 0%, #4ade80 100%)';
+}

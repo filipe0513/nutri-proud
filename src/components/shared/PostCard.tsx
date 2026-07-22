@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageCircle } from 'lucide-react';
 import { getRelativeTime } from '@/utils/timeUtils';
@@ -48,18 +49,20 @@ export function PostCard({ post, onToggleReaction, onCommentClick }: PostCardPro
     <article className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-[2rem] p-5 shadow-sm mb-4">
       {/* Header */}
       <header className="flex items-center space-x-3 mb-4">
-        <Avatar className="size-10 shadow-sm border border-white">
-          {post.author.image && (
-            <AvatarImage
-              src={post.author.image}
-              alt={post.author.name || 'Avatar'}
-              referrerPolicy="no-referrer"
-            />
-          )}
-          <AvatarFallback className="bg-gradient-to-br from-brand-500 to-brand-400 text-white font-bold text-caption-1">
-            {getInitials(post.author.name)}
-          </AvatarFallback>
-        </Avatar>
+        <Link href={`/profile/${post.author.id}`}>
+          <Avatar className="size-10 shadow-sm border border-white hover:scale-105 transition-transform cursor-pointer">
+            {post.author.image && (
+              <AvatarImage
+                src={post.author.image}
+                alt={post.author.name || 'Avatar'}
+                referrerPolicy="no-referrer"
+              />
+            )}
+            <AvatarFallback className="bg-gradient-to-br from-brand-500 to-brand-400 text-white font-bold text-caption-1">
+              {getInitials(post.author.name)}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
         <div className="flex-1 min-w-0">
           <p className="text-body-1 font-semibold text-neutral-500 truncate">
             {post.author.name || 'Usuário'}
