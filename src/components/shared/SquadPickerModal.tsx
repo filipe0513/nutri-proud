@@ -56,7 +56,7 @@ export function SquadPickerModal({
           <DrawerTitle className="text-title-3 text-neutral-500">
             Publicar em qual Grupo?
           </DrawerTitle>
-          <p className="text-body-1 text-neutral-400 mt-2 max-w-[280px]">
+          <p className="text-body-1 mx-auto text-neutral-400 mt-2 max-w-[280px]">
             Seu card de progresso será publicado no feed do Grupo escolhido.
           </p>
         </DrawerHeader>

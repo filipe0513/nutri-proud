@@ -52,21 +52,12 @@ export async function publishCardToSquad(formData: FormData): Promise<{ success:
     const folder = 'squad_posts';
     const paramsToSign = `folder=${folder}&timestamp=${timestamp}`;
 
-    // Generate HMAC-SHA1 signature
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(apiSecret);
-    const msgData = encoder.encode(paramsToSign);
-    const cryptoKey = await crypto.subtle.importKey(
-      'raw',
-      keyData,
-      { name: 'HMAC', hash: 'SHA-1' },
-      false,
-      ['sign'],
-    );
-    const sigBuffer = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
-    const signature = Array.from(new Uint8Array(sigBuffer))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
+    // Generate SHA-1 signature using Node.js crypto
+    const crypto = await import('crypto');
+    const signature = crypto
+      .createHash('sha1')
+      .update(paramsToSign + apiSecret)
+      .digest('hex');
 
     const cloudinaryFormData = new FormData();
     cloudinaryFormData.append('file', file);
