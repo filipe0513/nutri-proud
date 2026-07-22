@@ -63,12 +63,32 @@ function StreakDay({ day, activeAnimation }: { day: WeekDay, activeAnimation?: '
     squircleBg = 'bg-neutral-200 border border-neutral-300/50';
   }
 
-  // Icon colors based on state
-  const iconColor = isActive 
-    ? 'white' 
-    : day.isFuture 
-      ? '#d1d5db' // neutral-300
-      : '#9ca3af'; // neutral-400 (mais escuro para diferenciar)
+  const renderFlame = (isFilled: boolean, isGloryFlame: boolean = false) => {
+    const stroke = isGloryFlame ? 'url(#glory-flame-grad)' : isFilled ? 'white' : (day.isFuture ? '#d1d5db' : '#9ca3af');
+    const fill = isGloryFlame ? 'url(#glory-flame-grad)' : isFilled ? 'white' : 'transparent';
+    const dropShadow = isGloryFlame ? 'drop-shadow-md' : isFilled ? 'drop-shadow-sm' : '';
+    
+    const flameNode = (
+      <Flame
+        className={`w-4 h-4 ${dropShadow}`}
+        stroke={stroke}
+        fill={fill}
+      />
+    );
+
+    if (day.isToday && isActive) {
+      return (
+        <motion.div
+          animate={{ scale: [1, 1.15, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          {flameNode}
+        </motion.div>
+      );
+    }
+
+    return flameNode;
+  };
 
   return (
     <motion.div
@@ -104,15 +124,26 @@ function StreakDay({ day, activeAnimation }: { day: WeekDay, activeAnimation?: '
           borderColor: isGlory ? 'rgba(74, 222, 128, 0.5)' : undefined,
         }}
       >
-        {/* Fill layer without gradient artifacts */}
+        {/* Base Icon */}
+        {!isGlory && (
+           <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
+              {renderFlame(false, false)}
+           </div>
+        )}
+
+        {/* Fill layer with clipped white/glory flame */}
         {isActive && (
           <div 
-             className="absolute bottom-0 left-0 right-0 w-full transition-all duration-700 ease-out"
+             className="absolute bottom-0 left-0 right-0 w-full transition-all duration-700 ease-out overflow-hidden z-10"
              style={{
                height: `${score}%`,
                background: `linear-gradient(to top, ${colors.from}, ${colors.to})`
              }}
-          />
+          >
+             <div className="absolute bottom-0 left-0 w-full h-10 flex items-center justify-center">
+                 {renderFlame(true, isGlory)}
+             </div>
+          </div>
         )}
 
         <AnimatePresence>
@@ -122,7 +153,7 @@ function StreakDay({ day, activeAnimation }: { day: WeekDay, activeAnimation?: '
               animate={{ opacity: 0, scale: 1.6 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="absolute inset-0 rounded-[10px] border-2 border-green-400 z-0"
+              className="absolute inset-0 rounded-[10px] border-2 border-green-400 z-20 pointer-events-none"
             />
           )}
         </AnimatePresence>
@@ -130,33 +161,11 @@ function StreakDay({ day, activeAnimation }: { day: WeekDay, activeAnimation?: '
         {/* Today ring pulse */}
         {day.isToday && (
           <motion.div
-            className="absolute inset-0 rounded-[10px] z-10 pointer-events-none"
+            className="absolute inset-0 rounded-[10px] z-30 pointer-events-none"
             animate={{ boxShadow: ['0 0 0 0px rgba(0,0,0,0.1)', '0 0 0 4px rgba(0,0,0,0)'] }}
             transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
           />
         )}
-
-        {/* Icon */}
-        <div className="relative z-10 flex items-center justify-center w-full h-full">
-          {day.isToday && isActive ? (
-            <motion.div
-              animate={{ scale: [1, 1.15, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <Flame
-                className={`w-4 h-4 ${isGlory ? 'drop-shadow-md' : 'drop-shadow-sm'}`}
-                stroke={isGlory ? 'url(#glory-flame-grad)' : 'white'}
-                fill={isGlory ? 'url(#glory-flame-grad)' : 'white'}
-              />
-            </motion.div>
-          ) : (
-            <Flame
-              className="w-4 h-4"
-              stroke={isGlory ? 'url(#glory-flame-grad)' : iconColor}
-              fill={isGlory ? 'url(#glory-flame-grad)' : isActive ? 'white' : 'transparent'}
-            />
-          )}
-        </div>
       </motion.div>
 
       {/* Day label */}
