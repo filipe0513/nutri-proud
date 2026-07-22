@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { UserAvatar } from "@/components/shared/UserAvatar";
+import { AvatarUploadButton } from "@/components/shared/AvatarUploadButton";
 import {
   Drawer,
   DrawerContent,
@@ -114,7 +114,7 @@ export default function SettingsPage() {
       {/* Profile Header Card */}
       <Card className="bg-glass-light-2 backdrop-blur-md border-white/40 shadow-sm rounded-3xl overflow-hidden">
         <CardContent className="p-6 flex items-center space-x-4">
-          <UserAvatar size="lg" />
+          <AvatarUploadButton size="lg" />
           <div className="min-w-0 flex-1">
             <p className="text-title-3 font-bold text-neutral-500 truncate">{name}</p>
             {user_profile?.email && (
@@ -303,9 +303,14 @@ function PersonalDrawer({
       <DrawerContent className="!bg-white/95 backdrop-blur-2xl border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
         <DrawerHeader className="px-0">
           <DrawerTitle className="text-title-2 text-neutral-500">Dados Pessoais</DrawerTitle>
-          <DrawerDescription className="text-body-2 text-neutral-400">Altere seu nome de exibição</DrawerDescription>
+          <DrawerDescription className="text-body-2 text-neutral-400">Altere seu nome e foto de perfil</DrawerDescription>
         </DrawerHeader>
         <form onSubmit={handleSubmit((data) => onSave(data))} className="space-y-4 mt-2">
+          {/* Avatar Upload */}
+          <div className="flex flex-col items-center gap-2 pb-2">
+            <AvatarUploadButton size="lg" />
+            <p className="text-caption-2 text-neutral-400">Toque no avatar para alterar a foto</p>
+          </div>
           <div className="space-y-2">
             <label className="text-caption-1 font-medium text-neutral-500/80">
               Como quer ser chamado?
