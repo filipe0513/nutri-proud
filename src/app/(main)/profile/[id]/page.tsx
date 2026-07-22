@@ -3,11 +3,12 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { ProfileClient } from './ProfileClient';
 
-export default async function ProfilePage({ params }: { params: { id: string } }) {
+export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   const session = await auth();
   const currentUserId = session?.user?.id;
 
-  let targetUserId = params.id;
+  let targetUserId = resolvedParams.id;
   let isMe = false;
 
   if (targetUserId === 'me') {
