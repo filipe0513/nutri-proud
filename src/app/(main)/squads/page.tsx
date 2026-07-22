@@ -101,7 +101,7 @@ export default function SquadsHubPage() {
     <div className="min-h-screen max-w-lg mx-auto px-4 pt-24 pb-32">
       <TopHeader 
         leftAction="back" 
-        title="Grupos" 
+        title="Seus grupos" 
         rightElement={
           <button 
             onClick={() => setCreateDrawerOpen(true)}
@@ -112,16 +112,10 @@ export default function SquadsHubPage() {
           </button>
         }
       />
-      {/* Header */}
-      <header className="mb-6">
-        <p className="text-body-1 text-neutral-400">
-          Compartilhe sua jornada com amigos.
-        </p>
-      </header>
 
       {/* Content */}
       {squads.length === 0 ? (
-        <div className="flex flex-col items-center justify-center mt-16 text-center">
+        <div className="flex flex-col items-center justify-center text-center">
           <div className="w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-6">
             <Users className="w-12 h-12 text-brand-500" />
           </div>
@@ -149,9 +143,6 @@ export default function SquadsHubPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-title-3 font-semibold text-neutral-500">Seus Grupos</h2>
-          </div>
           <div className="grid gap-4">
             {squads.map((squad) => (
               <div key={squad.id} className="w-full bg-glass-light-1 backdrop-blur-sm border border-white/60 p-5 rounded-3xl shadow-sm">

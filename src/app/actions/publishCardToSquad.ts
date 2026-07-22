@@ -65,8 +65,18 @@ export async function publishCardToSquad(input: {
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
 
+    const matches = imageBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      return { success: false, error: 'Formato de imagem inválido. Esperado Data URI.' };
+    }
+    
+    const mimeType = matches[1];
+    const base64Data = matches[2];
+    const buffer = Buffer.from(base64Data, 'base64');
+    const blob = new Blob([buffer], { type: mimeType });
+
     const formData = new FormData();
-    formData.append('file', imageBase64);
+    formData.append('file', blob, 'upload.png');
     formData.append('api_key', apiKey);
     formData.append('timestamp', String(timestamp));
     formData.append('folder', folder);

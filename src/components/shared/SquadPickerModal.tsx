@@ -72,10 +72,10 @@ export function SquadPickerModal({
             </div>
             <div>
               <h2 className="text-title-3 font-semibold text-neutral-500">
-                Você ainda não tem Grupos
+                Você ainda não está em nenhum grupo
               </h2>
               <p className="text-body-1 text-neutral-400 mt-2 max-w-[260px] mb-6">
-                Crie ou entre em um Grupo para compartilhar seu progresso com amigos.
+                Crie ou entre em um grupo para compartilhar seu progresso com amigos.
               </p>
               <Button
                 className="w-full h-12 rounded-2xl bg-brand-500 hover:bg-brand-600 shadow-sm"
