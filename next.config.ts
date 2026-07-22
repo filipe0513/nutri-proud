@@ -3,10 +3,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ['@prisma/client', 'prisma'],
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '5mb',
-    },
+  serverActions: {
+    bodySizeLimit: '5mb',
   },
   images: {
     remotePatterns: [
