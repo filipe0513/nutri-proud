@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/store';
 import { Toaster } from '@/components/ui/sonner';
 import { SuccessOverlay } from './SuccessOverlay';
+import { OneSignalInit } from './OneSignalInit';
 
 /**
  * RootProvider — responsável apenas por inicializar os dados do Zustand e
@@ -28,6 +29,7 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <OneSignalInit />
       {children}
       <Toaster position="top-center" richColors />
       <SuccessOverlay />
