@@ -79,10 +79,11 @@ function StreakDay({ day, activeAnimation }: { day: WeekDay, activeAnimation?: '
       {isGlory && (
         <svg width="0" height="0" className="absolute">
           <defs>
-            <linearGradient id="glory-flame-grad" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#f59e0b" />
-              <stop offset="100%" stopColor="#fbbf24" />
-            </linearGradient>
+            <radialGradient id="glory-flame-grad" cx="50%" cy="50%" r="50%" fx="50%" fy="80%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="40%" stopColor="#facc15" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </radialGradient>
           </defs>
         </svg>
       )}
