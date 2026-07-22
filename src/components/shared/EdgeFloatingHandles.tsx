@@ -7,6 +7,7 @@ import { NotificationsSheet } from './NotificationsSheet';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { ArrowLeft, LogOut, Settings, Clock, Users } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAppStore } from '@/store/store';
 import { signOut } from 'next-auth/react';
 
@@ -39,21 +40,23 @@ export function EdgeFloatingHandles({
   };
 
   return (
-    <>
-      {/* Left Handle Container */}
-      {leftType !== 'none' && (
-        <div className="fixed left-0 top-16 z-50 flex items-center">
-          {leftType === 'avatar' && (
-            <Sheet open={leftOpen} onOpenChange={setLeftOpen}>
-              <div 
-                className={`transition-transform duration-300 ease-in-out ${
-                  leftOpen ? 'translate-x-[288px] sm:translate-x-[384px]' : 'translate-x-0'
-                }`}
-              >
+    <div className="fixed top-0 left-0 right-0 z-50 w-full pointer-events-none md:pointer-events-auto md:bg-glass-light-1/80 md:backdrop-blur-md md:border-b md:border-white/20">
+      <div className="mx-auto w-full md:max-w-lg md:px-6 flex justify-between items-start md:items-center pointer-events-none md:h-16">
+        
+        {/* Left Handle Container */}
+        {leftType !== 'none' && (
+          <div className="pointer-events-auto fixed left-0 top-16 md:static md:flex md:items-center">
+            {leftType === 'avatar' && (
+              <Sheet open={leftOpen} onOpenChange={setLeftOpen}>
+                <div 
+                  className={`transition-transform duration-300 ease-in-out ${
+                    leftOpen ? 'translate-x-[288px] sm:translate-x-[384px] md:translate-x-0' : 'translate-x-0'
+                  }`}
+                >
                 <SheetTrigger asChild>
                   <button 
                     aria-label="Menu Principal"
-                    className="flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-r-full py-1.5 px-2 pl-1 pr-3 hover:bg-glass-light-2 transition-all group"
+                    className="flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-r-full md:rounded-full py-1.5 px-2 pl-1 pr-3 md:px-2 md:py-1.5 hover:bg-glass-light-2 transition-all group"
                   >
                     <UserAvatar size="sm" className="ring-2 ring-white/60 group-hover:scale-105 transition-transform" />
                   </button>
@@ -115,34 +118,47 @@ export function EdgeFloatingHandles({
             </Sheet>
           )}
 
-          {leftType === 'back' && (
-            <button 
-              onClick={handleBack}
-              aria-label="Voltar"
-              className="flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-r-full py-2 px-3 pl-2 pr-4 hover:bg-glass-light-2 transition-all text-neutral-500 active:scale-95"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-      )}
+            {leftType === 'back' && (
+              <button 
+                onClick={handleBack}
+                aria-label="Voltar"
+                className="flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-r-full md:rounded-full py-2 px-3 pl-2 pr-4 md:px-3 md:py-2 hover:bg-glass-light-2 transition-all text-neutral-500 active:scale-95"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        )}
 
-      {/* Right Handle Container */}
-      {rightType !== 'none' && (
-        <div className="fixed right-0 top-16 z-50 flex items-center">
-          {rightType === 'notifications' && (
-            <div 
-              className={`transition-transform duration-300 ease-in-out ${
-                rightOpen ? '-translate-x-[85vw] sm:-translate-x-[28rem]' : 'translate-x-0'
-              }`}
-            >
+        {/* Center Logo (Desktop Only) */}
+        <div className="hidden md:flex pointer-events-auto items-center justify-center">
+          <Image
+            src="/logo-color-h.webp"
+            alt="Orgulho da Nutri"
+            width={1332}
+            height={281}
+            priority
+            unoptimized
+            className="h-6 w-auto"
+          />
+        </div>
+
+        {/* Right Handle Container */}
+        {rightType !== 'none' && (
+          <div className="pointer-events-auto fixed right-0 top-16 md:static md:flex md:items-center">
+            {rightType === 'notifications' && (
+              <div 
+                className={`transition-transform duration-300 ease-in-out ${
+                  rightOpen ? '-translate-x-[85vw] sm:-translate-x-[28rem] md:translate-x-0' : 'translate-x-0'
+                }`}
+              >
               <NotificationsSheet 
                 open={rightOpen} 
                 onOpenChange={setRightOpen}
                 customTrigger={
                   <button 
                     aria-label="Abrir notificações"
-                    className="relative flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-l-full py-2 px-3 pl-4 pr-2 hover:bg-glass-light-2 transition-all group"
+                    className="relative flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-l-full md:rounded-full py-2 px-3 pl-4 pr-2 md:px-3 md:py-2 hover:bg-glass-light-2 transition-all group"
                   >
                     <NotificationsUnreadBadge />
                   </button>
@@ -152,7 +168,8 @@ export function EdgeFloatingHandles({
           )}
         </div>
       )}
-    </>
+      </div>
+    </div>
   );
 }
 
