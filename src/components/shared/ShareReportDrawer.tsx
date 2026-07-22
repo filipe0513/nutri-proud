@@ -182,7 +182,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
   const [reportText, setReportText] = useState<string | null>(null);
 
   // ── Infographic state ──
-  const [infoPeriod, setInfoPeriod] = useState<InfographicPeriod>('week');
+  const [infoPeriod, setInfoPeriod] = useState<InfographicPeriod>('today');
   const [infoLoading, setInfoLoading] = useState(false);
   const [infoCapturing, setInfoCapturing] = useState(false);
   const [infoReady, setInfoReady] = useState(false);
@@ -404,7 +404,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
         setCustomEnd('');
         setInfoReady(false);
         setInfographicData(null);
-        setInfoPeriod('week');
+        setInfoPeriod('today');
         setSelectedExport('CARD');
         setActiveTab('nutri');
         setSquadPickerOpen(false);
@@ -710,6 +710,20 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
               {/* Share / Download actions */}
               {infoReady && infographicData && (
                 <div className="flex flex-col gap-3">
+                  {/* Publish to Squad — zero friction */}
+                  <Button
+                    onClick={() => setSquadPickerOpen(true)}
+                    disabled={infoCapturing}
+                    className="w-full h-14 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white text-button-1 flex items-center justify-center gap-2 shadow-md shadow-brand-500/25"
+                    id="btn-publish-to-squad"
+                  >
+                    {infoCapturing && publishingSquadId ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" />Publicando...</>
+                    ) : (
+                      <><Users className="h-4 w-4" />Publicar no Squad</>
+                    )}
+                  </Button>
+
                   <div className="flex gap-3">
                     <Button
                       variant="outline"
@@ -731,20 +745,6 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
                       Compartilhar
                     </Button>
                   </div>
-
-                  {/* Publish to Squad — zero friction */}
-                  <Button
-                    onClick={() => setSquadPickerOpen(true)}
-                    disabled={infoCapturing}
-                    className="w-full h-12 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white text-button-1 flex items-center justify-center gap-2 shadow-md shadow-brand-500/25"
-                    id="btn-publish-to-squad"
-                  >
-                    {infoCapturing && publishingSquadId ? (
-                      <><Loader2 className="h-4 w-4 animate-spin" />Publicando...</>
-                    ) : (
-                      <><Users className="h-4 w-4" />Publicar no Squad</>
-                    )}
-                  </Button>
 
                   <button
                     type="button"

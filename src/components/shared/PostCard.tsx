@@ -83,7 +83,7 @@ export function PostCard({ post, onToggleReaction, onCommentClick }: PostCardPro
         {post.imageUrl && (
           <div className="mt-3 rounded-2xl overflow-hidden border border-white/20 shadow-sm">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={post.imageUrl} alt="Imagem do post" className="w-full h-auto object-cover max-h-[400px]" loading="lazy" />
+            <img src={post.imageUrl} alt="Imagem do post" className="w-full h-auto object-contain bg-background/50 rounded-lg" loading="lazy" />
           </div>
         )}
         {/* Render a fake score visualization if it's a score post (heuristic) */}
