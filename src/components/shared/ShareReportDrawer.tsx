@@ -172,7 +172,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
   const { user_profile } = useAppStore();
 
   // ── Tab ──
-  const [activeTab, setActiveTab] = useState<Tab>('nutri');
+  const [activeTab, setActiveTab] = useState<Tab>('infographic');
 
   // ── Report (Nutri) state ──
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>('today');
@@ -406,7 +406,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
         setInfographicData(null);
         setInfoPeriod('today');
         setSelectedExport('CARD');
-        setActiveTab('nutri');
+        setActiveTab('infographic');
         setSquadPickerOpen(false);
       }, 300);
     }

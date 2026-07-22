@@ -27,6 +27,7 @@ function getInitials(name: string | null): string {
 export function PostCard({ post, onToggleReaction, onCommentClick }: PostCardProps) {
   // Temporary state for optimistic UI (if needed, though real app uses react-query or similar)
   const [reactions, setReactions] = useState(post.reactions);
+  const [isImageExpanded, setIsImageExpanded] = useState(false);
 
   const handleReaction = (emoji: string) => {
     onToggleReaction(post.id, emoji);
@@ -81,9 +82,27 @@ export function PostCard({ post, onToggleReaction, onCommentClick }: PostCardPro
           </p>
         )}
         {post.imageUrl && (
-          <div className="mt-3 rounded-2xl overflow-hidden border border-white/20 shadow-sm">
+          <div 
+            className="mt-3 rounded-2xl overflow-hidden border border-white/20 shadow-sm cursor-pointer relative group transition-all duration-300"
+            onClick={() => setIsImageExpanded(!isImageExpanded)}
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={post.imageUrl} alt="Imagem do post" className="w-full h-auto object-contain bg-background/50 rounded-lg" loading="lazy" />
+            <img 
+              src={post.imageUrl} 
+              alt="Imagem do post" 
+              className={cn(
+                "w-full bg-background/50 rounded-lg transition-all duration-300",
+                isImageExpanded ? "h-auto object-contain" : "h-56 object-cover object-top"
+              )} 
+              loading="lazy" 
+            />
+            {!isImageExpanded && (
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100">
+                <span className="text-white text-sm font-semibold bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm pointer-events-none">
+                  Ver completo
+                </span>
+              </div>
+            )}
           </div>
         )}
         {/* Render a fake score visualization if it's a score post (heuristic) */}
