@@ -11,6 +11,7 @@ import { ptBR } from "date-fns/locale";
 import { ActivityLog } from "@/store/types";
 import { useAppStore } from "@/store/store";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { EdgeFloatingHandles } from "@/components/shared/EdgeFloatingHandles";
 import { BottomSheet_Water } from "@/components/shared/BottomSheet_Water";
 import { BottomSheet_Sleep } from "@/components/shared/BottomSheet_Sleep";
 import { BottomSheet_Poop } from "@/components/shared/BottomSheet_Poop";
@@ -123,7 +124,8 @@ export default function HistoryPage() {
 
   return (
     <div className="pb-24 pt-8 px-6 max-w-lg mx-auto space-y-6">
-      <div className="flex justify-center mb-2">
+      <EdgeFloatingHandles leftType="avatar" rightType="notifications" />
+      <div className="flex justify-center mb-2 md:hidden">
         <div className="inline-flex items-center px-5 py-2.5 rounded-full bg-glass-light-2 backdrop-blur-md border border-white/60 shadow-sm">
           <Image
             src="/logo-color-h.webp"
