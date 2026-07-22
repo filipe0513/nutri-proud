@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, Plus, KeyRound, ChevronRight } from 'lucide-react';
+import { Users, Plus, KeyRound, ChevronRight, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { fetchMySquads } from '@/store/api';
+import { fetchMySquads, createSquad, joinSquadByCode } from '@/store/api';
 import type { SquadSummary } from '@/types/squadTypes';
 import { toast } from 'sonner';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
@@ -15,31 +15,85 @@ export default function SquadsHubPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [joinDrawerOpen, setJoinDrawerOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsLoading(true);
     fetchMySquads()
-      .then(setSquads)
-      .catch(() => toast.error('Erro ao carregar squads'))
-      .finally(() => setIsLoading(false));
+      .then((data) => { if (!cancelled) setSquads(data); })
+      .catch(() => { if (!cancelled) toast.error('Erro ao carregar squads'); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
-  const handleCreateSquad = (e: React.FormEvent<HTMLFormElement>) => {
+
+
+  const handleCreateSquad = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setCreateDrawerOpen(false);
-    toast.success('Squad criado! (Mock)');
-    // Refresh list logic would go here
+    const form = e.currentTarget;
+    const name = (form.elements.namedItem('name') as HTMLInputElement).value.trim();
+    const description = (form.elements.namedItem('description') as HTMLInputElement).value.trim();
+    if (!name) return;
+
+    setIsCreating(true);
+    try {
+      const newSquad = await createSquad({ name, description: description || undefined });
+      setSquads((prev) => [newSquad, ...prev]);
+      setCreateDrawerOpen(false);
+      toast.success(`Squad "${newSquad.name}" criado! 🎉`, {
+        className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
+      });
+    } catch {
+      toast.error('Não foi possível criar o Squad. Tente novamente.');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
-  const handleJoinSquad = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleJoinSquad = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setJoinDrawerOpen(false);
-    toast.success('Entrou no Squad! (Mock)');
-    // Refresh list logic would go here
+    const form = e.currentTarget;
+    const inviteCode = (form.elements.namedItem('inviteCode') as HTMLInputElement).value.trim();
+    if (!inviteCode) return;
+
+    setIsJoining(true);
+    try {
+      const joined = await joinSquadByCode(inviteCode);
+      setSquads((prev) => [joined, ...prev]);
+      setJoinDrawerOpen(false);
+      toast.success(`Você entrou no Squad "${joined.name}"! 🎉`, {
+        className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Código inválido.';
+      toast.error(msg);
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      toast.success('Código copiado!');
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch {
+      toast.error('Não foi possível copiar.');
+    }
   };
 
   if (isLoading) {
-    return <div className="flex h-full items-center justify-center pt-24"><div className="animate-spin h-8 w-8 border-4 border-brand-500 border-t-transparent rounded-full" /></div>;
+    return (
+      <div className="flex h-full items-center justify-center pt-24">
+        <div className="animate-spin h-8 w-8 border-4 border-brand-500 border-t-transparent rounded-full" />
+      </div>
+    );
   }
 
   return (
@@ -83,28 +137,56 @@ export default function SquadsHubPage() {
       ) : (
         <div className="space-y-4">
           <div className="flex justify-between items-center mb-4">
-             <h2 className="text-title-3 font-semibold text-neutral-500">Seus Grupos</h2>
-             <Button variant="ghost" size="sm" onClick={() => setCreateDrawerOpen(true)} className="text-brand-500 hover:text-brand-600 hover:bg-brand-50">
-               + Novo
-             </Button>
+            <h2 className="text-title-3 font-semibold text-neutral-500">Seus Grupos</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCreateDrawerOpen(true)}
+              className="text-brand-500 hover:text-brand-600 hover:bg-brand-50"
+            >
+              + Novo
+            </Button>
           </div>
           <div className="grid gap-4">
             {squads.map((squad) => (
-              <button
-                key={squad.id}
-                onClick={() => router.push(`/squads/${squad.id}`)}
-                className="w-full bg-glass-light-1 backdrop-blur-sm border border-white/60 p-5 rounded-3xl flex items-center justify-between text-left hover:bg-white/40 transition-colors shadow-sm group"
-              >
-                <div>
-                  <h3 className="text-title-3 font-bold text-neutral-500">{squad.name}</h3>
-                  <p className="text-caption-1 text-neutral-400 mt-1 flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5" /> {squad.memberCount} membro{squad.memberCount !== 1 ? 's' : ''}
+              <div key={squad.id} className="w-full bg-glass-light-1 backdrop-blur-sm border border-white/60 p-5 rounded-3xl shadow-sm">
+                <button
+                  onClick={() => router.push(`/squads/${squad.id}`)}
+                  className="w-full flex items-center justify-between text-left group"
+                >
+                  <div>
+                    <h3 className="text-title-3 font-bold text-neutral-500">{squad.name}</h3>
+                    {squad.description && (
+                      <p className="text-caption-1 text-neutral-400 mt-0.5 line-clamp-1">{squad.description}</p>
+                    )}
+                    <p className="text-caption-1 text-neutral-400 mt-1 flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5" />
+                      {squad.memberCount} membro{squad.memberCount !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center group-hover:bg-brand-50 transition-colors flex-shrink-0 ml-3">
+                    <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-brand-500" />
+                  </div>
+                </button>
+
+                {/* Invite code row */}
+                <div className="mt-3 pt-3 border-t border-neutral-100 flex items-center justify-between">
+                  <p className="text-caption-2 text-neutral-400 font-mono">
+                    Código: <span className="font-semibold text-neutral-500">{squad.inviteCode.slice(0, 8)}</span>
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyCode(squad.inviteCode)}
+                    className="flex items-center gap-1.5 text-caption-2 text-brand-500 hover:text-brand-600 transition-colors"
+                  >
+                    {copiedCode === squad.inviteCode ? (
+                      <><Check className="w-3 h-3" /> Copiado!</>
+                    ) : (
+                      <><Copy className="w-3 h-3" /> Copiar</>
+                    )}
+                  </button>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center group-hover:bg-brand-50 transition-colors">
-                   <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-brand-500" />
-                </div>
-              </button>
+              </div>
             ))}
           </div>
         </div>
@@ -118,15 +200,25 @@ export default function SquadsHubPage() {
           </DrawerHeader>
           <form onSubmit={handleCreateSquad} className="space-y-4">
             <div>
-              <label className="text-caption-1 text-neutral-500 font-medium mb-1.5 block">Nome do Grupo</label>
-              <Input placeholder="Ex: Galera do Crossfit" className="h-12 bg-white/50" required />
+              <label className="text-caption-1 text-neutral-500 font-medium mb-1.5 block">
+                Nome do Grupo
+              </label>
+              <Input name="name" placeholder="Ex: Galera do Crossfit" className="h-12 bg-white/50" required />
             </div>
             <div>
-              <label className="text-caption-1 text-neutral-500 font-medium mb-1.5 block">Descrição (Opcional)</label>
-              <Input placeholder="Qual o foco do grupo?" className="h-12 bg-white/50" />
+              <label className="text-caption-1 text-neutral-500 font-medium mb-1.5 block">
+                Descrição (Opcional)
+              </label>
+              <Input name="description" placeholder="Qual o foco do grupo?" className="h-12 bg-white/50" />
             </div>
-            <Button type="submit" className="w-full h-14 text-button-1 rounded-2xl bg-brand-500 mt-2">
-              Criar
+            <Button
+              type="submit"
+              disabled={isCreating}
+              className="w-full h-14 text-button-1 rounded-2xl bg-brand-500 mt-2 flex items-center justify-center gap-2"
+            >
+              {isCreating ? (
+                <><span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />Criando...</>
+              ) : 'Criar'}
             </Button>
           </form>
         </DrawerContent>
@@ -140,11 +232,24 @@ export default function SquadsHubPage() {
           </DrawerHeader>
           <form onSubmit={handleJoinSquad} className="space-y-4">
             <div>
-              <label className="text-caption-1 text-neutral-500 font-medium mb-1.5 block">Código de Convite</label>
-              <Input placeholder="Ex: 8f2a-4bc1" className="h-12 bg-white/50 text-center font-mono" required />
+              <label className="text-caption-1 text-neutral-500 font-medium mb-1.5 block">
+                Código de Convite
+              </label>
+              <Input
+                name="inviteCode"
+                placeholder="Cole o código aqui"
+                className="h-12 bg-white/50 text-center font-mono"
+                required
+              />
             </div>
-            <Button type="submit" className="w-full h-14 text-button-1 rounded-2xl bg-brand-500 mt-2">
-              Entrar
+            <Button
+              type="submit"
+              disabled={isJoining}
+              className="w-full h-14 text-button-1 rounded-2xl bg-brand-500 mt-2 flex items-center justify-center gap-2"
+            >
+              {isJoining ? (
+                <><span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />Entrando...</>
+              ) : 'Entrar'}
             </Button>
           </form>
         </DrawerContent>

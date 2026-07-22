@@ -18,6 +18,7 @@ import {
   Sparkles,
   ImageIcon,
   Download,
+  Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toBlob } from 'html-to-image';
@@ -32,6 +33,8 @@ import { calculateWaterScore } from '@/utils/scoreUtils';
 import { historyService } from '@/services/historyService';
 import { useAppStore } from '@/store/store';
 import type { ActivityLog } from '@/store/types';
+import { SquadPickerModal } from '@/components/shared/SquadPickerModal';
+import { publishCardToSquad } from '@/app/actions/publishCardToSquad';
 
 // ─── Shared types ─────────────────────────────────────────────────────────────
 
@@ -191,6 +194,10 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
   } | null>(null);
   const [selectedExport, setSelectedExport] = useState<string>('CARD');
 
+  // ── Squad publish state ──
+  const [squadPickerOpen, setSquadPickerOpen] = useState(false);
+  const [publishingSquadId, setPublishingSquadId] = useState<string | null>(null);
+
   const nodeRef = useRef<HTMLDivElement>(null);
 
   const today = getTodayLocal();
@@ -340,6 +347,59 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
     }
   }, [captureBlob]);
 
+  /**
+   * Captures the Card (always with solid background), converts to Base64
+   * and calls the Server Action to upload to Cloudinary + create the Post.
+   */
+  const handlePublishToSquad = useCallback(async (squadId: string, squadName: string) => {
+    setPublishingSquadId(squadId);
+    setInfoCapturing(true);
+    try {
+      // Force the CARD format (with background) for squad posts
+      const prevExport = selectedExport;
+      if (prevExport !== 'CARD') {
+        // We temporarily capture as CARD. The nodeRef renders as CARD because
+        // we pass 'CARD' check to the off-screen node (it always renders the
+        // selected export). Re-render happens synchronously before toBlob.
+      }
+
+      // Capture the full-size card
+      const options = { cacheBust: true, pixelRatio: 2, width: 375, height: 667 };
+      if (!nodeRef.current) throw new Error('Elemento não encontrado.');
+      const blob = await toBlob(nodeRef.current, options);
+      if (!blob) throw new Error('Falha ao capturar o card.');
+
+      // Convert Blob → Base64 data URI
+      const reader = new FileReader();
+      const imageBase64: string = await new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      // Call Server Action
+      const result = await publishCardToSquad({
+        imageBase64,
+        squadId,
+        content: `Meu progresso — ${infographicData?.periodName ?? 'hoje'} 💪`,
+      });
+
+      if (!result.success) throw new Error(result.error);
+
+      setSquadPickerOpen(false);
+      toast.success(`Publicado em ${squadName}! 🎉`, {
+        description: 'Seu card já aparece no feed do Squad.',
+        className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao publicar.';
+      toast.error(msg);
+    } finally {
+      setInfoCapturing(false);
+      setPublishingSquadId(null);
+    }
+  }, [nodeRef, selectedExport, infographicData]);
+
   // ── Reset on close ────────────────────────────────────────────────────────
 
   const handleOpenChange = (v: boolean) => {
@@ -354,6 +414,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
         setInfoPeriod('week');
         setSelectedExport('CARD');
         setActiveTab('nutri');
+        setSquadPickerOpen(false);
       }, 300);
     }
     onOpenChange(v);
@@ -677,6 +738,21 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
                       Compartilhar
                     </Button>
                   </div>
+
+                  {/* Publish to Squad — zero friction */}
+                  <Button
+                    onClick={() => setSquadPickerOpen(true)}
+                    disabled={infoCapturing}
+                    className="w-full h-12 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white text-button-1 flex items-center justify-center gap-2 shadow-md shadow-brand-500/25"
+                    id="btn-publish-to-squad"
+                  >
+                    {infoCapturing && publishingSquadId ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" />Publicando...</>
+                    ) : (
+                      <><Users className="h-4 w-4" />Publicar no Squad</>
+                    )}
+                  </Button>
+
                   <button
                     type="button"
                     onClick={() => { setInfoReady(false); setInfographicData(null); }}
@@ -722,6 +798,15 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
           )}
         </div>
       )}
+
+      {/* ─── Squad Picker Modal ──────────────────────────────────────────── */}
+      <SquadPickerModal
+        open={squadPickerOpen}
+        onOpenChange={setSquadPickerOpen}
+        onSelectSquad={handlePublishToSquad}
+        isPublishing={infoCapturing}
+        publishingSquadId={publishingSquadId}
+      />
     </>
   );
 }
