@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { LimitWarningDrawer } from '@/components/shared/LimitWarningDrawer';
 import { LifesaverDrawer } from '@/components/shared/LifesaverDrawer';
+import { EdgeFloatingHandles } from '@/components/shared/EdgeFloatingHandles';
 import { toLocalISOString } from '@/lib/utils';
 import { calculateWaterScore, calculateFoodScore } from '@/utils/scoreUtils';
 import { getLocalStartOfDay } from '@/utils/dateUtils';
@@ -241,6 +242,7 @@ function DashboardContent() {
 
   return (
     <div className="pb-24 pt-8 px-6 max-w-lg mx-auto space-y-6">
+      <EdgeFloatingHandles leftType="avatar" rightType="notifications" />
       {/* 1. Greeting + Streak Badge */}
       <StoryHeader />
 

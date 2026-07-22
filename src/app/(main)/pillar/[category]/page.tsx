@@ -5,11 +5,11 @@ import { useMemo, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Droplet, Moon, Utensils, Dumbbell, Smile, CheckCircle2, Lightbulb, ArrowLeft, Eye } from 'lucide-react';
-import Link from 'next/link';
+import { Droplet, Moon, Utensils, Dumbbell, Smile, CheckCircle2, Lightbulb, Eye } from 'lucide-react';
 import { useAppStore } from '@/store/store';
 import { ActivityLog } from '@/store/types';
 import { getLocalStartOfDay } from '@/utils/dateUtils';
+import { EdgeFloatingHandles } from '@/components/shared/EdgeFloatingHandles';
 
 // Aqui eu importo os drawers existentes, mas vou precisar controla-los de fora ou replicar a chamada.
 // Como o Drawer do Shadcn pode ser controlado por estado global ou id, vamos passar um trigger customizado.
@@ -160,14 +160,9 @@ export default function PillarInsightsPage() {
 
   return (
     <div className={`min-h-screen pb-32`}>
+      <EdgeFloatingHandles leftType="back" rightType="none" />
       {/* Hero Section */}
       <div className={`${data.bgClass} pt-12 pb-16 px-6 rounded-b-[40px] relative`}>
-        <div className="absolute top-8 left-6">
-          <Link href="/" className="h-10 w-10 bg-white/50 backdrop-blur-md border border-white/40 rounded-full flex items-center justify-center text-neutral-500 hover:scale-105 transition-transform">
-            <ArrowLeft size={20} />
-          </Link>
-        </div>
-
         <div className="flex flex-col items-center justify-center mt-8 space-y-4">
           <div className="h-24 w-24 rounded-full bg-white/80 shadow-sm flex items-center justify-center">
             <Icon className={`h-12 w-12 ${data.colorClass}`} />

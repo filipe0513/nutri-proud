@@ -9,6 +9,7 @@ import type { SquadSummary } from '@/types/squadTypes';
 import { toast } from 'sonner';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
+import { EdgeFloatingHandles } from '@/components/shared/EdgeFloatingHandles';
 
 export default function SquadsHubPage() {
   const [squads, setSquads] = useState<SquadSummary[]>([]);
@@ -98,6 +99,7 @@ export default function SquadsHubPage() {
 
   return (
     <div className="min-h-screen px-4 pt-12 pb-32">
+      <EdgeFloatingHandles leftType="back" rightType="none" />
       {/* Header */}
       <header className="mb-8">
         <h1 className="text-title-1 font-bold text-neutral-500 mb-2">Squads</h1>

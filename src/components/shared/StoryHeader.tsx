@@ -2,11 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useAppStore } from "@/store/store";
 import { Flame } from "lucide-react";
-import { NotificationsSheet } from "./NotificationsSheet";
-import { UserAvatar } from "./UserAvatar";
 import { ReleaseNotesDrawer } from "./ReleaseNotesDrawer";
 import packageInfo from "../../../package.json";
 
@@ -40,19 +37,8 @@ export function StoryHeader() {
 
   return (
     <div className="space-y-3">
-      {/* Top Row: Avatar (Settings) | Logo | Notifications */}
-      <div className="flex items-center justify-between">
-        {/* Left: User Avatar → navigates to Settings */}
-        <Link
-          href="/settings"
-          id="btn-user-avatar-settings"
-          aria-label="Ir para Configurações"
-          className="rounded-full hover:scale-105 active:scale-95 transition-transform ring-2 ring-transparent hover:ring-brand-400/40 focus:outline-none focus:ring-brand-400/60"
-        >
-          <UserAvatar size="sm" />
-        </Link>
-
-        {/* Center: Logo */}
+      {/* Top Row: Center Logo */}
+      <div className="flex items-center justify-center">
         <div className="inline-flex items-center px-5 py-2.5 rounded-full bg-glass-light-2 backdrop-blur-md border border-white/60 shadow-sm">
           <Image
             src="/logo-color-h.webp"
@@ -64,9 +50,6 @@ export function StoryHeader() {
             className="h-7 w-auto"
           />
         </div>
-
-        {/* Right: Notifications */}
-        <NotificationsSheet />
       </div>
 
       {/* Greeting Row */}
