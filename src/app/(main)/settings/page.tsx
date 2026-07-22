@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import packageInfo from "../../../../package.json";
 import { AvatarUploadButton } from "@/components/shared/AvatarUploadButton";
+import { ReleaseNotesDrawer } from "@/components/shared/ReleaseNotesDrawer";
 import {
   Drawer,
   DrawerContent,
@@ -49,6 +50,7 @@ export default function SettingsPage() {
   const { user_profile, updateProfile } = useAppStore();
   const router = useRouter();
   const [activeDrawer, setActiveDrawer] = useState<DrawerSection>(null);
+  const [showReleaseNotes, setShowReleaseNotes] = useState(false);
 
   // ── Derive read-only display values ──
   const name = user_profile?.name || "—";
@@ -201,9 +203,13 @@ export default function SettingsPage() {
           <LogOut className="h-5 w-5" />
           <span>Sair do App</span>
         </button>
-        <p className="text-center text-caption-2 text-neutral-400">
+        <button
+          type="button"
+          onClick={() => setShowReleaseNotes(true)}
+          className="text-center text-caption-2 text-neutral-400 hover:text-neutral-500 hover:underline transition-colors w-full"
+        >
           Versão {packageInfo.version}
-        </p>
+        </button>
       </div>
 
       {/* ── Drawer: Dados Pessoais ── */}
@@ -232,6 +238,12 @@ export default function SettingsPage() {
         open={activeDrawer === "meals"}
         onOpenChange={(o) => !o && setActiveDrawer(null)}
         onSave={saveSection}
+      />
+
+      <ReleaseNotesDrawer 
+        open={showReleaseNotes} 
+        onOpenChange={setShowReleaseNotes} 
+        currentVersion={packageInfo.version} 
       />
     </div>
   );
