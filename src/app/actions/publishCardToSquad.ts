@@ -5,7 +5,6 @@ import { createSquadPost } from '@/services/squadService';
 import { z } from 'zod';
 
 const publishSchema = z.object({
-  imageBase64: z.string().min(1, 'Imagem é obrigatória.'),
   squadId: z.string().uuid('Squad inválido.'),
   content: z.string().max(500).optional(),
 });
@@ -17,23 +16,27 @@ const publishSchema = z.object({
  * This Server Action is called directly from the client component, keeping the
  * Cloudinary API secret safely on the server.
  */
-export async function publishCardToSquad(input: {
-  imageBase64: string;
-  squadId: string;
-  content?: string;
-}): Promise<{ success: boolean; postId?: string; error?: string }> {
+export async function publishCardToSquad(formData: FormData): Promise<{ success: boolean; postId?: string; error?: string }> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'Não autorizado.' };
     }
 
-    const parsed = publishSchema.safeParse(input);
+    const file = formData.get('file') as File | null;
+    const rawSquadId = formData.get('squadId') as string;
+    const rawContent = formData.get('content') as string | null;
+
+    if (!file) {
+      return { success: false, error: 'Imagem é obrigatória.' };
+    }
+
+    const parsed = publishSchema.safeParse({ squadId: rawSquadId, content: rawContent || undefined });
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? 'Dados inválidos.' };
     }
 
-    const { imageBase64, squadId, content } = parsed.data;
+    const { squadId, content } = parsed.data;
 
     // ── 1. Upload to Cloudinary ───────────────────────────────────────────────
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -65,26 +68,16 @@ export async function publishCardToSquad(input: {
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
 
-    const matches = imageBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-    if (!matches || matches.length !== 3) {
-      return { success: false, error: 'Formato de imagem inválido. Esperado Data URI.' };
-    }
-    
-    const mimeType = matches[1];
-    const base64Data = matches[2];
-    const buffer = Buffer.from(base64Data, 'base64');
-    const blob = new Blob([buffer], { type: mimeType });
-
-    const formData = new FormData();
-    formData.append('file', blob, 'upload.png');
-    formData.append('api_key', apiKey);
-    formData.append('timestamp', String(timestamp));
-    formData.append('folder', folder);
-    formData.append('signature', signature);
+    const cloudinaryFormData = new FormData();
+    cloudinaryFormData.append('file', file);
+    cloudinaryFormData.append('api_key', apiKey);
+    cloudinaryFormData.append('timestamp', String(timestamp));
+    cloudinaryFormData.append('folder', folder);
+    cloudinaryFormData.append('signature', signature);
 
     const uploadRes = await fetch(
       `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      { method: 'POST', body: formData },
+      { method: 'POST', body: cloudinaryFormData },
     );
 
     if (!uploadRes.ok) {

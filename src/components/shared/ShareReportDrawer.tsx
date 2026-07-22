@@ -369,20 +369,13 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
       const blob = await toBlob(nodeRef.current, options);
       if (!blob) throw new Error('Falha ao capturar o card.');
 
-      // Convert Blob → Base64 data URI
-      const reader = new FileReader();
-      const imageBase64: string = await new Promise((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
+      // Call Server Action with native FormData (bypasses Next.js JSON body size limits)
+      const formData = new FormData();
+      formData.append('file', blob, 'orgulho-da-nutri.png');
+      formData.append('squadId', squadId);
+      formData.append('content', `Meu progresso — ${infographicData?.periodName ?? 'hoje'} 💪`);
 
-      // Call Server Action
-      const result = await publishCardToSquad({
-        imageBase64,
-        squadId,
-        content: `Meu progresso — ${infographicData?.periodName ?? 'hoje'} 💪`,
-      });
+      const result = await publishCardToSquad(formData);
 
       if (!result.success) throw new Error(result.error);
 
