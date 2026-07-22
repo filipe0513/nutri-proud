@@ -28,7 +28,7 @@ export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
 
   const rightItems = [
     { label: 'Nutri', icon: Share2, href: null as null, onClick: onShareClick },
-    { label: 'Squads', icon: Users, href: '/squads' },
+    { label: 'Grupos', icon: Users, href: '/squads' },
   ];
 
   return (
@@ -71,7 +71,7 @@ export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
         <Plus className="h-7 w-7 stroke-[2.5px]" />
       </button>
 
-      {/* Right: Compartilhar + Squads */}
+      {/* Right: Compartilhar + Grupos */}
       {rightItems.map((item) => {
         const isActive = item.href ? pathname === item.href : false;
 

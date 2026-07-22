@@ -46,11 +46,11 @@ export default function SquadsHubPage() {
       const newSquad = await createSquad({ name, description: description || undefined });
       setSquads((prev) => [newSquad, ...prev]);
       setCreateDrawerOpen(false);
-      toast.success(`Squad "${newSquad.name}" criado! 🎉`, {
+      toast.success(`Grupo "${newSquad.name}" criado! 🎉`, {
         className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
       });
     } catch {
-      toast.error('Não foi possível criar o Squad. Tente novamente.');
+      toast.error('Não foi possível criar o Grupo. Tente novamente.');
     } finally {
       setIsCreating(false);
     }
@@ -67,7 +67,7 @@ export default function SquadsHubPage() {
       const joined = await joinSquadByCode(inviteCode);
       setSquads((prev) => [joined, ...prev]);
       setJoinDrawerOpen(false);
-      toast.success(`Você entrou no Squad "${joined.name}"! 🎉`, {
+      toast.success(`Você entrou no Grupo "${joined.name}"! 🎉`, {
         className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
       });
     } catch (err) {
@@ -101,11 +101,11 @@ export default function SquadsHubPage() {
     <div className="min-h-screen max-w-lg mx-auto px-4 pt-24 pb-32">
       <TopHeader 
         leftAction="back" 
-        title="Squads" 
+        title="Grupos" 
         rightElement={
           <button 
             onClick={() => setCreateDrawerOpen(true)}
-            aria-label="Criar Novo Squad"
+            aria-label="Criar Novo Grupo"
             className="flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-full w-10 h-10 hover:bg-glass-light-2 transition-all text-neutral-500 hover:text-brand-500 active:scale-95"
           >
             <Plus className="w-5 h-5" />
@@ -126,7 +126,7 @@ export default function SquadsHubPage() {
             <Users className="w-12 h-12 text-brand-500" />
           </div>
           <h2 className="text-title-2 font-bold text-neutral-500 mb-2">
-            Nenhum Squad ainda
+            Nenhum Grupo ainda
           </h2>
           <p className="text-body-1 text-neutral-400 max-w-[280px] mb-8">
             Crie um grupo ou entre com um código para começar a compartilhar seus resultados.
@@ -136,7 +136,7 @@ export default function SquadsHubPage() {
               onClick={() => setCreateDrawerOpen(true)}
               className="w-full h-14 text-button-1 rounded-2xl bg-brand-500 hover:bg-brand-600 shadow-md shadow-brand-500/20"
             >
-              <Plus className="w-5 h-5 mr-2" /> Criar Squad
+              <Plus className="w-5 h-5 mr-2" /> Criar Grupo
             </Button>
             <Button
               variant="outline"
@@ -201,7 +201,7 @@ export default function SquadsHubPage() {
       <Drawer open={createDrawerOpen} onOpenChange={setCreateDrawerOpen}>
         <DrawerContent className="!bg-white/95 backdrop-blur-2xl px-6 pb-10">
           <DrawerHeader className="px-0 pb-4">
-            <DrawerTitle className="text-title-3 text-neutral-500">Criar Novo Squad</DrawerTitle>
+            <DrawerTitle className="text-title-3 text-neutral-500">Criar Novo Grupo</DrawerTitle>
           </DrawerHeader>
           <form onSubmit={handleCreateSquad} className="space-y-4">
             <div>
@@ -233,7 +233,7 @@ export default function SquadsHubPage() {
       <Drawer open={joinDrawerOpen} onOpenChange={setJoinDrawerOpen}>
         <DrawerContent className="!bg-white/95 backdrop-blur-2xl px-6 pb-10">
           <DrawerHeader className="px-0 pb-4">
-            <DrawerTitle className="text-title-3 text-neutral-500">Entrar em um Squad</DrawerTitle>
+            <DrawerTitle className="text-title-3 text-neutral-500">Entrar em um Grupo</DrawerTitle>
           </DrawerHeader>
           <form onSubmit={handleJoinSquad} className="space-y-4">
             <div>

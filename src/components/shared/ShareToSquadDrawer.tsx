@@ -40,7 +40,7 @@ export function ShareToSquadDrawer({
       <DrawerContent className="!bg-white/95 backdrop-blur-2xl border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-10">
         <DrawerHeader className="px-0 pb-4">
           <DrawerTitle className="text-title-3 text-neutral-500 text-center">
-            Criar Postagem
+            Criar Postagem no Grupo
           </DrawerTitle>
         </DrawerHeader>
 

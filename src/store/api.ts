@@ -143,6 +143,40 @@ export const createSquad = async (data: { name: string; description?: string }):
   return res.json();
 };
 
+export const fetchSquadDetails = async (squadId: string): Promise<SquadSummary | null> => {
+  const res = await fetch(`/api/squads/${squadId}`);
+  if (!res.ok) {
+    console.warn('Falha ao buscar detalhes do squad');
+    return null;
+  }
+  const data = await res.json();
+  return data.squad || null;
+};
+
+export const updateSquadDetails = async (squadId: string, data: { name?: string; description?: string }): Promise<SquadSummary> => {
+  const res = await fetch(`/api/squads/${squadId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Erro ao atualizar squad');
+  }
+  const responseData = await res.json();
+  return responseData.squad;
+};
+
+export const deleteSquadAction = async (squadId: string): Promise<void> => {
+  const res = await fetch(`/api/squads/${squadId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Erro ao apagar squad');
+  }
+};
+
 export const joinSquadByCode = async (inviteCode: string): Promise<SquadSummary> => {
   const res = await fetch('/api/squads/join', {
     method: 'POST',

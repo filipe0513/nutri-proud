@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 
 interface SquadFeedHeaderProps {
   title: string;
+  onSettingsClick?: () => void;
 }
 
-export function SquadFeedHeader({ title }: SquadFeedHeaderProps) {
+export function SquadFeedHeader({ title, onSettingsClick }: SquadFeedHeaderProps) {
   const router = useRouter();
 
   return (
@@ -31,9 +32,9 @@ export function SquadFeedHeader({ title }: SquadFeedHeaderProps) {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => console.log('Open Settings')} // Placeholder for future
+          onClick={onSettingsClick}
           className="text-neutral-500 hover:bg-black/5 rounded-full"
-          aria-label="Configurações do Squad"
+          aria-label="Configurações do Grupo"
         >
           <Settings className="h-6 w-6" />
         </Button>

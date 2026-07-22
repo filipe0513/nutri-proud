@@ -97,6 +97,90 @@ export async function joinSquadByCode(
   };
 }
 
+/**
+ * Gets a squad by ID, ensuring the user is a member.
+ */
+export async function getSquadById(
+  squadId: string,
+  userId: string,
+): Promise<SquadSummary> {
+  const membership = await prisma.squadMember.findUnique({
+    where: { squadId_userId: { squadId, userId } },
+    include: {
+      squad: {
+        include: { _count: { select: { members: true } } },
+      },
+    },
+  });
+
+  if (!membership) {
+    throw new Error('Squad não encontrado ou acesso negado.');
+  }
+
+  const { squad } = membership;
+  return {
+    id: squad.id,
+    name: squad.name,
+    description: squad.description,
+    inviteCode: squad.inviteCode,
+    memberCount: squad._count.members,
+    createdAt: squad.createdAt.toISOString(),
+  };
+}
+
+/**
+ * Updates a squad. Only the ADMIN should be able to do this.
+ */
+export async function updateSquad(
+  squadId: string,
+  userId: string,
+  data: { name?: string; description?: string },
+): Promise<SquadSummary> {
+  const membership = await prisma.squadMember.findUnique({
+    where: { squadId_userId: { squadId, userId } },
+  });
+
+  if (!membership || membership.role !== 'ADMIN') {
+    throw new Error('Acesso negado: apenas o administrador pode editar este Squad.');
+  }
+
+  const updated = await prisma.squad.update({
+    where: { id: squadId },
+    data: {
+      ...(data.name && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+    },
+    include: { _count: { select: { members: true } } },
+  });
+
+  return {
+    id: updated.id,
+    name: updated.name,
+    description: updated.description,
+    inviteCode: updated.inviteCode,
+    memberCount: updated._count.members,
+    createdAt: updated.createdAt.toISOString(),
+  };
+}
+
+/**
+ * Deletes a squad. Only the ADMIN should be able to do this.
+ */
+export async function deleteSquad(
+  squadId: string,
+  userId: string,
+): Promise<void> {
+  const membership = await prisma.squadMember.findUnique({
+    where: { squadId_userId: { squadId, userId } },
+  });
+
+  if (!membership || membership.role !== 'ADMIN') {
+    throw new Error('Acesso negado: apenas o administrador pode apagar este Squad.');
+  }
+
+  await prisma.squad.delete({ where: { id: squadId } });
+}
+
 // ─── Posts ────────────────────────────────────────────────────────────────────
 
 /**

@@ -53,12 +53,11 @@ export function SquadPickerModal({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="!bg-white/97 backdrop-blur-2xl border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-10">
         <DrawerHeader className="px-0 pb-4">
-          <DrawerTitle className="text-title-3 text-neutral-500 flex items-center gap-2">
-            <Users className="w-5 h-5 text-brand-500" />
-            Publicar em qual Squad?
+          <DrawerTitle className="text-title-3 text-neutral-500">
+            Publicar em qual Grupo?
           </DrawerTitle>
-          <p className="text-caption-1 text-neutral-400 mt-1">
-            Seu card de progresso será publicado no feed do Squad escolhido.
+          <p className="text-body-1 text-neutral-400 mt-2 max-w-[280px]">
+            Seu card de progresso será publicado no feed do Grupo escolhido.
           </p>
         </DrawerHeader>
 
@@ -72,23 +71,23 @@ export function SquadPickerModal({
               <Users className="w-8 h-8 text-brand-400" />
             </div>
             <div>
-              <p className="text-body-1 font-semibold text-neutral-500">
-                Você ainda não tem Squads
+              <h2 className="text-title-3 font-semibold text-neutral-500">
+                Você ainda não tem Grupos
+              </h2>
+              <p className="text-body-1 text-neutral-400 mt-2 max-w-[260px] mb-6">
+                Crie ou entre em um Grupo para compartilhar seu progresso com amigos.
               </p>
-              <p className="text-caption-1 text-neutral-400 mt-1 max-w-[240px] mx-auto">
-                Crie ou entre em um Squad para compartilhar seu progresso com amigos.
-              </p>
+              <Button
+                className="w-full h-12 rounded-2xl bg-brand-500 hover:bg-brand-600 shadow-sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  router.push('/squads');
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Ir para Grupos
+              </Button>
             </div>
-            <Button
-              className="h-12 rounded-2xl bg-brand-500 text-white text-button-1 px-6 flex items-center gap-2"
-              onClick={() => {
-                onOpenChange(false);
-                router.push('/squads');
-              }}
-            >
-              <Plus className="w-4 h-4" />
-              Ir para Squads
-            </Button>
           </div>
         ) : (
           <div className="space-y-3">
