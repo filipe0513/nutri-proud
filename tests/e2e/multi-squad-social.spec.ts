@@ -206,7 +206,7 @@ test.describe('🔥 CT-09 — Reações e Optimistic UI', () => {
       return reactionCount
     }).toBe(0)
 
-    await contextC_or_B(contextB)
+    await contextB.close()
   })
 })
 
@@ -350,7 +350,3 @@ test.describe('⚙️ CT-10 & CT-11 — Administração e Cascading Delete do Sq
     await contextA.close()
   })
 })
-
-async function contextC_or_B(ctx: import('@playwright/test').BrowserContext) {
-  await ctx.close()
-}
