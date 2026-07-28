@@ -39,18 +39,26 @@ export function PostCard({ post, currentUserId, onToggleReaction, onCommentClick
   const handleReaction = (emoji: string) => {
     onToggleReaction(post.id, emoji);
     // Optimistic update
-    setReactions((prev) =>
-      prev.map((r) => {
-        if (r.emoji === emoji) {
-          return {
-            ...r,
-            count: r.reacted ? r.count - 1 : r.count + 1,
-            reacted: !r.reacted,
-          };
-        }
-        return r;
-      })
-    );
+    setReactions((prev) => {
+      const existing = prev.find((r) => r.emoji === emoji);
+      if (!existing) {
+        return [...prev, { emoji, count: 1, reacted: true }];
+      }
+      return prev
+        .map((r) => {
+          if (r.emoji === emoji) {
+            const nextReacted = !r.reacted;
+            const nextCount = nextReacted ? r.count + 1 : r.count - 1;
+            return {
+              ...r,
+              count: nextCount,
+              reacted: nextReacted,
+            };
+          }
+          return r;
+        })
+        .filter((r) => r.count > 0);
+    });
   };
 
   const handleDelete = async () => {
@@ -172,6 +180,7 @@ export function PostCard({ post, currentUserId, onToggleReaction, onCommentClick
           {reactions.map((reaction) => (
             <button
               key={reaction.emoji}
+              data-testid={`btn-reaction-${reaction.emoji}`}
               onClick={() => handleReaction(reaction.emoji)}
               className={cn(
                 "flex items-center space-x-1.5 px-3 py-1.5 rounded-full transition-colors",
@@ -186,6 +195,7 @@ export function PostCard({ post, currentUserId, onToggleReaction, onCommentClick
           ))}
           {reactions.length === 0 && (
              <button
+              data-testid="btn-reaction-🔥"
               onClick={() => handleReaction('🔥')}
               className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/40 text-neutral-500 hover:bg-white/60 transition-colors border border-transparent"
             >

@@ -108,11 +108,13 @@ export default function SquadFeedPage() {
     }
   };
 
+  const isAdmin = squad?.currentUserRole === 'ADMIN';
+
   return (
     <div className="min-h-screen bg-mesh-sunset flex flex-col relative pb-32">
       <SquadFeedHeader 
         title={isLoading ? 'Carregando...' : (squad?.name ?? 'Grupo')} 
-        onSettingsClick={() => setSettingsDrawerOpen(true)}
+        onSettingsClick={isAdmin ? () => setSettingsDrawerOpen(true) : undefined}
       />
       
       <main className="flex-1 px-4 pt-6">
@@ -174,17 +176,18 @@ export default function SquadFeedPage() {
               <label className="text-caption-1 text-neutral-500 font-medium mb-1.5 block">
                 Nome do Grupo
               </label>
-              <Input name="name" defaultValue={squad?.name} placeholder="Ex: Galera do Crossfit" className="h-12 bg-white/50" required />
+              <Input name="name" defaultValue={squad?.name} placeholder="Ex: Galera do Crossfit" className="h-12 bg-white/50" required data-testid="input-squad-name" />
             </div>
             <div>
               <label className="text-caption-1 text-neutral-500 font-medium mb-1.5 block">
                 Descrição (Opcional)
               </label>
-              <Input name="description" defaultValue={squad?.description || ''} placeholder="Qual o foco do grupo?" className="h-12 bg-white/50" />
+              <Input name="description" defaultValue={squad?.description || ''} placeholder="Qual o foco do grupo?" className="h-12 bg-white/50" data-testid="input-squad-description" />
             </div>
             <Button
               type="submit"
               disabled={isUpdating}
+              data-testid="btn-save-squad-settings"
               className="w-full h-14 text-button-1 rounded-2xl bg-brand-500 mt-2 flex items-center justify-center gap-2"
             >
               {isUpdating ? (
@@ -194,6 +197,7 @@ export default function SquadFeedPage() {
             <Button
               type="button"
               variant="ghost"
+              data-testid="btn-open-delete-squad-dialog"
               onClick={() => {
                 setSettingsDrawerOpen(false);
                 setDeleteConfirmOpen(true);
@@ -232,6 +236,7 @@ export default function SquadFeedPage() {
             <Button
               onClick={handleDeleteSquad}
               disabled={isDeleting}
+              data-testid="btn-confirm-delete-squad"
               className="flex-1 h-12 rounded-xl bg-notify-error hover:bg-notify-error/90 text-white"
             >
               {isDeleting ? 'Apagando...' : 'Sim, Apagar'}

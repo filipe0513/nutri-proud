@@ -124,6 +124,7 @@ export async function getSquadById(
     description: squad.description,
     inviteCode: squad.inviteCode,
     memberCount: squad._count.members,
+    currentUserRole: membership.role,
     createdAt: squad.createdAt.toISOString(),
   };
 }
@@ -159,6 +160,7 @@ export async function updateSquad(
     description: updated.description,
     inviteCode: updated.inviteCode,
     memberCount: updated._count.members,
+    currentUserRole: 'ADMIN',
     createdAt: updated.createdAt.toISOString(),
   };
 }

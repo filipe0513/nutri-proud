@@ -7,6 +7,7 @@ export interface SquadSummary {
   description: string | null;
   inviteCode: string;
   memberCount: number;
+  currentUserRole?: 'ADMIN' | 'MEMBER';
   createdAt: string; // ISO
 }
 

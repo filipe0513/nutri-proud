@@ -29,15 +29,20 @@ export function SquadFeedHeader({ title, onSettingsClick }: SquadFeedHeaderProps
           {title}
         </h1>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onSettingsClick}
-          className="text-neutral-500 hover:bg-black/5 rounded-full"
-          aria-label="Configurações do Grupo"
-        >
-          <Settings className="h-6 w-6" />
-        </Button>
+        {onSettingsClick ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onSettingsClick}
+            className="text-neutral-500 hover:bg-black/5 rounded-full"
+            aria-label="Configurações do Grupo"
+            data-testid="btn-squad-settings"
+          >
+            <Settings className="h-6 w-6" />
+          </Button>
+        ) : (
+          <div className="w-10 h-10" />
+        )}
       </div>
     </header>
   );

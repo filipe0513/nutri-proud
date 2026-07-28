@@ -20,7 +20,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     return NextResponse.json({ squad });
   } catch (err) {
     console.error(`[GET /api/squads/${params.id}]`, err);
-    return NextResponse.json({ error: 'Erro ao buscar squad.' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Erro ao buscar squad.';
+    const status = msg.includes('Acesso negado') || msg.includes('não encontrado') ? 403 : 500;
+    return NextResponse.json({ error: msg }, { status });
   }
 }
 
@@ -43,7 +45,8 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   } catch (err) {
     console.error(`[PUT /api/squads/${params.id}]`, err);
     const msg = err instanceof Error ? err.message : 'Erro ao atualizar squad.';
-    return NextResponse.json({ error: msg }, { status: 500 });
+    const status = msg.includes('Acesso negado') || msg.includes('não encontrado') ? 403 : 500;
+    return NextResponse.json({ error: msg }, { status });
   }
 }
 
@@ -60,6 +63,7 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
   } catch (err) {
     console.error(`[DELETE /api/squads/${params.id}]`, err);
     const msg = err instanceof Error ? err.message : 'Erro ao apagar squad.';
-    return NextResponse.json({ error: msg }, { status: 500 });
+    const status = msg.includes('Acesso negado') || msg.includes('não encontrado') ? 403 : 500;
+    return NextResponse.json({ error: msg }, { status });
   }
 }
