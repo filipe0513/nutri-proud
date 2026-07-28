@@ -285,6 +285,24 @@ export async function createSquadPost(
   };
 }
 
+/**
+ * Deletes a post. Only the author can delete their own post.
+ * Throws an error if the post does not exist or the user is not the author.
+ */
+export async function deletePost(postId: string, userId: string): Promise<void> {
+  const post = await prisma.post.findUnique({ where: { id: postId } });
+
+  if (!post) {
+    throw new Error('Post não encontrado.');
+  }
+
+  if (post.authorId !== userId) {
+    throw new Error('Acesso negado: apenas o autor pode apagar este post.');
+  }
+
+  await prisma.post.delete({ where: { id: postId } });
+}
+
 // ─── Reactions ────────────────────────────────────────────────────────────────
 
 /**

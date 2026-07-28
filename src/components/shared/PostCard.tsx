@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Trash2 } from 'lucide-react';
 import { getRelativeTime } from '@/utils/timeUtils';
 import type { PostWithAuthor } from '@/types/squadTypes';
 import { cn } from '@/lib/utils';
@@ -11,8 +11,12 @@ import { Droplets, Utensils, Dumbbell, Moon, Smile } from 'lucide-react';
 
 interface PostCardProps {
   post: PostWithAuthor;
+  /** The ID of the currently authenticated user — used to show ownership actions */
+  currentUserId?: string | null;
   onToggleReaction: (postId: string, emoji: string) => void;
   onCommentClick: (postId: string) => void;
+  /** Called after a successful delete so the parent can remove the post from the list */
+  onDeletePost?: (postId: string) => void;
 }
 
 function getInitials(name: string | null): string {
@@ -24,10 +28,13 @@ function getInitials(name: string | null): string {
   return name.slice(0, 2).toUpperCase();
 }
 
-export function PostCard({ post, onToggleReaction, onCommentClick }: PostCardProps) {
+export function PostCard({ post, currentUserId, onToggleReaction, onCommentClick, onDeletePost }: PostCardProps) {
   // Temporary state for optimistic UI (if needed, though real app uses react-query or similar)
   const [reactions, setReactions] = useState(post.reactions);
   const [isImageExpanded, setIsImageExpanded] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const isAuthor = !!currentUserId && currentUserId === post.author.id;
 
   const handleReaction = (emoji: string) => {
     onToggleReaction(post.id, emoji);
@@ -46,8 +53,29 @@ export function PostCard({ post, onToggleReaction, onCommentClick }: PostCardPro
     );
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm('Tem certeza que deseja apagar esta publicação?')) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/posts/${post.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error ?? 'Erro ao apagar.');
+      }
+      onDeletePost?.(post.id);
+    } catch (err) {
+      console.error('[PostCard] handleDelete:', err);
+      alert(err instanceof Error ? err.message : 'Erro ao apagar publicação.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <article className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-[2rem] p-5 shadow-sm mb-4">
+    <article
+      data-testid={`post-card-${post.id}`}
+      className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-[2rem] p-5 shadow-sm mb-4"
+    >
       {/* Header */}
       <header className="flex items-center space-x-3 mb-4">
         <Link href={`/profile/${post.author.id}`}>
@@ -72,6 +100,19 @@ export function PostCard({ post, onToggleReaction, onCommentClick }: PostCardPro
             {getRelativeTime(post.createdAt)}
           </p>
         </div>
+
+        {/* Delete button — only visible to the post author */}
+        {isAuthor && (
+          <button
+            data-testid="btn-delete-post"
+            aria-label="Apagar publicação"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="flex items-center justify-center w-8 h-8 rounded-full text-neutral-400 hover:text-notify-error hover:bg-notify-error-glass transition-colors disabled:opacity-50"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </header>
 
       {/* Body */}

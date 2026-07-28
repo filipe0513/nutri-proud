@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
 import * as fs from 'fs'
@@ -140,16 +140,16 @@ export async function createTestUser(overrides: CreateTestUserOptions = {}) {
       name: overrides.name ?? `Test User ${uniqueSuffix}`,
       role: overrides.role ?? 'USER',
       is_anonymous: overrides.isAnonymous ?? false,
-      profile: overrides.profile ?? {
+      profile: (overrides.profile ?? {
         weight_kg: 70,
         height_cm: 170,
         gender: 'other',
         main_goal: 'health',
-      },
-      targets: overrides.targets ?? {
+      }) as Prisma.InputJsonValue,
+      targets: (overrides.targets ?? {
         water_ml_per_day: 2500,
         sleep_hours_per_night: 8,
-      },
+      }) as Prisma.InputJsonValue,
     },
   })
 }
@@ -250,3 +250,53 @@ export async function createTestDailyLog(
     },
   })
 }
+
+// ── addMemberToSquad ─────────────────────────────────────────────────────────
+/**
+ * Adiciona um usuário existente como MEMBER (ou outro role) em um Squad.
+ * Útil para o CT-08 onde o Usuário B precisa estar no Squad do Usuário A.
+ *
+ * @param userId  - ID do usuário a ser adicionado
+ * @param squadId - ID do Squad
+ * @param role    - Role no Squad (padrão: 'MEMBER')
+ * @returns O registro SquadMember criado
+ */
+export async function addMemberToSquad(
+  userId: string,
+  squadId: string,
+  role: 'ADMIN' | 'MEMBER' = 'MEMBER'
+) {
+  const prisma = getTestPrisma()
+
+  return prisma.squadMember.create({
+    data: { userId, squadId, role },
+  })
+}
+
+// ── createTestSession ────────────────────────────────────────────────────────
+/**
+ * Cria um registro de Session no banco de testes simulando um login via NextAuth.
+ * O token retornado pode ser injetado como cookie `next-auth.session-token`
+ * no contexto do Playwright para autenticar o browser sem OAuth real.
+ *
+ * @param userId - ID do usuário que terá a sessão criada
+ * @returns O token de sessão a ser usado como cookie
+ */
+export async function createTestSession(userId: string): Promise<string> {
+  const prisma = getTestPrisma()
+
+  // Gera um token aleatório único
+  const sessionToken = `e2e-test-${userId}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 dias
+
+  await prisma.session.create({
+    data: {
+      sessionToken,
+      userId,
+      expires,
+    },
+  })
+
+  return sessionToken
+}
+

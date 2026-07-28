@@ -13,12 +13,14 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { useAppStore } from '@/store/store';
 
 export default function SquadFeedPage() {
   const params = useParams();
   const squadId = params.id as string;
 
   const router = useRouter();
+  const currentUserId = useAppStore(state => state.user_profile?.id);
   const [squad, setSquad] = useState<SquadSummary | null>(null);
   const [posts, setPosts] = useState<PostWithAuthor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,6 +51,13 @@ export default function SquadFeedPage() {
   const handleCommentClick = () => {
     // Navigates to a specific post page (not implemented in this task)
     toast.info('Comentários em breve!');
+  };
+
+  const handleDeletePost = (postId: string) => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    toast.success('Publicação apagada.', {
+      className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
+    });
   };
 
   const handleShareScore = async (score: number) => {
@@ -129,8 +138,10 @@ export default function SquadFeedPage() {
               <PostCard
                 key={post.id}
                 post={post}
+                currentUserId={currentUserId}
                 onToggleReaction={handleToggleReaction}
                 onCommentClick={handleCommentClick}
+                onDeletePost={handleDeletePost}
               />
             ))}
           </div>
