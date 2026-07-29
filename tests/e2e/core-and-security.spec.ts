@@ -58,16 +58,6 @@ async function setNextAuthCookie(page: import('@playwright/test').Page, sessionT
       httpOnly: true,
       secure: false,
       sameSite: 'Lax',
-    },
-    // Backup para garantir caso o ambiente force secure
-    {
-      name: '__Secure-authjs.session-token',
-      value: sessionToken,
-      domain: 'localhost',
-      path: '/',
-      httpOnly: true,
-      secure: true,
-      sameSite: 'Lax',
     }
   ])
 }

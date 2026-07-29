@@ -5,22 +5,32 @@ import OneSignal from 'react-onesignal';
 import { useAppStore } from '@/store/store';
 
 export function OneSignalInit() {
-  const isInitialized = useRef(false);
+  const isInitStarted = useRef(false);
+  const isInitDone = useRef(false);
   const userProfile = useAppStore((state) => state.user_profile);
   const userId = userProfile?.id;
 
   useEffect(() => {
     const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
-    if (!appId || isInitialized.current) return;
+    if (!appId || isInitStarted.current) return;
 
     const initOneSignal = async () => {
       try {
+        isInitStarted.current = true;
         await OneSignal.init({
           appId,
           allowLocalhostAsSecureOrigin: process.env.NODE_ENV === 'development',
         });
-        isInitialized.current = true;
+        isInitDone.current = true;
+        
+        // Se já tiver userId quando inicializou, loga agora
+        if (useAppStore.getState().user_profile?.id) {
+          OneSignal.login(useAppStore.getState().user_profile!.id!).catch((err) => {
+             console.error('Erro ao vincular usuário (pós-init):', err);
+          });
+        }
       } catch (error) {
+        isInitStarted.current = false;
         console.error('Erro ao inicializar OneSignal:', error);
       }
     };
@@ -29,7 +39,7 @@ export function OneSignalInit() {
   }, []);
 
   useEffect(() => {
-    if (!isInitialized.current) return;
+    if (!isInitDone.current) return;
 
     if (userId) {
       OneSignal.login(userId).catch((err) => {

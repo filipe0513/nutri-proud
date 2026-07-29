@@ -285,8 +285,9 @@ export async function addMemberToSquad(
 export async function createTestSession(userId: string): Promise<string> {
   const prisma = getTestPrisma()
 
-  // Gera um token aleatório único
-  const sessionToken = `e2e-test-${userId}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  // Gera um UUIDv4 real para o sessionToken, pois o Auth.js espera UUIDs e não strings longas no modo database
+  const crypto = require('crypto');
+  const sessionToken = crypto.randomUUID();
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 dias
 
   await prisma.session.create({
