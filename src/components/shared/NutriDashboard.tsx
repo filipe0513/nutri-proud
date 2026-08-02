@@ -11,7 +11,6 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TopHeader } from '@/components/shared/TopHeader';
 import { toast } from 'sonner';
 
 // ─── Mock data para o skeleton inicial ─────────────────────────────────────
@@ -165,8 +164,7 @@ export function NutriDashboard() {
   };
 
   return (
-    <div className="pb-32 pt-24 px-6 max-w-lg mx-auto space-y-6">
-      <TopHeader leftAction="avatar" rightAction="notifications" />
+    <div className="pb-12 pt-8 px-4 sm:px-6 max-w-4xl mx-auto space-y-6">
 
       {/* ── Welcome Header ─────────────────────────────────────────── */}
       <section className="space-y-1">

@@ -1,27 +1,35 @@
+import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { cookies } from 'next/headers';
 import { UserRole } from '@/types/roles';
 import { PatientHome } from '@/components/shared/PatientHome';
-import { NutriDashboard } from '@/components/shared/NutriDashboard';
 
 /**
- * Home page — Server Component.
+ * Home page (/) — Controlador de tráfego baseado em role.
  *
- * Bifurca a renderização com base na role do usuário autenticado:
- * - NUTRITIONIST → <NutriDashboard /> (painel de gestão de pacientes)
- * - USER / ADMIN / anônimo → <PatientHome /> (painel gamificado de saúde)
+ * ┌──────────────────────────────────────────────────────────────┐
+ * │  Role           │  Destino                                   │
+ * ├──────────────────────────────────────────────────────────────┤
+ * │  NUTRITIONIST   │  redirect('/dashboard') — layout limpo     │
+ * │  USER / anônimo │  <PatientHome /> renderizado em /          │
+ * └──────────────────────────────────────────────────────────────┘
+ *
+ * Nota: a URL / permanece para pacientes para manter compatibilidade
+ * com os testes E2E (que navegam para '/' e esperam o PatientHome).
  */
-export default async function DashboardPage() {
+export default async function RootHomePage() {
   const session = await auth();
   const cookieStore = await cookies();
+  const anonUserId = cookieStore.get('anon_user_id')?.value;
 
-  // Suporte a sessões reais (Auth.js) e sessões anônimas (cookie)
   const role = session?.user?.role;
-  const isAnonSession = !session && !!cookieStore.get('anon_user_id')?.value;
+  const isAnon = !session && !!anonUserId;
 
-  if (!isAnonSession && role === UserRole.NUTRITIONIST) {
-    return <NutriDashboard />;
+  // Nutricionistas são redirecionadas para o painel dedicado
+  if (!isAnon && role === UserRole.NUTRITIONIST) {
+    redirect('/dashboard');
   }
 
+  // Pacientes e usuários anônimos veem o painel gamificado
   return <PatientHome />;
 }
