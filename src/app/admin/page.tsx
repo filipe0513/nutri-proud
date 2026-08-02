@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Users, Activity, BrainCircuit } from "lucide-react";
 import { WeeklyVolumeChart, SourceDistributionChart, LoginAttemptsChart } from "./charts";
 import { HeavyUsersTable } from "./heavy-users-table";
+import { UsersManagementTable } from "./users-management-table";
 export default async function AdminPage() {
   const session = await auth();
 
@@ -85,6 +86,14 @@ export default async function AdminPage() {
         select: { createdAt: true }
       }
     }
+  });
+
+  // 5. Todos os usuários registrados (não-anônimos) — para Gestão de Usuários
+  const allRegisteredUsers = await prisma.user.findMany({
+    where: { is_anonymous: false },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+    select: { id: true, email: true, name: true, role: true, is_anonymous: true, createdAt: true },
   });
 
   // 5. Autenticação & Funil de Login
@@ -176,6 +185,17 @@ export default async function AdminPage() {
           <SourceDistributionChart data={donutData} />
           <LoginAttemptsChart data={loginAttemptsData} />
         </div>
+
+        {/* Gestão de Usuários */}
+        <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm overflow-hidden">
+          <CardHeader>
+            <CardTitle className="text-neutral-700">Gestão de Usuários</CardTitle>
+            <CardDescription>
+              Promova pacientes para Nutricionista. A mudança é refletida automaticamente no próximo acesso da usuária.
+            </CardDescription>
+          </CardHeader>
+          <UsersManagementTable initialData={allRegisteredUsers} />
+        </Card>
 
         {/* Top Heavy Users */}
         <Card className="bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm overflow-hidden">

@@ -20,7 +20,6 @@ function WelcomeContent() {
   const [email, setEmail] = useState("");
   const [loadingEmail, setLoadingEmail] = useState(false);
   const [loadingAnon, setLoadingAnon] = useState(false);
-  const [roleMode, setRoleMode] = useState<"USER" | "NUTRITIONIST">("USER");
 
   const handleMagicLink = async () => {
     try {
@@ -29,12 +28,6 @@ function WelcomeContent() {
       
       // Fire and forget telemetry
       fetch('/api/events', { method: 'POST', body: JSON.stringify({ eventName: 'AUTH_EMAIL_STARTED' }) }).catch(() => {});
-
-      if (roleMode === "NUTRITIONIST") {
-        document.cookie = "intended_role=NUTRITIONIST; path=/; max-age=3600";
-      } else {
-        document.cookie = "intended_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-      }
 
       const callbackUrl = forceLogin ? "/?merged=true" : "/";
       await signIn("resend", { email, redirect: false, callbackUrl });
@@ -57,12 +50,6 @@ function WelcomeContent() {
     // Fire and forget telemetry
     fetch('/api/events', { method: 'POST', body: JSON.stringify({ eventName: 'AUTH_GOOGLE_CLICKED' }) }).catch(() => {});
     
-    if (roleMode === "NUTRITIONIST") {
-      document.cookie = "intended_role=NUTRITIONIST; path=/; max-age=3600";
-    } else {
-      document.cookie = "intended_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-    }
-
     const callbackUrl = forceLogin ? "/?merged=true" : "/";
     signIn("google", { callbackUrl });
   };
@@ -122,21 +109,6 @@ function WelcomeContent() {
         transition={{ delay: 0.6, duration: 0.6 }}
         className="w-full max-w-sm space-y-6 pb-12"
       >
-        <div className="flex bg-white/20 p-1 rounded-2xl backdrop-blur-md">
-          <button
-            onClick={() => setRoleMode("USER")}
-            className={`flex-1 py-3 px-4 rounded-xl text-button-1 font-semibold transition-all ${roleMode === "USER" ? "bg-white text-orange-500 shadow-md" : "text-white/80 hover:text-white"}`}
-          >
-            Sou Paciente
-          </button>
-          <button
-            onClick={() => setRoleMode("NUTRITIONIST")}
-            className={`flex-1 py-3 px-4 rounded-xl text-button-1 font-semibold transition-all ${roleMode === "NUTRITIONIST" ? "bg-white text-orange-500 shadow-md" : "text-white/80 hover:text-white"}`}
-          >
-            Sou Nutri
-          </button>
-        </div>
-
         {/* Email Magic Link */}
         <div className="space-y-3 bg-white/40 p-4 rounded-3xl border border-white/60 shadow-sm backdrop-blur-md">
           <input

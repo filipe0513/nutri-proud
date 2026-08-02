@@ -200,32 +200,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
 
-      // Verificação de Intended Role (Nutricionista)
-      const intendedRole = cookieStore.get("intended_role")?.value;
-      if (intendedRole === "NUTRITIONIST" && user?.id) {
-        try {
-          console.log(`[Auth/Role] Atualizando role do usuário para NUTRITIONIST`);
-          
-          const userInDb = await prisma.user.findUnique({
-            where: { id: user.id }
-          });
-
-          // Se for novo ou não tiver a role correta, atualiza
-          // Nota: Em NextAuth com DB, no momento deste callback o usuário já foi inserido/encontrado no banco
-          if (userInDb && userInDb.role !== "NUTRITIONIST") {
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { role: "NUTRITIONIST" }
-            });
-            console.log(`[Auth/Role] Role atualizada com sucesso para ${user.id}`);
-          }
-          
-          cookieStore.delete("intended_role");
-        } catch (e) {
-          console.error("[Auth/Role] Falha ao setar role NUTRITIONIST:", e);
-        }
-      }
-
       return true;
     },
   },

@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { UserRole } from '@/types/roles';
+import { createSquad } from '@/services/squadService';
 
 export class PermissionError extends Error {
   constructor(message: string) {
@@ -84,5 +86,62 @@ export const userService = {
         }
       }
     });
-  }
+  },
+
+  /**
+   * Promove um usuário para NUTRITIONIST.
+   *
+   * Provisionamento automático executado:
+   * 1. Role atualizado para 'NUTRITIONIST'
+   * 2. Targets de paciente zerados (não se aplicam à nutri)
+   * 3. Profile marcado com onboarding_skipped para ignorar o fluxo de paciente
+   * 4. Uma Squad padrão é criada com a nutri como ADMIN
+   * 5. SystemEvent registrado para auditoria
+   *
+   * Nota: a sessão NextAuth usa database strategy, então o novo role é refletido
+   * automaticamente no próximo request (sem precisar de logout).
+   */
+  async promoteToNutritionist(userId: string): Promise<{ squadInviteCode: string }> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, role: true, is_anonymous: true },
+    });
+
+    if (!user) throw new Error('Usuário não encontrado.');
+    if (user.is_anonymous) throw new Error('Não é possível promover um usuário anônimo.');
+    if (user.role === UserRole.NUTRITIONIST) throw new Error('Usuário já é Nutricionista.');
+    if (user.role === UserRole.ADMIN) throw new Error('Não é possível alterar a role de um Admin.');
+
+    // 1. Atualiza role e limpa profile de paciente
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        role: UserRole.NUTRITIONIST,
+        targets: Prisma.DbNull,    // Metas de paciente não se aplicam
+        profile: { onboarding_skipped: true },
+      },
+    });
+
+    // 2. Cria a Squad padrão da nutri
+    const squadName = user.name ? `Squad da ${user.name}` : 'Meu Squad';
+    const squad = await createSquad(userId, {
+      name: squadName,
+      description: 'Squad criado automaticamente ao ativar a conta de nutricionista.',
+    });
+
+    // 3. Registro de auditoria
+    await prisma.systemEvent.create({
+      data: {
+        userId,
+        eventName: 'ROLE_PROMOTED_NUTRITIONIST',
+        metadata: {
+          promoted_at: new Date().toISOString(),
+          default_squad_id: squad.id,
+          default_squad_invite_code: squad.inviteCode,
+        },
+      },
+    });
+
+    return { squadInviteCode: squad.inviteCode };
+  },
 };
