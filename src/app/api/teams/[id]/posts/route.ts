@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { z } from 'zod';
-import { getSquadPosts, createSquadPost } from '@/services/squadService';
+import { getTeamPosts, createTeamPost } from '@/services/teamService';
 
 const createPostSchema = z.object({
   content: z.string().max(500).optional(),
@@ -19,8 +19,8 @@ export async function GET(
       return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
     }
 
-    const { id: squadId } = await params;
-    const posts = await getSquadPosts(squadId, session.user.id);
+    const { id: teamId } = await params;
+    const posts = await getTeamPosts(teamId, session.user.id);
     return NextResponse.json({ posts });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erro ao buscar posts.';
@@ -39,7 +39,7 @@ export async function POST(
       return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
     }
 
-    const { id: squadId } = await params;
+    const { id: teamId } = await params;
     const body = await request.json();
     const parsed = createPostSchema.safeParse(body);
     if (!parsed.success) {
@@ -50,7 +50,7 @@ export async function POST(
       return NextResponse.json({ error: 'O post precisa ter conteúdo ou imagem.' }, { status: 400 });
     }
 
-    const post = await createSquadPost(squadId, session.user.id, parsed.data);
+    const post = await createTeamPost(teamId, session.user.id, parsed.data);
     return NextResponse.json(post, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erro ao criar post.';

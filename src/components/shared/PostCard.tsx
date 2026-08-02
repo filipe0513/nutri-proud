@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageCircle, Trash2 } from 'lucide-react';
 import { getRelativeTime } from '@/utils/timeUtils';
-import type { PostWithAuthor } from '@/types/squadTypes';
+import type { PostWithAuthor } from '@/types/teamTypes';
 import { cn } from '@/lib/utils';
 import { Droplets, Utensils, Dumbbell, Moon, Smile } from 'lucide-react';
 

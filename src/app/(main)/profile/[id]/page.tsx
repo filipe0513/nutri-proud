@@ -60,7 +60,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       content: post.content,
       imageUrl: post.imageUrl,
       type: post.type,
-      squadId: post.squadId,
+      teamId: post.teamId,
       createdAt: post.createdAt.toISOString(),
       authorId: post.authorId,
       author: {

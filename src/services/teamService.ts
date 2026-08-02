@@ -1,16 +1,16 @@
 import { prisma } from '@/lib/prisma';
-import type { PostWithAuthor, ReactionCount, SquadSummary } from '@/types/squadTypes';
+import type { PostWithAuthor, ReactionCount, TeamSummary } from '@/types/teamTypes';
 
-// ─── Squads ───────────────────────────────────────────────────────────────────
+// ─── Teams ───────────────────────────────────────────────────────────────────
 
 /**
- * Returns the list of squads the user belongs to, including member count.
+ * Returns the list of teams the user belongs to, including member count.
  */
-export async function getMySquads(userId: string): Promise<SquadSummary[]> {
-  const memberships = await prisma.squadMember.findMany({
+export async function getMyTeams(userId: string): Promise<TeamSummary[]> {
+  const memberships = await prisma.teamMember.findMany({
     where: { userId },
     include: {
-      squad: {
+      team: {
         include: {
           _count: { select: { members: true } },
         },
@@ -19,24 +19,24 @@ export async function getMySquads(userId: string): Promise<SquadSummary[]> {
     orderBy: { joinedAt: 'desc' },
   });
 
-  return memberships.map(({ squad }) => ({
-    id: squad.id,
-    name: squad.name,
-    description: squad.description,
-    inviteCode: squad.inviteCode,
-    memberCount: squad._count.members,
-    createdAt: squad.createdAt.toISOString(),
+  return memberships.map(({ team }) => ({
+    id: team.id,
+    name: team.name,
+    description: team.description,
+    inviteCode: team.inviteCode,
+    memberCount: team._count.members,
+    createdAt: team.createdAt.toISOString(),
   }));
 }
 
 /**
- * Creates a new Squad and adds the creator as ADMIN.
+ * Creates a new Team and adds the creator as ADMIN.
  */
-export async function createSquad(
+export async function createTeam(
   userId: string,
   data: { name: string; description?: string },
-): Promise<SquadSummary> {
-  const squad = await prisma.squad.create({
+): Promise<TeamSummary> {
+  const team = await prisma.team.create({
     data: {
       name: data.name,
       description: data.description ?? null,
@@ -50,103 +50,103 @@ export async function createSquad(
   });
 
   return {
-    id: squad.id,
-    name: squad.name,
-    description: squad.description,
-    inviteCode: squad.inviteCode,
-    memberCount: squad._count.members,
-    createdAt: squad.createdAt.toISOString(),
+    id: team.id,
+    name: team.name,
+    description: team.description,
+    inviteCode: team.inviteCode,
+    memberCount: team._count.members,
+    createdAt: team.createdAt.toISOString(),
   };
 }
 
 /**
- * Joins a Squad using an invite code. Throws if code is invalid or user is already a member.
+ * Joins a Team using an invite code. Throws if code is invalid or user is already a member.
  */
-export async function joinSquadByCode(
+export async function joinTeamByCode(
   userId: string,
   inviteCode: string,
-): Promise<SquadSummary> {
-  const squad = await prisma.squad.findUnique({
+): Promise<TeamSummary> {
+  const team = await prisma.team.findUnique({
     where: { inviteCode },
     include: { _count: { select: { members: true } } },
   });
 
-  if (!squad) {
+  if (!team) {
     throw new Error('Código de convite inválido.');
   }
 
-  const existing = await prisma.squadMember.findUnique({
-    where: { squadId_userId: { squadId: squad.id, userId } },
+  const existing = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId: team.id, userId } },
   });
 
   if (existing) {
-    throw new Error('Você já é membro deste Squad.');
+    throw new Error('Você já é membro deste Team.');
   }
 
-  await prisma.squadMember.create({
-    data: { squadId: squad.id, userId, role: 'MEMBER' },
+  await prisma.teamMember.create({
+    data: { teamId: team.id, userId, role: 'MEMBER' },
   });
 
   return {
-    id: squad.id,
-    name: squad.name,
-    description: squad.description,
-    inviteCode: squad.inviteCode,
-    memberCount: squad._count.members + 1,
-    createdAt: squad.createdAt.toISOString(),
+    id: team.id,
+    name: team.name,
+    description: team.description,
+    inviteCode: team.inviteCode,
+    memberCount: team._count.members + 1,
+    createdAt: team.createdAt.toISOString(),
   };
 }
 
 /**
- * Gets a squad by ID, ensuring the user is a member.
+ * Gets a team by ID, ensuring the user is a member.
  */
-export async function getSquadById(
-  squadId: string,
+export async function getTeamById(
+  teamId: string,
   userId: string,
-): Promise<SquadSummary> {
-  const membership = await prisma.squadMember.findUnique({
-    where: { squadId_userId: { squadId, userId } },
+): Promise<TeamSummary> {
+  const membership = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId, userId } },
     include: {
-      squad: {
+      team: {
         include: { _count: { select: { members: true } } },
       },
     },
   });
 
   if (!membership) {
-    throw new Error('Squad não encontrado ou acesso negado.');
+    throw new Error('Team não encontrado ou acesso negado.');
   }
 
-  const { squad } = membership;
+  const { team } = membership;
   return {
-    id: squad.id,
-    name: squad.name,
-    description: squad.description,
-    inviteCode: squad.inviteCode,
-    memberCount: squad._count.members,
+    id: team.id,
+    name: team.name,
+    description: team.description,
+    inviteCode: team.inviteCode,
+    memberCount: team._count.members,
     currentUserRole: membership.role,
-    createdAt: squad.createdAt.toISOString(),
+    createdAt: team.createdAt.toISOString(),
   };
 }
 
 /**
- * Updates a squad. Only the ADMIN should be able to do this.
+ * Updates a team. Only the ADMIN should be able to do this.
  */
-export async function updateSquad(
-  squadId: string,
+export async function updateTeam(
+  teamId: string,
   userId: string,
   data: { name?: string; description?: string },
-): Promise<SquadSummary> {
-  const membership = await prisma.squadMember.findUnique({
-    where: { squadId_userId: { squadId, userId } },
+): Promise<TeamSummary> {
+  const membership = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId, userId } },
   });
 
   if (!membership || membership.role !== 'ADMIN') {
-    throw new Error('Acesso negado: apenas o administrador pode editar este Squad.');
+    throw new Error('Acesso negado: apenas o administrador pode editar este Team.');
   }
 
-  const updated = await prisma.squad.update({
-    where: { id: squadId },
+  const updated = await prisma.team.update({
+    where: { id: teamId },
     data: {
       ...(data.name && { name: data.name }),
       ...(data.description !== undefined && { description: data.description }),
@@ -166,41 +166,41 @@ export async function updateSquad(
 }
 
 /**
- * Deletes a squad. Only the ADMIN should be able to do this.
+ * Deletes a team. Only the ADMIN should be able to do this.
  */
-export async function deleteSquad(
-  squadId: string,
+export async function deleteTeam(
+  teamId: string,
   userId: string,
 ): Promise<void> {
-  const membership = await prisma.squadMember.findUnique({
-    where: { squadId_userId: { squadId, userId } },
+  const membership = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId, userId } },
   });
 
   if (!membership || membership.role !== 'ADMIN') {
-    throw new Error('Acesso negado: apenas o administrador pode apagar este Squad.');
+    throw new Error('Acesso negado: apenas o administrador pode apagar este Team.');
   }
 
-  await prisma.squad.delete({ where: { id: squadId } });
+  await prisma.team.delete({ where: { id: teamId } });
 }
 
 // ─── Posts ────────────────────────────────────────────────────────────────────
 
 /**
- * Returns the posts in a Squad's feed with reactions and comment counts.
- * Only accessible if the requesting user is a member of the squad.
+ * Returns the posts in a Team's feed with reactions and comment counts.
+ * Only accessible if the requesting user is a member of the team.
  */
-export async function getSquadPosts(
-  squadId: string,
+export async function getTeamPosts(
+  teamId: string,
   currentUserId: string,
 ): Promise<PostWithAuthor[]> {
   // Verify membership
-  const membership = await prisma.squadMember.findUnique({
-    where: { squadId_userId: { squadId, userId: currentUserId } },
+  const membership = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId, userId: currentUserId } },
   });
-  if (!membership) throw new Error('Acesso negado: você não é membro deste Squad.');
+  if (!membership) throw new Error('Acesso negado: você não é membro deste Team.');
 
   const posts = await prisma.post.findMany({
-    where: { squadId },
+    where: { teamId },
     orderBy: { createdAt: 'desc' },
     take: 50,
     include: {
@@ -229,7 +229,7 @@ export async function getSquadPosts(
       content: post.content,
       imageUrl: post.imageUrl,
       type: post.type,
-      squadId: post.squadId,
+      teamId: post.teamId,
       author: {
         id: post.author.id,
         name: post.author.name,
@@ -243,21 +243,21 @@ export async function getSquadPosts(
 }
 
 /**
- * Creates a new post in a Squad. User must be a member.
+ * Creates a new post in a Team. User must be a member.
  */
-export async function createSquadPost(
-  squadId: string,
+export async function createTeamPost(
+  teamId: string,
   authorId: string,
   data: { content?: string; imageUrl?: string; type?: 'USER_GENERATED' | 'SYSTEM_MILESTONE' },
 ): Promise<PostWithAuthor> {
-  const membership = await prisma.squadMember.findUnique({
-    where: { squadId_userId: { squadId, userId: authorId } },
+  const membership = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId, userId: authorId } },
   });
-  if (!membership) throw new Error('Acesso negado: você não é membro deste Squad.');
+  if (!membership) throw new Error('Acesso negado: você não é membro deste Team.');
 
   const post = await prisma.post.create({
     data: {
-      squadId,
+      teamId,
       authorId,
       content: data.content ?? null,
       imageUrl: data.imageUrl ?? null,
@@ -275,7 +275,7 @@ export async function createSquadPost(
     content: post.content,
     imageUrl: post.imageUrl,
     type: post.type,
-    squadId: post.squadId,
+    teamId: post.teamId,
     author: {
       id: post.author.id,
       name: post.author.name,

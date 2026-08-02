@@ -1,5 +1,5 @@
 import { UserProfile, ActivityLog } from './types';
-import type { SquadSummary, PostWithAuthor } from '@/types/squadTypes';
+import type { TeamSummary, PostWithAuthor } from '@/types/teamTypes';
 
 /** Erro tipado para respostas HTTP não-ok da API. Permite detectar status 403 nos componentes. */
 export class ApiError extends Error {
@@ -118,67 +118,67 @@ export const deleteActivityLog = async (id: string): Promise<void> => {
   }
 };
 
-// ── Squads API (UI Mocks for now) ──────────────────────────
+// ── Teams API (UI Mocks for now) ──────────────────────────
 
-export const fetchMySquads = async (): Promise<SquadSummary[]> => {
-  const res = await fetch('/api/squads');
+export const fetchMyTeams = async (): Promise<TeamSummary[]> => {
+  const res = await fetch('/api/teams');
   if (!res.ok) {
-    console.warn('Falha ao buscar squads, usando mock');
+    console.warn('Falha ao buscar teams, usando mock');
     return []; // Return empty array if backend not implemented
   }
   const data = await res.json();
-  return data.squads || [];
+  return data.teams || [];
 };
 
-export const createSquad = async (data: { name: string; description?: string }): Promise<SquadSummary> => {
-  const res = await fetch('/api/squads', {
+export const createTeam = async (data: { name: string; description?: string }): Promise<TeamSummary> => {
+  const res = await fetch('/api/teams', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new ApiError(res.status, body?.error ?? 'Erro ao criar squad');
+    throw new ApiError(res.status, body?.error ?? 'Erro ao criar team');
   }
   return res.json();
 };
 
-export const fetchSquadDetails = async (squadId: string): Promise<SquadSummary | null> => {
-  const res = await fetch(`/api/squads/${squadId}`);
+export const fetchTeamDetails = async (teamId: string): Promise<TeamSummary | null> => {
+  const res = await fetch(`/api/teams/${teamId}`);
   if (!res.ok) {
-    console.warn('Falha ao buscar detalhes do squad');
+    console.warn('Falha ao buscar detalhes do team');
     return null;
   }
   const data = await res.json();
-  return data.squad || null;
+  return data.team || null;
 };
 
-export const updateSquadDetails = async (squadId: string, data: { name?: string; description?: string }): Promise<SquadSummary> => {
-  const res = await fetch(`/api/squads/${squadId}`, {
+export const updateTeamDetails = async (teamId: string, data: { name?: string; description?: string }): Promise<TeamSummary> => {
+  const res = await fetch(`/api/teams/${teamId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new ApiError(res.status, body?.error ?? 'Erro ao atualizar squad');
+    throw new ApiError(res.status, body?.error ?? 'Erro ao atualizar team');
   }
   const responseData = await res.json();
-  return responseData.squad;
+  return responseData.team;
 };
 
-export const deleteSquadAction = async (squadId: string): Promise<void> => {
-  const res = await fetch(`/api/squads/${squadId}`, {
+export const deleteTeamAction = async (teamId: string): Promise<void> => {
+  const res = await fetch(`/api/teams/${teamId}`, {
     method: 'DELETE',
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new ApiError(res.status, body?.error ?? 'Erro ao apagar squad');
+    throw new ApiError(res.status, body?.error ?? 'Erro ao apagar team');
   }
 };
 
-export const joinSquadByCode = async (inviteCode: string): Promise<SquadSummary> => {
-  const res = await fetch('/api/squads/join', {
+export const joinTeamByCode = async (inviteCode: string): Promise<TeamSummary> => {
+  const res = await fetch('/api/teams/join', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ inviteCode }),
@@ -190,18 +190,18 @@ export const joinSquadByCode = async (inviteCode: string): Promise<SquadSummary>
   return res.json();
 };
 
-export const fetchSquadFeed = async (squadId: string): Promise<PostWithAuthor[]> => {
-  const res = await fetch(`/api/squads/${squadId}/posts`);
+export const fetchTeamFeed = async (teamId: string): Promise<PostWithAuthor[]> => {
+  const res = await fetch(`/api/teams/${teamId}/posts`);
   if (!res.ok) {
-    console.warn('Falha ao buscar feed do squad, usando mock vazio');
+    console.warn('Falha ao buscar feed do team, usando mock vazio');
     return [];
   }
   const data = await res.json();
   return data.posts || [];
 };
 
-export const createPost = async (squadId: string, data: { content?: string; imageUrl?: string }): Promise<PostWithAuthor> => {
-  const res = await fetch(`/api/squads/${squadId}/posts`, {
+export const createPost = async (teamId: string, data: { content?: string; imageUrl?: string }): Promise<PostWithAuthor> => {
+  const res = await fetch(`/api/teams/${teamId}/posts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),

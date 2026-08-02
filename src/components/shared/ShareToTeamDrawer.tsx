@@ -10,17 +10,17 @@ import {
 import { useAppStore } from '@/store/store';
 import { historyService } from '@/services/historyService';
 
-interface ShareToSquadDrawerProps {
+interface ShareToTeamDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onShareScore: (score: number) => void;
 }
 
-export function ShareToSquadDrawer({
+export function ShareToTeamDrawer({
   open,
   onOpenChange,
   onShareScore,
-}: ShareToSquadDrawerProps) {
+}: ShareToTeamDrawerProps) {
   const { activity_logs, user_profile } = useAppStore();
 
   const handleShareScore = () => {
@@ -40,7 +40,7 @@ export function ShareToSquadDrawer({
       <DrawerContent className="!bg-white/95 backdrop-blur-2xl border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-10">
         <DrawerHeader className="px-0 pb-4">
           <DrawerTitle className="text-title-3 text-neutral-500 text-center">
-            Criar Postagem no Grupo
+            Criar Postagem no Time
           </DrawerTitle>
         </DrawerHeader>
 

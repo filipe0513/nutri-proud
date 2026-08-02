@@ -9,7 +9,7 @@ export const UserRole = {
   USER: 'USER',
   /** Administrador do sistema — acessa /admin. */
   ADMIN: 'ADMIN',
-  /** Nutricionista — acessa o Dashboard de gestão de pacientes e Squads. */
+  /** Nutricionista — acessa o Dashboard de gestão de pacientes e Teams. */
   NUTRITIONIST: 'NUTRITIONIST',
 } as const;
 

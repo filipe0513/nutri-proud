@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProfileCalendar } from '@/components/shared/ProfileCalendar';
 import { PostCard } from '@/components/shared/PostCard';
 import { toggleReaction } from '@/store/api';
-import type { PostWithAuthor } from '@/types/squadTypes';
+import type { PostWithAuthor } from '@/types/teamTypes';
 import { toast } from 'sonner';
 
 interface ProfileClientProps {
@@ -93,7 +93,7 @@ export function ProfileClient({ user, scoresByDate, initialPosts, isMe }: Profil
               </h4>
               <p className="text-body-2 text-neutral-400 mt-1 max-w-[240px]">
                 {isMe
-                  ? 'Compartilhe seu progresso com o squad para ver suas postagens aqui.'
+                  ? 'Compartilhe seu progresso com o team para ver suas postagens aqui.'
                   : 'Este usuário ainda não fez nenhuma publicação.'}
               </p>
             </div>

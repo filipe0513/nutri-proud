@@ -7,11 +7,11 @@ vi.mock('@/lib/prisma', () => ({
   prisma: prismaMock
 }));
 
-// Mock do squadService para isolar testes de userService
-vi.mock('@/services/squadService', () => ({
-  createSquad: vi.fn().mockResolvedValue({
-    id: 'squad-abc',
-    name: 'Squad da Dra. Ana',
+// Mock do teamService para isolar testes de userService
+vi.mock('@/services/teamService', () => ({
+  createTeam: vi.fn().mockResolvedValue({
+    id: 'team-abc',
+    name: 'Team da Dra. Ana',
     description: null,
     inviteCode: 'invite-xyz',
     memberCount: 1,
@@ -170,6 +170,6 @@ test('promoteToNutritionist: executa provisionamento completo e retorna o invite
     })
   );
 
-  // Assert — retorna o invite code do squad criado
-  expect(result.squadInviteCode).toBe('invite-xyz');
+  // Assert — retorna o invite code do team criado
+  expect(result.teamInviteCode).toBe('invite-xyz');
 });

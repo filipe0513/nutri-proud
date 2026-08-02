@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { z } from 'zod';
-import { togglePostReaction } from '@/services/squadService';
+import { togglePostReaction } from '@/services/teamService';
 
 const reactionSchema = z.object({
   emoji: z.string().min(1).max(10),

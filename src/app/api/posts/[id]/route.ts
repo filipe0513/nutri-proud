@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { deletePost } from '@/services/squadService';
+import { deletePost } from '@/services/teamService';
 
 export async function DELETE(
   _request: Request,

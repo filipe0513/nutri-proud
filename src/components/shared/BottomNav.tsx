@@ -13,11 +13,11 @@ interface BottomNavProps {
 export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
   const pathname = usePathname();
 
-  // Hide nav when inside a Story/Pillar screen or a specific Squad feed
+  // Hide nav when inside a Story/Pillar screen or a specific Team feed
   if (
     pathname.startsWith('/pillar') ||
     pathname.startsWith('/profile') ||
-    (pathname.startsWith('/squads/') && pathname !== '/squads')
+    (pathname.startsWith('/teams/') && pathname !== '/teams')
   )
     return null;
 
@@ -28,7 +28,7 @@ export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
 
   const rightItems = [
     { label: 'Nutri', icon: Share2, href: null as null, onClick: onShareClick },
-    { label: 'Grupos', icon: Users, href: '/squads' },
+    { label: 'Times', icon: Users, href: '/teams' },
   ];
 
   return (
@@ -71,7 +71,7 @@ export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
         <Plus className="h-7 w-7 stroke-[2.5px]" />
       </button>
 
-      {/* Right: Compartilhar + Grupos */}
+      {/* Right: Compartilhar + Times */}
       {rightItems.map((item) => {
         const isActive = item.href ? pathname === item.href : false;
 

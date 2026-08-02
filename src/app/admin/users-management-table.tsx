@@ -81,7 +81,7 @@ export function UsersManagementTable({
     setPromotingId(userId);
     startTransition(async () => {
       try {
-        const { squadInviteCode } = await promoteUserToNutritionist(userId);
+        const { teamInviteCode } = await promoteUserToNutritionist(userId);
 
         setData((prev) =>
           prev.map((u) =>
@@ -90,7 +90,7 @@ export function UsersManagementTable({
         );
 
         toast.success("Nutricionista ativada com sucesso!", {
-          description: `Squad criado. Código de convite: ${squadInviteCode}`,
+          description: `Team criado. Código de convite: ${teamInviteCode}`,
           duration: 8000,
           className:
             "bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success",
@@ -216,7 +216,7 @@ export function UsersManagementTable({
                                     Alterar a role para{" "}
                                     <strong>NUTRITIONIST</strong>
                                   </li>
-                                  <li>Criar o Squad padrão da nutricionista</li>
+                                  <li>Criar o Team padrão da nutricionista</li>
                                   <li>Remover metas de paciente</li>
                                   <li>
                                     Redirecionar para o dashboard de gestão no

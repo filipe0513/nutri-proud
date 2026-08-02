@@ -9,7 +9,7 @@ export const postTypeSchema = z.enum(['USER_GENERATED', 'SYSTEM_MILESTONE']);
 export const createPostSchema = z.object({
   content: z.string().max(2000).optional(),
   imageUrl: z.string().url('URL de imagem inválida.').max(2048).optional(),
-  squadId: z.string().uuid('ID do squad inválido.'),
+  teamId: z.string().uuid('ID do team inválido.'),
 }).strict().refine(
   (data) => data.content || data.imageUrl,
   { message: 'O post deve conter texto ou imagem.' },

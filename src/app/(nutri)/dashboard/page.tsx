@@ -3,7 +3,7 @@ import { NutriDashboard } from '@/components/shared/NutriDashboard';
 
 export const metadata: Metadata = {
   title: 'Painel da Nutricionista',
-  description: 'Gerencie seus pacientes, grupos e acompanhe a adesão aos hábitos de saúde.',
+  description: 'Gerencie seus pacientes, times e acompanhe a adesão aos hábitos de saúde.',
 };
 
 /**

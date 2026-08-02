@@ -22,7 +22,7 @@ export async function getAdminUserLogs(userId: string) {
   return logs;
 }
 
-export async function promoteUserToNutritionist(userId: string): Promise<{ squadInviteCode: string }> {
+export async function promoteUserToNutritionist(userId: string): Promise<{ teamInviteCode: string }> {
   const session = await auth();
 
   if (!session?.user || (session.user as { role?: string }).role !== "ADMIN") {

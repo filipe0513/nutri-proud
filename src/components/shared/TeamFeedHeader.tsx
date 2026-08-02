@@ -4,12 +4,12 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-interface SquadFeedHeaderProps {
+interface TeamFeedHeaderProps {
   title: string;
   onSettingsClick?: () => void;
 }
 
-export function SquadFeedHeader({ title, onSettingsClick }: SquadFeedHeaderProps) {
+export function TeamFeedHeader({ title, onSettingsClick }: TeamFeedHeaderProps) {
   const router = useRouter();
 
   return (
@@ -35,8 +35,8 @@ export function SquadFeedHeader({ title, onSettingsClick }: SquadFeedHeaderProps
             size="icon"
             onClick={onSettingsClick}
             className="text-neutral-500 hover:bg-black/5 rounded-full"
-            aria-label="Configurações do Grupo"
-            data-testid="btn-squad-settings"
+            aria-label="Configurações do Time"
+            data-testid="btn-team-settings"
           >
             <Settings className="h-6 w-6" />
           </Button>

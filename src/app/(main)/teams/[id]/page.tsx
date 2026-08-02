@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
-import { SquadFeedHeader } from '@/components/shared/SquadFeedHeader';
+import { TeamFeedHeader } from '@/components/shared/TeamFeedHeader';
 import { PostCard } from '@/components/shared/PostCard';
-import { ShareToSquadDrawer } from '@/components/shared/ShareToSquadDrawer';
-import { fetchSquadFeed, toggleReaction, createPost, fetchSquadDetails, updateSquadDetails, deleteSquadAction } from '@/store/api';
-import type { PostWithAuthor, SquadSummary } from '@/types/squadTypes';
+import { ShareToTeamDrawer } from '@/components/shared/ShareToTeamDrawer';
+import { fetchTeamFeed, toggleReaction, createPost, fetchTeamDetails, updateTeamDetails, deleteTeamAction } from '@/store/api';
+import type { PostWithAuthor, TeamSummary } from '@/types/teamTypes';
 import { toast } from 'sonner';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
@@ -15,13 +15,13 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/store';
 
-export default function SquadFeedPage() {
+export default function TeamFeedPage() {
   const params = useParams();
-  const squadId = params.id as string;
+  const teamId = params.id as string;
 
   const router = useRouter();
   const currentUserId = useAppStore(state => state.user_profile?.id);
-  const [squad, setSquad] = useState<SquadSummary | null>(null);
+  const [team, setTeam] = useState<TeamSummary | null>(null);
   const [posts, setPosts] = useState<PostWithAuthor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
@@ -32,12 +32,12 @@ export default function SquadFeedPage() {
 
   useEffect(() => {
     Promise.all([
-      fetchSquadDetails(squadId).then(setSquad),
-      fetchSquadFeed(squadId).then(setPosts),
+      fetchTeamDetails(teamId).then(setTeam),
+      fetchTeamFeed(teamId).then(setPosts),
     ])
-      .catch(() => toast.error('Erro ao carregar dados do grupo'))
+      .catch(() => toast.error('Erro ao carregar dados do time'))
       .finally(() => setIsLoading(false));
-  }, [squadId]);
+  }, [teamId]);
 
   const handleToggleReaction = async (postId: string, emoji: string) => {
     try {
@@ -63,18 +63,18 @@ export default function SquadFeedPage() {
   const handleShareScore = async (score: number) => {
     const loadingToast = toast.loading('Publicando score...');
     try {
-      await createPost(squadId, { content: `Meu Score do Dia: ${score}/100! 🔥` });
+      await createPost(teamId, { content: `Meu Score do Dia: ${score}/100! 🔥` });
       toast.success('Publicado com sucesso!', { id: loadingToast });
       // In a real app we'd fetch the new post and append it, or invalidate the cache
       // Here we just refresh the mock
-      fetchSquadFeed(squadId).then(setPosts);
+      fetchTeamFeed(teamId).then(setPosts);
     } catch (err) {
       console.error(err);
       toast.error('Erro ao publicar', { id: loadingToast });
     }
   };
 
-  const handleUpdateSquad = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleUpdateTeam = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const name = (form.elements.namedItem('name') as HTMLInputElement).value.trim();
@@ -83,37 +83,37 @@ export default function SquadFeedPage() {
 
     setIsUpdating(true);
     try {
-      const updated = await updateSquadDetails(squadId, { name, description });
-      setSquad(updated);
+      const updated = await updateTeamDetails(teamId, { name, description });
+      setTeam(updated);
       setSettingsDrawerOpen(false);
-      toast.success('Grupo atualizado com sucesso!');
+      toast.success('Time atualizado com sucesso!');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erro ao atualizar grupo.';
+      const msg = err instanceof Error ? err.message : 'Erro ao atualizar time.';
       toast.error(msg);
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const handleDeleteSquad = async () => {
+  const handleDeleteTeam = async () => {
     setIsDeleting(true);
     try {
-      await deleteSquadAction(squadId);
-      toast.success('Grupo apagado com sucesso!');
-      router.push('/squads');
+      await deleteTeamAction(teamId);
+      toast.success('Time apagado com sucesso!');
+      router.push('/teams');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erro ao apagar grupo.';
+      const msg = err instanceof Error ? err.message : 'Erro ao apagar time.';
       toast.error(msg);
       setIsDeleting(false);
     }
   };
 
-  const isAdmin = squad?.currentUserRole === 'ADMIN';
+  const isAdmin = team?.currentUserRole === 'ADMIN';
 
   return (
     <div className="min-h-screen bg-mesh-sunset flex flex-col relative pb-32">
-      <SquadFeedHeader 
-        title={isLoading ? 'Carregando...' : (squad?.name ?? 'Grupo')} 
+      <TeamFeedHeader 
+        title={isLoading ? 'Carregando...' : (team?.name ?? 'Time')} 
         onSettingsClick={isAdmin ? () => setSettingsDrawerOpen(true) : undefined}
       />
       
@@ -159,7 +159,7 @@ export default function SquadFeedPage() {
         <Plus className="w-7 h-7" />
       </button>
 
-      <ShareToSquadDrawer
+      <ShareToTeamDrawer
         open={shareDrawerOpen}
         onOpenChange={setShareDrawerOpen}
         onShareScore={handleShareScore}
@@ -169,25 +169,25 @@ export default function SquadFeedPage() {
       <Drawer open={settingsDrawerOpen} onOpenChange={setSettingsDrawerOpen}>
         <DrawerContent className="!bg-white/95 backdrop-blur-2xl px-6 pb-10">
           <DrawerHeader className="px-0 pb-4">
-            <DrawerTitle className="text-title-3 text-neutral-500">Configurações do Grupo</DrawerTitle>
+            <DrawerTitle className="text-title-3 text-neutral-500">Configurações do Time</DrawerTitle>
           </DrawerHeader>
-          <form onSubmit={handleUpdateSquad} className="space-y-4">
+          <form onSubmit={handleUpdateTeam} className="space-y-4">
             <div>
               <label className="text-caption-1 text-neutral-500 font-medium mb-1.5 block">
-                Nome do Grupo
+                Nome do Time
               </label>
-              <Input name="name" defaultValue={squad?.name} placeholder="Ex: Galera do Crossfit" className="h-12 bg-white/50" required data-testid="input-squad-name" />
+              <Input name="name" defaultValue={team?.name} placeholder="Ex: Galera do Crossfit" className="h-12 bg-white/50" required data-testid="input-team-name" />
             </div>
             <div>
               <label className="text-caption-1 text-neutral-500 font-medium mb-1.5 block">
                 Descrição (Opcional)
               </label>
-              <Input name="description" defaultValue={squad?.description || ''} placeholder="Qual o foco do grupo?" className="h-12 bg-white/50" data-testid="input-squad-description" />
+              <Input name="description" defaultValue={team?.description || ''} placeholder="Qual o foco do time?" className="h-12 bg-white/50" data-testid="input-team-description" />
             </div>
             <Button
               type="submit"
               disabled={isUpdating}
-              data-testid="btn-save-squad-settings"
+              data-testid="btn-save-team-settings"
               className="w-full h-14 text-button-1 rounded-2xl bg-brand-500 mt-2 flex items-center justify-center gap-2"
             >
               {isUpdating ? (
@@ -197,14 +197,14 @@ export default function SquadFeedPage() {
             <Button
               type="button"
               variant="ghost"
-              data-testid="btn-open-delete-squad-dialog"
+              data-testid="btn-open-delete-team-dialog"
               onClick={() => {
                 setSettingsDrawerOpen(false);
                 setDeleteConfirmOpen(true);
               }}
               className="w-full h-14 text-button-1 rounded-2xl text-notify-error hover:bg-notify-error-glass hover:text-notify-error"
             >
-              Apagar Grupo
+              Apagar Time
             </Button>
           </form>
         </DrawerContent>
@@ -214,11 +214,11 @@ export default function SquadFeedPage() {
       <Drawer open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DrawerContent className="!bg-white/95 backdrop-blur-2xl px-6 pb-8">
           <DrawerHeader className="px-0 pb-2 text-center">
-            <DrawerTitle className="text-title-3 text-notify-error">Apagar Grupo</DrawerTitle>
+            <DrawerTitle className="text-title-3 text-notify-error">Apagar Time</DrawerTitle>
           </DrawerHeader>
           <div className="text-center space-y-4 mt-2">
             <p className="text-body-1 text-neutral-500">
-              Tem certeza que deseja apagar o grupo <strong>{squad?.name}</strong>?
+              Tem certeza que deseja apagar o time <strong>{team?.name}</strong>?
             </p>
             <p className="text-caption-1 text-neutral-400">
               Esta ação não pode ser desfeita e todos os membros perderão o acesso.
@@ -234,9 +234,9 @@ export default function SquadFeedPage() {
               Cancelar
             </Button>
             <Button
-              onClick={handleDeleteSquad}
+              onClick={handleDeleteTeam}
               disabled={isDeleting}
-              data-testid="btn-confirm-delete-squad"
+              data-testid="btn-confirm-delete-team"
               className="flex-1 h-12 rounded-xl bg-notify-error hover:bg-notify-error/90 text-white"
             >
               {isDeleting ? 'Apagando...' : 'Sim, Apagar'}

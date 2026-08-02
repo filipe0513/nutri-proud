@@ -10,7 +10,7 @@ import { signOut } from '@/auth';
  * Layout exclusivo da Nutricionista.
  *
  * Guarda RBAC: somente usuários com role NUTRITIONIST podem acessar
- * as rotas dentro do grupo (nutri). Qualquer outro usuário é redirecionado
+ * as rotas dentro do time (nutri). Qualquer outro usuário é redirecionado
  * para a home do paciente (/).
  *
  * Design: sem BottomNav mobile. Sidebar/Header estilo admin/desktop.

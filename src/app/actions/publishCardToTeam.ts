@@ -1,22 +1,22 @@
 'use server';
 
 import { auth } from '@/auth';
-import { createSquadPost } from '@/services/squadService';
+import { createTeamPost } from '@/services/teamService';
 import { z } from 'zod';
 
 const publishSchema = z.object({
-  squadId: z.string().uuid('Squad inválido.'),
+  teamId: z.string().uuid('Team inválido.'),
   content: z.string().max(500).optional(),
 });
 
 /**
  * Uploads a base64-encoded image to Cloudinary and creates a Post in the
- * target Squad's feed.
+ * target Team's feed.
  *
  * This Server Action is called directly from the client component, keeping the
  * Cloudinary API secret safely on the server.
  */
-export async function publishCardToSquad(formData: FormData): Promise<{ success: boolean; postId?: string; error?: string }> {
+export async function publishCardToTeam(formData: FormData): Promise<{ success: boolean; postId?: string; error?: string }> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -24,19 +24,19 @@ export async function publishCardToSquad(formData: FormData): Promise<{ success:
     }
 
     const file = formData.get('file') as File | null;
-    const rawSquadId = formData.get('squadId') as string;
+    const rawTeamId = formData.get('teamId') as string;
     const rawContent = formData.get('content') as string | null;
 
     if (!file) {
       return { success: false, error: 'Imagem é obrigatória.' };
     }
 
-    const parsed = publishSchema.safeParse({ squadId: rawSquadId, content: rawContent || undefined });
+    const parsed = publishSchema.safeParse({ teamId: rawTeamId, content: rawContent || undefined });
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? 'Dados inválidos.' };
     }
 
-    const { squadId, content } = parsed.data;
+    const { teamId, content } = parsed.data;
 
     // ── 1. Upload to Cloudinary ───────────────────────────────────────────────
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -49,7 +49,7 @@ export async function publishCardToSquad(formData: FormData): Promise<{ success:
 
     // Build the multipart form for the Cloudinary REST API (signed upload)
     const timestamp = Math.round(Date.now() / 1000);
-    const folder = 'squad_posts';
+    const folder = 'team_posts';
     const paramsToSign = `folder=${folder}&timestamp=${timestamp}`;
 
     // Generate SHA-1 signature using Node.js crypto
@@ -73,7 +73,7 @@ export async function publishCardToSquad(formData: FormData): Promise<{ success:
 
     if (!uploadRes.ok) {
       const errBody = await uploadRes.json().catch(() => ({}));
-      console.error('[publishCardToSquad] Cloudinary error:', errBody);
+      console.error('[publishCardToTeam] Cloudinary error:', errBody);
       return { success: false, error: 'Falha no upload da imagem. Tente novamente.' };
     }
 
@@ -81,7 +81,7 @@ export async function publishCardToSquad(formData: FormData): Promise<{ success:
     const imageUrl = uploadData.secure_url;
 
     // ── 2. Create Post in DB ─────────────────────────────────────────────────
-    const post = await createSquadPost(squadId, session.user.id, {
+    const post = await createTeamPost(teamId, session.user.id, {
       imageUrl,
       content: content ?? undefined,
       type: 'USER_GENERATED',
@@ -90,7 +90,7 @@ export async function publishCardToSquad(formData: FormData): Promise<{ success:
     return { success: true, postId: post.id };
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erro inesperado.';
-    console.error('[publishCardToSquad]', err);
+    console.error('[publishCardToTeam]', err);
     return { success: false, error: message };
   }
 }

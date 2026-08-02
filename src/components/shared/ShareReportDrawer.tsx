@@ -35,8 +35,8 @@ import { calculateWaterScore } from '@/utils/scoreUtils';
 import { historyService } from '@/services/historyService';
 import { useAppStore } from '@/store/store';
 import type { ActivityLog } from '@/store/types';
-import { SquadPickerModal } from '@/components/shared/SquadPickerModal';
-import { publishCardToSquad } from '@/app/actions/publishCardToSquad';
+import { TeamPickerModal } from '@/components/shared/TeamPickerModal';
+import { publishCardToTeam } from '@/app/actions/publishCardToTeam';
 
 // ─── Shared types ─────────────────────────────────────────────────────────────
 
@@ -199,9 +199,9 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
   const [bgPhoto, setBgPhoto] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Squad publish state ──
-  const [squadPickerOpen, setSquadPickerOpen] = useState(false);
-  const [publishingSquadId, setPublishingSquadId] = useState<string | null>(null);
+  // ── Team publish state ──
+  const [teamPickerOpen, setTeamPickerOpen] = useState(false);
+  const [publishingTeamId, setPublishingTeamId] = useState<string | null>(null);
 
   const nodeRef = useRef<HTMLDivElement>(null);
 
@@ -365,11 +365,11 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
    * Captures the Card (always with solid background), converts to Base64
    * and calls the Server Action to upload to Cloudinary + create the Post.
    */
-  const handlePublishToSquad = useCallback(async (squadId: string, squadName: string) => {
-    setPublishingSquadId(squadId);
+  const handlePublishToTeam = useCallback(async (teamId: string, teamName: string) => {
+    setPublishingTeamId(teamId);
     setInfoCapturing(true);
     try {
-      // Force the CARD format (with background) for squad posts
+      // Force the CARD format (with background) for team posts
       const prevExport = selectedExport;
       if (prevExport !== 'CARD') {
         // We temporarily capture as CARD. The nodeRef renders as CARD because
@@ -386,16 +386,16 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
       // Call Server Action with native FormData (bypasses Next.js JSON body size limits)
       const formData = new FormData();
       formData.append('file', blob, 'orgulho-da-nutri.png');
-      formData.append('squadId', squadId);
+      formData.append('teamId', teamId);
       formData.append('content', `Meu progresso — ${infographicData?.periodName ?? 'hoje'} 💪`);
 
-      const result = await publishCardToSquad(formData);
+      const result = await publishCardToTeam(formData);
 
       if (!result.success) throw new Error(result.error);
 
-      setSquadPickerOpen(false);
-      toast.success(`Publicado em ${squadName}! 🎉`, {
-        description: 'Seu card já aparece no feed do Squad.',
+      setTeamPickerOpen(false);
+      toast.success(`Publicado em ${teamName}! 🎉`, {
+        description: 'Seu card já aparece no feed do Team.',
         className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
       });
     } catch (err) {
@@ -403,7 +403,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
       toast.error(msg);
     } finally {
       setInfoCapturing(false);
-      setPublishingSquadId(null);
+      setPublishingTeamId(null);
     }
   }, [nodeRef, selectedExport, infographicData]);
 
@@ -421,7 +421,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
         setInfoPeriod('today');
         setSelectedExport('CARD');
         setActiveTab('infographic');
-        setSquadPickerOpen(false);
+        setTeamPickerOpen(false);
         setBgPhoto(null);
       }, 300);
     }
@@ -797,17 +797,17 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
               {/* Share / Download actions */}
               {infoReady && infographicData && (
                 <div className="flex flex-col gap-3">
-                  {/* Publish to Squad — zero friction */}
+                  {/* Publish to Team — zero friction */}
                   <Button
-                    onClick={() => setSquadPickerOpen(true)}
+                    onClick={() => setTeamPickerOpen(true)}
                     disabled={infoCapturing}
                     className="w-full h-14 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white text-button-1 flex items-center justify-center gap-2 shadow-md shadow-brand-500/25"
-                    id="btn-publish-to-squad"
+                    id="btn-publish-to-team"
                   >
-                    {infoCapturing && publishingSquadId ? (
+                    {infoCapturing && publishingTeamId ? (
                       <><Loader2 className="h-4 w-4 animate-spin" />Publicando...</>
                     ) : (
-                      <><Users className="h-4 w-4" />Publicar no Squad</>
+                      <><Users className="h-4 w-4" />Publicar no Team</>
                     )}
                   </Button>
 
@@ -914,13 +914,13 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
         </div>
       )}
 
-      {/* ─── Squad Picker Modal ──────────────────────────────────────────── */}
-      <SquadPickerModal
-        open={squadPickerOpen}
-        onOpenChange={setSquadPickerOpen}
-        onSelectSquad={handlePublishToSquad}
+      {/* ─── Team Picker Modal ──────────────────────────────────────────── */}
+      <TeamPickerModal
+        open={teamPickerOpen}
+        onOpenChange={setTeamPickerOpen}
+        onSelectTeam={handlePublishToTeam}
         isPublishing={infoCapturing}
-        publishingSquadId={publishingSquadId}
+        publishingTeamId={publishingTeamId}
       />
     </>
   );

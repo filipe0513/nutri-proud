@@ -1,7 +1,7 @@
-// ── Frontend types for the Squads social feature ──────────────
+// ── Frontend types for the Teams social feature ──────────────
 
-/** Summary of a squad as displayed in the hub listing */
-export interface SquadSummary {
+/** Summary of a team as displayed in the hub listing */
+export interface TeamSummary {
   id: string;
   name: string;
   description: string | null;
@@ -32,7 +32,7 @@ export interface PostWithAuthor {
   content: string | null;
   imageUrl: string | null;
   type: 'USER_GENERATED' | 'SYSTEM_MILESTONE';
-  squadId: string;
+  teamId: string;
   author: PostAuthor;
   reactions: ReactionCount[];
   commentCount: number;

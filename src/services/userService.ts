@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { UserRole } from '@/types/roles';
-import { createSquad } from '@/services/squadService';
+import { createTeam } from '@/services/teamService';
 
 export class PermissionError extends Error {
   constructor(message: string) {
@@ -95,13 +95,13 @@ export const userService = {
    * 1. Role atualizado para 'NUTRITIONIST'
    * 2. Targets de paciente zerados (não se aplicam à nutri)
    * 3. Profile marcado com onboarding_skipped para ignorar o fluxo de paciente
-   * 4. Uma Squad padrão é criada com a nutri como ADMIN
+   * 4. Uma Team padrão é criada com a nutri como ADMIN
    * 5. SystemEvent registrado para auditoria
    *
    * Nota: a sessão NextAuth usa database strategy, então o novo role é refletido
    * automaticamente no próximo request (sem precisar de logout).
    */
-  async promoteToNutritionist(userId: string): Promise<{ squadInviteCode: string }> {
+  async promoteToNutritionist(userId: string): Promise<{ teamInviteCode: string }> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, name: true, role: true, is_anonymous: true },
@@ -122,11 +122,11 @@ export const userService = {
       },
     });
 
-    // 2. Cria a Squad padrão da nutri
-    const squadName = user.name ? `Squad da ${user.name}` : 'Meu Squad';
-    const squad = await createSquad(userId, {
-      name: squadName,
-      description: 'Squad criado automaticamente ao ativar a conta de nutricionista.',
+    // 2. Cria a Team padrão da nutri
+    const teamName = user.name ? `Team da ${user.name}` : 'Meu Team';
+    const team = await createTeam(userId, {
+      name: teamName,
+      description: 'Team criado automaticamente ao ativar a conta de nutricionista.',
     });
 
     // 3. Registro de auditoria
@@ -136,12 +136,12 @@ export const userService = {
         eventName: 'ROLE_PROMOTED_NUTRITIONIST',
         metadata: {
           promoted_at: new Date().toISOString(),
-          default_squad_id: squad.id,
-          default_squad_invite_code: squad.inviteCode,
+          default_team_id: team.id,
+          default_team_invite_code: team.inviteCode,
         },
       },
     });
 
-    return { squadInviteCode: squad.inviteCode };
+    return { teamInviteCode: team.inviteCode };
   },
 };
