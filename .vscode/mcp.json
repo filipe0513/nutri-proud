@@ -3,6 +3,10 @@
     "Sentry": {
       "url": "https://mcp.sentry.dev/mcp/filipe-magalhaes/nutriproud",
       "type": "http"
+    },
+    "onesignal": {
+      "type": "http",
+      "url": "https://server.smithery.ai/onesignal/onesignal"
     }
   }
 }

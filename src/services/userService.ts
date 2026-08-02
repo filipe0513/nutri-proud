@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { UserRole } from '@/types/roles';
 
 export class PermissionError extends Error {
   constructor(message: string) {
@@ -10,14 +11,20 @@ export class PermissionError extends Error {
 export const userService = {
   async checkUserPermissions(userId: string): Promise<boolean> {
     const user = await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
+      select: { id: true, is_anonymous: true, createdAt: true, role: true },
     });
 
     if (!user) {
       throw new Error('Usuário não encontrado.');
     }
 
-    // Se for usuário real, acesso liberado
+    // Nutricionistas têm acesso irrestrito
+    if (user.role === UserRole.NUTRITIONIST) {
+      return true;
+    }
+
+    // Se for usuário real (não anônimo), acesso liberado
     if (!user.is_anonymous) {
       return true;
     }
@@ -47,10 +54,15 @@ export const userService = {
   async checkHasCompletedOnboarding(userId: string): Promise<boolean> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { profile: true },
+      select: { profile: true, role: true },
     });
 
     if (!user) return false;
+
+    // Nutricionistas não passam pelo onboarding de paciente
+    if (user.role === UserRole.NUTRITIONIST) {
+      return true;
+    }
 
     const profile = user.profile as Record<string, unknown> | null;
     if (!profile) return false;
