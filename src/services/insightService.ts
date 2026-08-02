@@ -254,11 +254,30 @@ export const insightService = {
       .map(([cat, count]) => `- ${cat}: ${count} registros nos últimos 7 dias`)
       .join('\n');
 
+    const localDate = new Date(localTime);
+    const dayOfWeek = localDate.getDay();
+    let weekendRule = '';
+    if ((dayOfWeek === 5 && hour >= 12) || (dayOfWeek === 6 && hour < 18)) {
+      weekendRule = "REGRA EXTRA: O tom deve ser de 'Redução de Danos'. Aconselhe que, se for sair, deve intercalar álcool com água e não pular o treino.";
+    }
+
+    const poopLogToday = todayLogs.find(l => l.category.toLowerCase() === 'poop');
+    const isPoopAbnormal = poopLogToday && poopLogToday.details && (poopLogToday.details as Record<string, unknown>).state && (poopLogToday.details as Record<string, unknown>).state !== 'normal';
+    const hasFoodOrWaterRecent = last30Logs.some(l => 
+      (l.category.toLowerCase() === 'food' || l.category.toLowerCase() === 'water' || l.category.toLowerCase() === 'jacada') &&
+      localDate.getTime() - new Date(l.eventTime).getTime() <= 48 * 60 * 60 * 1000
+    );
+
+    let rule2 = '';
+    if (isPoopAbnormal && !hasFoodOrWaterRecent) {
+      rule2 = "REGRA CRÍTICA: Intestino anormal registrado, MAS não há logs de refeições/água recentes. NÃO invente um motivo. Explique que o intestino reflete o que foi comido ontem e pergunte se o usuário esqueceu de registrar a refeição/jacada.";
+    }
+
     const prompt = `
 Você é a Nutri, assistente de saúde acolhedora e bem-humorada do app "Orgulho da Nutri".
 
 ## Contexto atual do usuário
-- Hora local: ${hour}h (${periodLabel})
+- Data e Hora local: ${localTime} (${periodLabel})
 - Objetivo principal: ${mainGoal === 'fat_loss' ? 'emagrecer' : mainGoal === 'muscle_gain' ? 'ganhar massa' : 'saúde geral'}
 
 ## Logs de hoje
@@ -285,6 +304,9 @@ Instruções de uso do contexto semanal:
 - Se yesterdayScore for nulo ou < 40, encoraje o usuário a não quebrar a corrente e recomeçar bem hoje.
 - Se a semana toda não tem registros, seja acolhedora e incentive o primeiro passo.
 - Combine sempre com o contexto de hoje (hora, pilares ausentes, etc.).
+
+${weekendRule}
+${rule2}
 
 ## Regras de priorização (siga na ordem):
 1. Se é manhã (< 10h) e não há NENHUM log hoje → priorize SLEEP (registrar o sono da noite anterior)

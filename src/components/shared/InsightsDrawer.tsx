@@ -25,9 +25,10 @@ interface InsightsDrawerProps {
   message: string | null;
   /** Uppercase pillar name or null */
   cta?: string | null;
+  isCtaCompleted?: boolean;
 }
 
-export function InsightsDrawer({ open, onOpenChange, message, cta }: InsightsDrawerProps) {
+export function InsightsDrawer({ open, onOpenChange, message, cta, isCtaCompleted }: InsightsDrawerProps) {
   const setOpenDrawer = useAppStore(state => state.setActiveDrawer);
 
   const ctaInfo = cta ? CTA_MAP[cta.toUpperCase()] : null;
@@ -94,7 +95,7 @@ export function InsightsDrawer({ open, onOpenChange, message, cta }: InsightsDra
         </div>
 
         {/* CTA Button */}
-        {ctaInfo && message && (
+        {ctaInfo && message && !isCtaCompleted && (
           <button
             type="button"
             onClick={handleCta}

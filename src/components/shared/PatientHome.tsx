@@ -398,6 +398,12 @@ function PatientHomeContent() {
         }}
         message={insightData?.message ?? pendingInsightData?.message ?? null}
         cta={insightData?.cta ?? pendingInsightData?.cta}
+        isCtaCompleted={(() => {
+          const ctaStr = (insightData?.cta ?? pendingInsightData?.cta)?.toLowerCase();
+          if (!ctaStr) return false;
+          const score = scores[ctaStr as keyof typeof scores] || 0;
+          return (ctaStr === 'water' || ctaStr === 'food') ? score >= 100 : score > 0;
+        })()}
       />
 
       <LimitWarningDrawer 

@@ -1,3 +1,6 @@
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { auth } from '@/auth';
@@ -64,7 +67,20 @@ export async function POST(request: Request) {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     
-    const prompt = `O usuário está com pontuação baixa hoje. Ele tem os seguintes percentuais de meta concluídos: Água (${scores.water}%), Comida (${scores.food}%), Treino (${scores.workout}%), Sono (${scores.sleep}%), Intestino (${scores.poop}%).
+    const now = new Date();
+    const localTimeString = now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    const dayOfWeek = now.getDay();
+    const hour = now.getHours();
+
+    let weekendRule = '';
+    if ((dayOfWeek === 5 && hour >= 12) || (dayOfWeek === 6 && hour < 18)) {
+      weekendRule = "O tom deve ser de 'Redução de Danos'. Aconselhe que, se for sair, deve intercalar álcool com água e não pular o treino.";
+    }
+
+    const prompt = `Você é a Nutri Proud. O usuário está com pontuação baixa hoje. Ele tem os seguintes percentuais de meta concluídos: Água (${scores.water}%), Comida (${scores.food}%), Treino (${scores.workout}%), Sono (${scores.sleep}%), Intestino (${scores.poop}%).
+
+Data e hora atual: ${localTimeString}
+${weekendRule}
 
 Dê 3 dicas ultra-rápidas do que ele ainda pode fazer hoje à noite para melhorar os pontos específicos que estão baixos.
 
@@ -80,7 +96,7 @@ RETORNE APENAS HTML puro (sem bloco de código, sem markdown, sem explicações)
 
     return NextResponse.json({ message: text });
   } catch (error) {
-    console.error('Erro ao gerar dicas salva-vidas:', error);
+    console.error('[Gemini API Error - Lifesaver]:', error);
     return NextResponse.json(
       { error: 'Erro interno ao gerar dicas.' },
       { status: 500 }

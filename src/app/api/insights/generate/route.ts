@@ -1,3 +1,6 @@
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { cookies } from 'next/headers';
@@ -39,7 +42,7 @@ export async function POST(request: Request) {
     const insight = await insightService.generateContextualInsight(userId, parsed.data.localTime);
     return NextResponse.json(insight, { status: 201 });
   } catch (error: unknown) {
-    console.error('Erro na rota POST /api/insights/generate:', error);
+    console.error('[Gemini API Error - Insight Generate]:', error);
     const details = error instanceof Error ? error.message : 'Erro desconhecido';
     return NextResponse.json({ error: 'Falha ao gerar insight.', details }, { status: 500 });
   }
