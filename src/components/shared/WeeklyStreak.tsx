@@ -193,7 +193,7 @@ function computeWeeklyStreakText(history: WeekHistoryItem[]): string {
   const completedWeeks = history.filter((w) => !w.isCurrentWeek);
   
   if (completedWeeks.length === 0) {
-    return "Semana inicial, foco total";
+    return "Iniciando no foco!";
   }
 
   const degreeValue: Record<string, number> = {
@@ -345,7 +345,7 @@ export function WeeklyStreak() {
         {/* Header row */}
         <div className="flex items-center justify-between px-1">
           <p className="text-body-2 font-semibold text-neutral-400">
-            Como está sua semana atual
+            Semana atual
           </p>
           <motion.span
             initial={{ opacity: 0, x: 8 }}
