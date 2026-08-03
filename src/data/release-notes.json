@@ -1,5 +1,16 @@
 [
   {
+    "version": "2.0.0",
+    "date": "2026-08-03",
+    "highlights": [
+      "🎉 O Orgulho da Nutri 2.0 chegou! Uma experiência completamente reformulada com novos planos de assinatura (SaaS).",
+      "👥 Hub de Grupos (Squads): Compartilhe seu progresso como no Instagram, com fotos, reações e interações entre os participantes!",
+      "👩‍⚕️ Bem-vindos, Nutricionistas! Novo dashboard B2B exclusivo para convidar e acompanhar o progresso dos seus pacientes.",
+      "🔥 Novo Histórico de Chamas (Streaks) com gamificação redesenhada, animações de Glória e gravação de dias consecutivos.",
+      "🔔 Nunca perca nada: adicionamos Notificações Push e uma nova central de avisos diretamente no seu app."
+    ]
+  },
+  {
     "version": "1.22.0",
     "date": "2026-07-21",
     "highlights": [
