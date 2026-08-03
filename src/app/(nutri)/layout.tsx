@@ -81,7 +81,7 @@ export default async function NutriLayout({
 
             {/* Settings link */}
             <Link
-              href="/settings"
+              href="/dashboard/settings"
               aria-label="Configurações"
               className="h-8 w-8 flex items-center justify-center rounded-xl text-neutral-400 hover:bg-slate-100 hover:text-neutral-500 transition-colors"
             >
