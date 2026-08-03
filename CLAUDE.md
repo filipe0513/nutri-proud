@@ -8,7 +8,7 @@
 
 ## 🎯 Product Overview
 
-A gamified daily health diary PWA tracking **5 pillars**: Water, Food, Sleep, Workout, Bowel.
+A gamified daily health diary PWA tracking **5 pillars**: Water, Food, Sleep, Workout, Bowel. Built for a B2B2C model where Nutritionists can monitor their patients via Teams and a dedicated Dashboard.
 **UX Differentiator:** Zero-friction One-Click Actions. Nubank-inspired minimal UI with Cards, Bottom Sheets, and modals — the user never leaves the current page.
 
 ---
@@ -43,6 +43,7 @@ src/
 │   │   ├── settings/page.tsx     # Profile & target adjustments
 │   │   ├── pillar/[category]/    # Pillar insight pages (water|food|sleep|workout|poop)
 │   │   └── page.tsx              # Home dashboard (Stories + quick actions)
+│   ├── dashboard/                # B2B Nutritionist Dashboard (Teams & Patients)
 │   ├── admin/                    # ADMIN role only
 │   ├── api/                      # RESTful API routes (thin controllers only)
 │   └── layout.tsx / globals.css
@@ -74,6 +75,7 @@ src/
 - `/history` — Log feed with infinite scroll (filter via `?categories=`).
 - `/settings` — Single-page profile and target fine-tuning.
 - `/pillar/[category]` — Educational insights. Valid categories: `water`, `food`, `sleep`, `workout`, `poop`.
+- `/dashboard` — B2B Nutritionist Dashboard for managing teams and patients.
 
 ### Admin (`role: 'ADMIN'` required)
 
@@ -121,6 +123,11 @@ interface DailyLog {
   created_at: string; // ISO string
 }
 ```
+
+### Team / Social (Prisma)
+
+- `Team`: Groups of patients created by Nutritionists (B2B2C).
+- `TeamMember`: Junction with roles `ADMIN` (Nutritionist) or `MEMBER` (Patient).
 
 ---
 

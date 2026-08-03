@@ -1,7 +1,7 @@
 # 📱 Projeto: Diário de Saúde Gamificado (MVP)
 
 ## 🎯 Visão Geral do Produto
-Aplicativo web (PWA) focado no registro rápido e diário de 5 pilares da saúde: Água, Alimentação, Sono, Treino e Intestino. 
+Aplicativo web (PWA) focado no registro rápido e diário de 5 pilares da saúde: Água, Alimentação, Sono, Treino e Intestino. Modelo B2B2C onde Nutricionistas acompanham pacientes via Dashboard (Teams).
 **Diferencial (UX/UI):** Usabilidade extrema com zero atrito (One-Click Actions). Interface minimalista e gamificada inspirada no padrão visual do **Nubank** (uso intenso de Cards, Bottom Sheets, fundos em tom cinza claro e componentes modais para manter o usuário na mesma página).
 
 ---
@@ -32,6 +32,7 @@ src/
 │   │   ├── settings/page.tsx     # Perfil e ajuste de metas
 │   │   ├── pillar/[category]/    # Insights educativos (water|food|sleep|workout|poop)
 │   │   └── page.tsx              # Home (Dashboard de Stories e Ações)
+│   ├── dashboard/                # Dashboard B2B para Nutricionistas (Teams/Patients)
 │   ├── admin/                    # Rotas exclusivas para ADMIN
 │   ├── api/                      # Rotas RESTful (Thin controllers)
 │   ├── layout.tsx
@@ -111,10 +112,11 @@ O coração do app. Fundo `bg-slate-50`.
 - **Corpo:** Lista vertical de Cards de Ações Rápidas (Ex: "💧 Beba Água - Meta: 2.5L").
 - **Rodapé:** Menu flutuante de navegação (Home, Diário, Ajustes).
 
-### 4. Novas Rotas (Settings, Pillars e Admin)
+### 4. Novas Rotas (Settings, Pillars, Dashboard e Admin)
 - **`/history`**: Feed de registros diários com infinite scroll.
 - **`/settings`**: Perfil único para ajustes finos de metas.
 - **`/pillar/[category]`**: Insights educativos baseados na categoria de saúde.
+- **`/dashboard`**: Dashboard B2B para Nutricionistas acompanharem seus pacientes (Teams).
 - **`/admin`**: Dashboard gerencial de métricas (Gráficos Recharts).
 
 ### 5. Componentes Globais (Shadcn UI)
@@ -123,7 +125,7 @@ O coração do app. Fundo `bg-slate-50`.
 
 ---
 
-## 🚀 Status e Contexto Atual do Projeto (Último Update: Maio 2026)
+## 🚀 Status e Contexto Atual do Projeto (Último Update: Agosto 2026)
 
 O projeto já passou da fase de setup e está em pleno desenvolvimento. As seguintes áreas já estão construídas e funcionais:
 
@@ -147,6 +149,11 @@ O projeto já passou da fase de setup e está em pleno desenvolvimento. As segui
    - Lógica de cálculo de notas dos pilares normalizada.
    - Fusos horários (Timezones) corrigidos no histórico de logs.
    - Exclusão e edição de atividades funcionais.
+
+5. **Modelo B2B2C e Social (Teams):**
+   - Lançamento do Dashboard do Nutricionista (`/dashboard`).
+   - Criação de Teams (Grupos/Pacientes) com convites e cargos (ADMIN e MEMBER).
+   - Componentes visuais para Empty States de novos Nutricionistas.
 
 **Regras de Código Atualizadas:**
 - Use `snake_case` apenas para comunicação legada, mas prefira tipagens estritas em `camelCase` e schemas em Zod atualizados.
