@@ -1,0 +1,63 @@
+name: 🗄️ Database Backup (Prod)
+
+on:
+  schedule:
+    # Roda todo dia às 04:00 UTC (01:00 horário de Brasília)
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+    # Permite rodar manualmente pelo GitHub Actions UI
+
+jobs:
+  backup:
+    name: Dump Supabase → Artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📦 Install Supabase CLI
+        run: |
+          curl -fsSL https://github.com/supabase/cli/releases/download/v2.30.4/supabase_linux_amd64.tar.gz \
+            | tar xz -C /usr/local/bin supabase
+
+      - name: 🔌 Dump database schema + data
+        env:
+          DIRECT_URL: ${{ secrets.SUPABASE_DIRECT_URL }}
+        run: |
+          # Schema apenas (DDL — estrutura de tabelas, índices, etc.)
+          supabase db dump \
+            --db-url "$DIRECT_URL" \
+            --schema public \
+            --file schema.sql
+
+          # Data dump (INSERT statements com todos os dados)
+          supabase db dump \
+            --db-url "$DIRECT_URL" \
+            --schema public \
+            --data-only \
+            --file data.sql
+
+          # Metadata: timestamp e contagem de linhas
+          echo "Backup gerado em: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" > backup_info.txt
+          echo "Schema: $(wc -l < schema.sql) linhas" >> backup_info.txt
+          echo "Data:   $(wc -l < data.sql) linhas" >> backup_info.txt
+          cat backup_info.txt
+
+      - name: 📤 Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_number }}-${{ github.run_attempt }}
+          path: |
+            schema.sql
+            data.sql
+            backup_info.txt
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: ✅ Summary
+        run: |
+          echo "## 🗄️ Backup concluído" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat backup_info.txt >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Artifact:** \`db-backup-${{ github.run_number }}-${{ github.run_attempt }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Retenção:** 30 dias" >> $GITHUB_STEP_SUMMARY
