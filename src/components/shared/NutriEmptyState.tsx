@@ -3,9 +3,9 @@ import { toast } from 'sonner';
 
 export function NutriEmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 space-y-8">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 py-8 md:py-0 space-y-6 md:space-y-8">
       <div className="space-y-2 max-w-md mx-auto">
-        <h1 className="text-title-1 font-bold text-neutral-600">
+        <h1 className="text-title-2 md:text-title-1 font-bold text-neutral-600">
           Nenhum paciente ou time por aqui ainda 👀
         </h1>
         <p className="text-body-1 text-neutral-500">
@@ -20,7 +20,7 @@ export function NutriEmptyState() {
           onClick={() => toast.info('Criação de times em breve! 🚀', {
             className: 'bg-notify-info-glass backdrop-blur-md border border-notify-info',
           })}
-          className="flex flex-col items-start p-5 rounded-3xl border border-white/40 bg-glass-light-1 backdrop-blur-sm hover:shadow-md transition-all active:scale-[0.99] group"
+          className="flex flex-col items-start p-5 md:p-6 rounded-3xl border border-white/60 bg-brand-100/40 hover:bg-brand-100/60 transition-all active:scale-[0.99] group shadow-sm hover:shadow-md"
         >
           <div className="p-3 bg-brand-500/10 text-brand-500 rounded-xl mb-4 group-hover:bg-brand-500 group-hover:text-white transition-colors">
             <Users className="h-6 w-6" />
@@ -43,7 +43,7 @@ export function NutriEmptyState() {
           onClick={() => toast.info('Convite individual em breve! 🚀', {
              className: 'bg-notify-info-glass backdrop-blur-md border border-notify-info',
           })}
-          className="flex flex-col items-start p-5 rounded-3xl border border-white/40 bg-glass-light-1 backdrop-blur-sm hover:shadow-md transition-all active:scale-[0.99] group"
+          className="flex flex-col items-start p-5 md:p-6 rounded-3xl border border-white/60 bg-white/80 hover:bg-white transition-all active:scale-[0.99] group shadow-sm hover:shadow-md"
         >
           <div className="p-3 bg-neutral-100 text-neutral-600 rounded-xl mb-4 group-hover:bg-neutral-200 transition-colors">
             <Link2 className="h-6 w-6" />

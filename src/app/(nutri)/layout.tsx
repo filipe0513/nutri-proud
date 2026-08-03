@@ -42,13 +42,7 @@ export default async function NutriLayout({
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           {/* Logo / Brand */}
           <Link href="/dashboard" className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="h-8 w-8 rounded-xl bg-brand-500 flex items-center justify-center shadow-sm">
-              <span className="text-white text-sm font-bold">ON</span>
-            </div>
-            <div className="flex flex-col leading-none">
-              <span className="text-caption-2 text-neutral-300 font-medium">Orgulho da Nutri</span>
-              <span className="text-body-2 font-bold text-neutral-500">Painel Profissional</span>
-            </div>
+            <span className="text-title-3 font-bold text-neutral-600">Dashboard Nutri</span>
           </Link>
 
           {/* Nav links (desktop) */}
