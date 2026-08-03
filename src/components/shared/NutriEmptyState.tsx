@@ -1,54 +1,30 @@
-import { Plus, Users, Link2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Plus, Link2 } from 'lucide-react';
 
-export function NutriEmptyState() {
+interface NutriEmptyStateProps {
+  onGenerateInvite: () => void;
+}
+
+export function NutriEmptyState({ onGenerateInvite }: NutriEmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 py-8 md:py-0 space-y-6 md:space-y-8">
       <div className="space-y-2 max-w-md mx-auto">
         <h1 className="text-title-2 md:text-title-1 font-bold text-neutral-600">
-          Nenhum paciente ou time por aqui ainda 👀
+          Você ainda não tem pacientes 👀
         </h1>
         <p className="text-body-1 text-neutral-500">
-          Você está com o painel zerado! Comece a estruturar seus acompanhamentos escolhendo uma das opções abaixo.
+          Seu painel está zerado! Gere o link de convite e envie para seu paciente começar a registrar os hábitos.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl text-left">
-        {/* Card 1: Criar Time */}
+      <div className="flex justify-center w-full max-w-md text-left">
+        {/* Card Único: Convidar Paciente */}
         <button
           type="button"
-          onClick={() => toast.info('Criação de times em breve! 🚀', {
-            className: 'bg-notify-info-glass backdrop-blur-md border border-notify-info',
-          })}
-          className="flex flex-col items-start p-5 md:p-6 rounded-3xl border border-white/60 bg-brand-100/40 hover:bg-brand-100/60 transition-all active:scale-[0.99] group shadow-sm hover:shadow-md"
+          onClick={onGenerateInvite}
+          className="w-full flex flex-col items-start p-5 md:p-6 rounded-3xl border border-white/60 bg-white/80 hover:bg-white transition-all active:scale-[0.99] group shadow-sm hover:shadow-md"
         >
-          <div className="flex gap-4 items-center  mb-4">
+          <div className="flex gap-4 items-center mb-4">
             <div className="p-3 bg-brand-500/10 text-brand-500 rounded-xl group-hover:bg-brand-500 group-hover:text-white transition-colors">
-              <Users className="h-6 w-6" />
-            </div>
-            <h3 className="text-title-3 font-bold text-neutral-600 mb-1">
-              Criar um Time
-            </h3>
-          </div>
-          <p className="text-caption-1 text-neutral-500 mb-6 text-left">
-            Ideal para segmentar seus pacientes. Ex: &quot;Desafio de Emagrecimento 30 dias&quot;, &quot;Turma de Hipertrofia&quot;.
-          </p>
-          <div className="mt-auto flex items-center gap-2 text-button-1 font-semibold text-brand-500 group-hover:text-brand-600">
-            <Plus className="h-4 w-4" />
-            Criar meu primeiro time
-          </div>
-        </button>
-
-        {/* Card 2: Convidar Paciente */}
-        <button
-          type="button"
-          onClick={() => toast.info('Convite individual em breve! 🚀', {
-             className: 'bg-notify-info-glass backdrop-blur-md border border-notify-info',
-          })}
-          className="flex flex-col items-start p-5 md:p-6 rounded-3xl border border-white/60 bg-white/80 hover:bg-white transition-all active:scale-[0.99] group shadow-sm hover:shadow-md"
-        >
-          <div className="flex gap-4 items-center  mb-4">
-            <div className="p-3 bg-neutral-100 text-neutral-600 rounded-xl group-hover:bg-neutral-200 transition-colors">
               <Link2 className="h-6 w-6" />
             </div>
             <h3 className="text-title-3 font-bold text-neutral-600 mb-1">
@@ -56,9 +32,9 @@ export function NutriEmptyState() {
             </h3>
           </div>
           <p className="text-caption-1 text-neutral-500 mb-6 text-start">
-            Acompanhamento individualizado. Gere um link e envie diretamente para seu paciente começar a registrar.
+            Acompanhamento contínuo. Gere um link e envie diretamente para seu paciente entrar no seu time.
           </p>
-          <div className="mt-auto flex items-center gap-2 text-button-1 font-semibold text-neutral-600 group-hover:text-neutral-800">
+          <div className="mt-auto flex items-center gap-2 text-button-1 font-semibold text-brand-500 group-hover:text-brand-600">
             <Plus className="h-4 w-4" />
             Gerar link de convite
           </div>

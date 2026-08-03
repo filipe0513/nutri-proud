@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import { NutriDashboard } from '@/components/shared/NutriDashboard';
+import { auth } from '@/auth';
+import { getMyTeams } from '@/services/teamService';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: 'Painel da Nutricionista',
@@ -10,8 +13,15 @@ export const metadata: Metadata = {
  * /dashboard — Página exclusiva da Nutricionista.
  *
  * O guarda de RBAC está no layout pai (nutri)/layout.tsx.
- * Aqui apenas renderizamos o componente de dashboard.
+ * Aqui buscamos os dados do banco e renderizamos o dashboard.
  */
-export default function NutriDashboardPage() {
-  return <NutriDashboard />;
+export default async function NutriDashboardPage() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    redirect('/welcome');
+  }
+
+  const teams = await getMyTeams(session.user.id);
+  
+  return <NutriDashboard teams={teams} />;
 }

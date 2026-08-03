@@ -1,29 +1,17 @@
 'use client';
 
-import { useState } from 'react';
 import {
   Users,
   AlertTriangle,
   ChevronRight,
   Link2,
-  Plus,
   TrendingUp,
   CheckCircle2,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { NutriEmptyState } from './NutriEmptyState';
-
-// ─── Mock data para o skeleton inicial ─────────────────────────────────────
-
-// Removendo mocks iniciais para testar o Empty State, caso necessário basta adicionar os mocks
-interface MockGroup {
-  id: string;
-  name: string;
-  members: number;
-  activeToday: number;
-}
-const MOCK_GROUPS: MockGroup[] = [];
+import type { TeamSummary } from '@/types/teamTypes';
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
@@ -143,35 +131,51 @@ function GroupCard({ name, members, activeToday, onGenerateInvite }: GroupCardPr
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
-export function NutriDashboard() {
-  const [groups] = useState(MOCK_GROUPS);
-  const [patients] = useState<unknown[]>([]); // Mock vazio por enquanto
+interface NutriDashboardProps {
+  teams: TeamSummary[];
+}
 
-  const handleGenerateInvite = (groupName: string) => {
-    // Mock: gera um link de convite fictício e copia para o clipboard
-    const mockCode = crypto.randomUUID().replace(/-/g, '').substring(0, 6).toUpperCase();
-    const mockLink = `${window.location.origin}/join/${mockCode}`;
+export function NutriDashboard({ teams }: NutriDashboardProps) {
+  // Apenas para simplificar no MVP, como não temos histórico hoje de pacientes ativos, activeToday é 0.
+  // Em uma implementação futura seria buscado do backend.
+  const activeToday = 0;
+
+  const handleGenerateInvite = (inviteCode: string, groupName: string) => {
+    const inviteLink = `${window.location.origin}/join/${inviteCode}`;
 
     navigator.clipboard
-      .writeText(mockLink)
+      .writeText(inviteLink)
       .then(() => {
         toast.success(`Link de convite para "${groupName}" copiado!`, {
-          description: mockLink,
+          description: inviteLink,
           className:
             'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
         });
       })
       .catch(() => {
-        toast.info(`Link de convite: ${mockLink}`, {
+        toast.info(`Link de convite: ${inviteLink}`, {
           className:
             'bg-notify-info-glass backdrop-blur-md border border-notify-info',
         });
       });
   };
 
-  // Se o usuário nutricionista não tem pacientes nem grupos, exibir o empty state
-  if (patients.length === 0 && groups.length === 0) {
-    return <NutriEmptyState />;
+  // Se o usuário nutricionista não tem nenhum paciente em nenhum time, exibir o empty state
+  // O Team padrão sempre existe, então verificamos se há algum paciente
+  const totalPatients = teams.reduce((acc, t) => acc + t.memberCount, 0) - teams.length; // Subtraindo 1 por team (a própria nutri é ADMIN)
+  if (totalPatients <= 0) {
+    const defaultTeam = teams[0];
+    return (
+      <NutriEmptyState
+        onGenerateInvite={() => {
+          if (defaultTeam) {
+            handleGenerateInvite(defaultTeam.inviteCode, defaultTeam.name);
+          } else {
+            toast.error('Erro: Time padrão não encontrado.');
+          }
+        }}
+      />
+    );
   }
 
   return (
@@ -190,9 +194,9 @@ export function NutriDashboard() {
       {/* ── Summary Stats ──────────────────────────────────────────── */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Total', value: groups.reduce((a, g) => a + g.members, 0), icon: Users, color: 'text-brand-500' },
-          { label: 'Ativos hoje', value: groups.reduce((a, g) => a + g.activeToday, 0), icon: CheckCircle2, color: 'text-notify-success' },
-          { label: 'Times', value: groups.length, icon: TrendingUp, color: 'text-notify-warning' },
+          { label: 'Total', value: totalPatients, icon: Users, color: 'text-brand-500' },
+          { label: 'Ativos hoje', value: activeToday, icon: CheckCircle2, color: 'text-notify-success' },
+          { label: 'Times', value: teams.length, icon: TrendingUp, color: 'text-notify-warning' },
         ].map((stat) => (
           <div
             key={stat.label}
@@ -217,30 +221,22 @@ export function NutriDashboard() {
               Meus Times
             </p>
           </div>
-          <button
-            type="button"
-            className="flex items-center gap-1 text-brand-500 text-caption-1 font-semibold hover:underline"
-            onClick={() =>
-              toast.info('Criação de times em breve! 🚀', {
-                className: 'bg-notify-info-glass backdrop-blur-md border border-notify-info',
-              })
-            }
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Novo time
-          </button>
+          {/* Novo time escondido para MVP focado no time padrão */}
         </div>
 
         <div className="space-y-3">
-          {groups.map((group) => (
-            <GroupCard
-              key={group.id}
-              name={group.name}
-              members={group.members}
-              activeToday={group.activeToday}
-              onGenerateInvite={() => handleGenerateInvite(group.name)}
-            />
-          ))}
+          {teams.map((group) => {
+            const memberCount = Math.max(0, group.memberCount - 1); // Desconta a própria nutri
+            return (
+              <GroupCard
+                key={group.id}
+                name={group.name}
+                members={memberCount}
+                activeToday={activeToday} // TODO: Implementar metricas de ativos reais depois
+                onGenerateInvite={() => handleGenerateInvite(group.inviteCode, group.name)}
+              />
+            );
+          })}
         </div>
       </section>
     </div>
