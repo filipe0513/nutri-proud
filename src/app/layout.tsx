@@ -10,10 +10,10 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 export const metadata: Metadata = {
   title: {
     template: "%s | Orgulho da Nutri",
-    default: "Orgulho da Nutri - Gamifique seus Hábitos Saudáveis",
+    default: "Orgulho da Nutri - Gamifique seus Hábitos e Conecte-se com sua Nutricionista",
   },
   description:
-    "O Orgulho da Nutri é o seu parceiro gamificado para rastrear água, sono, alimentação, intestino e treinos. Zero atrito e com IA integrada.",
+    "O Orgulho da Nutri é o seu diário de saúde gamificado e inteligente. Monitore água, sono, alimentação, intestino e treinos com zero atrito. Nutricionistas podem acompanhar seus pacientes em tempo real.",
   keywords: [
     "rastreador de hábitos",
     "saúde",
@@ -21,11 +21,13 @@ export const metadata: Metadata = {
     "gamificação",
     "nutrição",
     "diário de saúde",
+    "acompanhamento nutricional",
+    "software para nutricionistas",
   ],
   openGraph: {
     title: "Orgulho da Nutri - Gamifique seus Hábitos Saudáveis",
     description:
-      "O Orgulho da Nutri é o seu parceiro gamificado para rastrear água, sono, alimentação, intestino e treinos. Zero atrito e com IA integrada.",
+      "Diário de saúde gamificado para pacientes e plataforma inteligente de acompanhamento para nutricionistas.",
     url: "https://orgulhodanutri.com",
     siteName: "Orgulho da Nutri",
     locale: "pt_BR",

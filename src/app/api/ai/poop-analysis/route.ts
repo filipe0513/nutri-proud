@@ -1,3 +1,6 @@
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { auth } from '@/auth';
@@ -213,13 +216,30 @@ export async function POST(request: Request) {
 
     const currentStateLabel = STATE_LABELS[state] ?? state;
 
+    const now = new Date();
+    const localTimeString = now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+    const hasFoodOrWaterRecent = recentLogs.some(l => 
+      (l.category === 'food' || l.category === 'water' || l.category === 'jacada') &&
+      now.getTime() - new Date(l.eventTime).getTime() <= 48 * 60 * 60 * 1000
+    );
+
+    let rule2 = '';
+    if (!hasFoodOrWaterRecent) {
+      rule2 = `REGRA CRÍTICA: Não há logs de refeições/água recentes. NÃO invente um motivo. Explique que o intestino reflete o que foi comido ontem e pergunte se o usuário esqueceu de registrar a refeição/jacada.`;
+    }
+
     const prompt = `Você é a Nutri, nutricionista analítica e empática.
 Analise os dados dos últimos 3 dias e identifique se há correlação clara com o registro de intestino atual.
+
+Data e hora atual: ${localTimeString}
 
 Registro atual de intestino: ${currentStateLabel}
 
 --- Últimos 3 dias ---
 ${contextSummary}
+
+${rule2}
 
 REGRAS OBRIGATÓRIAS:
 1. Só responda se houver correlação CLARA e ESPECÍFICA nos dados fornecidos. Caso contrário, retorne EXATAMENTE o JSON: {"analysis": null}
@@ -272,7 +292,7 @@ REGRAS OBRIGATÓRIAS:
 
     return NextResponse.json({ analysis });
   } catch (error) {
-    console.error('Erro ao gerar análise de intestino:', error);
+    console.error('[Gemini API Error - Poop]:', error);
     return NextResponse.json(
       { error: 'Erro interno ao gerar análise.' },
       { status: 500 },

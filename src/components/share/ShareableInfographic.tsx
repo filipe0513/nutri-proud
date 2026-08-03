@@ -236,10 +236,14 @@ export const ShareableInfographic = React.forwardRef<
       >
         {/* Period chip (Moved near pillar bars) */}
         <div
+          className="flex flex-col items-center justify-center w-full text-center"
           style={{
-            display: 'inline-flex',
+            display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
+            width: '100%',
+            textAlign: 'center',
             gap: '6px',
             padding: '4px 14px',
             borderRadius: '100px',

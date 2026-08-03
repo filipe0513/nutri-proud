@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useAppStore } from "@/store/store";
 import { Flame } from "lucide-react";
-import { NotificationsSheet } from "./NotificationsSheet";
+import { ReleaseNotesDrawer } from "./ReleaseNotesDrawer";
+import packageInfo from "../../../package.json";
 
 export function StoryHeader() {
   const { user_profile } = useAppStore();
   const [streakCount, setStreakCount] = useState(0);
+  const [showReleaseNotes, setShowReleaseNotes] = useState(false);
+
+  const appVersion = packageInfo.version;
 
   // Fetch streak data for the header badge
   useEffect(() => {
@@ -33,20 +36,7 @@ export function StoryHeader() {
 
   return (
     <div className="space-y-3">
-      <div className="flex justify-center">
-        <div className="inline-flex items-center px-5 py-2.5 rounded-full bg-glass-light-2 backdrop-blur-md border border-white/60 shadow-sm">
-          <Image
-            src="/logo-color-h.webp"
-            alt="Orgulho da Nutri"
-            width={1332}
-            height={281}
-            priority
-            unoptimized
-            className="h-7 w-auto"
-          />
-        </div>
-      </div>
-
+      {/* 2nd Row: Avatar, Greeting, Date & Versions */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-title-1 text-neutral-500">
@@ -65,9 +55,13 @@ export function StoryHeader() {
           </div>
         )}
       </div>
-      <div className="absolute top-4 right-4">
-        <NotificationsSheet />
-      </div>
+
+      {/* Release Notes Drawer */}
+      <ReleaseNotesDrawer
+        open={showReleaseNotes}
+        onOpenChange={setShowReleaseNotes}
+        currentVersion={appVersion}
+      />
     </div>
   );
 }

@@ -7,6 +7,9 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
+    // Apenas arquivos de unit test em src/ — os testes E2E em tests/e2e são do Playwright
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['tests/**', 'node_modules/**'],
     alias: {
       '@': path.resolve(__dirname, './src'),
     },

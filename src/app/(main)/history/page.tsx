@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useInView } from "react-intersection-observer";
 import { useHistoryStore } from "@/store/historyStore";
 import { FilterDrawer } from "@/components/shared/FilterDrawer";
@@ -11,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { ActivityLog } from "@/store/types";
 import { useAppStore } from "@/store/store";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { TopHeader } from "@/components/shared/TopHeader";
 import { BottomSheet_Water } from "@/components/shared/BottomSheet_Water";
 import { BottomSheet_Sleep } from "@/components/shared/BottomSheet_Sleep";
 import { BottomSheet_Poop } from "@/components/shared/BottomSheet_Poop";
@@ -122,24 +122,12 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="pb-24 pt-8 px-6 max-w-lg mx-auto space-y-6">
-      <div className="flex justify-center mb-2">
-        <div className="inline-flex items-center px-5 py-2.5 rounded-full bg-glass-light-2 backdrop-blur-md border border-white/60 shadow-sm">
-          <Image
-            src="/logo-color-h.webp"
-            alt="Orgulho da Nutri"
-            width={1332}
-            height={281}
-            priority
-            unoptimized
-            className="h-7 w-auto"
-          />
-        </div>
-      </div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-title-1 font-bold text-neutral-500">Histórico</h1>
-        <FilterDrawer />
-      </div>
+    <div className="pb-32 pt-24 px-6 max-w-lg mx-auto space-y-6">
+      <TopHeader 
+        leftAction="back" 
+        title="Histórico" 
+        rightElement={<FilterDrawer />} 
+      />
 
       {logs.length === 0 && !isFetching ? (
         <div className="flex flex-col items-center justify-center py-20 text-center space-y-3 opacity-70">

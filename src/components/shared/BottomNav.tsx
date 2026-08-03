@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, History, Settings, Share2, Plus } from 'lucide-react';
+import { Home, History, Share2, Users, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BottomNavProps {
@@ -13,11 +13,11 @@ interface BottomNavProps {
 export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
   const pathname = usePathname();
 
-  // Hide nav when inside a Story/Pillar screen or Settings
+  // Hide nav when inside a Story/Pillar screen or a specific Team feed
   if (
     pathname.startsWith('/pillar') ||
-    pathname.startsWith('/settings') ||
-    pathname.startsWith('/profile')
+    pathname.startsWith('/profile') ||
+    (pathname.startsWith('/teams/') && pathname !== '/teams')
   )
     return null;
 
@@ -28,14 +28,15 @@ export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
 
   const rightItems = [
     { label: 'Nutri', icon: Share2, href: null as null, onClick: onShareClick },
-    { label: 'Config', icon: Settings, href: '/settings' },
+    { label: 'Times', icon: Users, href: '/teams' },
   ];
 
   return (
     <nav
-      className="fixed bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[480px] h-[68px] bg-glass-light-2 backdrop-blur-md border border-white/40 shadow-xl rounded-full flex items-center justify-around px-2 z-50"
+      className="fixed bottom-6 left-4 right-4 md:bottom-0 md:left-0 md:right-0 md:w-full md:translate-x-0 h-[68px] bg-glass-light-2 backdrop-blur-md border border-white/40 shadow-xl rounded-full md:rounded-none md:border-x-0 md:border-b-0 z-50"
       aria-label="Navegação principal"
     >
+      <div className="w-full h-full md:max-w-lg md:mx-auto md:px-6 flex items-center justify-around px-2 md:px-0">
       {/* Left: Home + Histórico */}
       {leftItems.map((item) => {
         const isActive = pathname === item.href;
@@ -70,7 +71,7 @@ export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
         <Plus className="h-7 w-7 stroke-[2.5px]" />
       </button>
 
-      {/* Right: Compartilhar + Config */}
+      {/* Right: Compartilhar + Times */}
       {rightItems.map((item) => {
         const isActive = item.href ? pathname === item.href : false;
 
@@ -112,6 +113,7 @@ export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
           </Link>
         );
       })}
+      </div>
     </nav>
   );
 }

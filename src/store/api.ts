@@ -1,4 +1,5 @@
 import { UserProfile, ActivityLog } from './types';
+import type { TeamSummary, PostWithAuthor } from '@/types/teamTypes';
 
 /** Erro tipado para respostas HTTP não-ok da API. Permite detectar status 403 nos componentes. */
 export class ApiError extends Error {
@@ -117,3 +118,109 @@ export const deleteActivityLog = async (id: string): Promise<void> => {
   }
 };
 
+// ── Teams API (UI Mocks for now) ──────────────────────────
+
+export const fetchMyTeams = async (): Promise<TeamSummary[]> => {
+  const res = await fetch('/api/teams');
+  if (!res.ok) {
+    console.warn('Falha ao buscar teams, usando mock');
+    return []; // Return empty array if backend not implemented
+  }
+  const data = await res.json();
+  return data.teams || [];
+};
+
+export const createTeam = async (data: { name: string; description?: string }): Promise<TeamSummary> => {
+  const res = await fetch('/api/teams', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Erro ao criar team');
+  }
+  return res.json();
+};
+
+export const fetchTeamDetails = async (teamId: string): Promise<TeamSummary | null> => {
+  const res = await fetch(`/api/teams/${teamId}`);
+  if (!res.ok) {
+    console.warn('Falha ao buscar detalhes do team');
+    return null;
+  }
+  const data = await res.json();
+  return data.team || null;
+};
+
+export const updateTeamDetails = async (teamId: string, data: { name?: string; description?: string }): Promise<TeamSummary> => {
+  const res = await fetch(`/api/teams/${teamId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Erro ao atualizar team');
+  }
+  const responseData = await res.json();
+  return responseData.team;
+};
+
+export const deleteTeamAction = async (teamId: string): Promise<void> => {
+  const res = await fetch(`/api/teams/${teamId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Erro ao apagar team');
+  }
+};
+
+export const joinTeamByCode = async (inviteCode: string): Promise<TeamSummary> => {
+  const res = await fetch('/api/teams/join', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ inviteCode }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Código inválido ou expirado');
+  }
+  return res.json();
+};
+
+export const fetchTeamFeed = async (teamId: string): Promise<PostWithAuthor[]> => {
+  const res = await fetch(`/api/teams/${teamId}/posts`);
+  if (!res.ok) {
+    console.warn('Falha ao buscar feed do team, usando mock vazio');
+    return [];
+  }
+  const data = await res.json();
+  return data.posts || [];
+};
+
+export const createPost = async (teamId: string, data: { content?: string; imageUrl?: string }): Promise<PostWithAuthor> => {
+  const res = await fetch(`/api/teams/${teamId}/posts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Erro ao publicar');
+  }
+  return res.json();
+};
+
+export const toggleReaction = async (postId: string, emoji: string): Promise<void> => {
+  const res = await fetch(`/api/posts/${postId}/reactions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ emoji }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? 'Erro ao reagir');
+  }
+};

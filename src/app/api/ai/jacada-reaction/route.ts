@@ -1,3 +1,6 @@
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { auth } from '@/auth';
@@ -172,7 +175,7 @@ REGRAS OBRIGATÓRIAS:
 
     return NextResponse.json({ message: text });
   } catch (error) {
-    console.error('Erro ao gerar reação da jacada:', error);
+    console.error('[Gemini API Error - Jacada]:', error);
     return NextResponse.json(
       { error: 'Erro interno ao gerar reação.' },
       { status: 500 }

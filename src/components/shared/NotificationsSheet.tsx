@@ -5,6 +5,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Bell, Sparkles, Droplets, Target, Settings, Utensils } from "lucide-react";
 import { useAppStore } from "@/store/store";
 
+interface NotificationsSheetProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  customTrigger?: React.ReactNode;
+}
+
 interface Notification {
   id: string;
   title: string;
@@ -64,8 +70,16 @@ function formatDate(iso: string) {
   });
 }
 
-export function NotificationsSheet() {
-  const [open, setOpen] = useState(false);
+export function NotificationsSheet({
+  open: externalOpen,
+  onOpenChange: externalOnOpenChange,
+  customTrigger,
+}: NotificationsSheetProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = externalOnOpenChange !== undefined ? externalOnOpenChange : setInternalOpen;
+  
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { setActiveDrawer, setPendingInsightData } = useAppStore();
 
@@ -127,20 +141,22 @@ export function NotificationsSheet() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button
-          id="notifications-trigger"
-          aria-label="Abrir notificações"
-          className="relative p-2 rounded-full hover:bg-neutral-200 transition"
-        >
-          <Bell className="w-6 h-6 text-neutral-500" />
-          {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
-              <span className="text-white text-[10px] font-bold leading-none px-0.5">
-                {unreadCount > 9 ? "9+" : unreadCount}
+        {customTrigger ? customTrigger : (
+          <button
+            id="notifications-trigger"
+            aria-label="Abrir notificações"
+            className="relative p-2 rounded-full hover:bg-neutral-200 transition"
+          >
+            <Bell className="w-6 h-6 text-neutral-500" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+                <span className="text-white text-[10px] font-bold leading-none px-0.5">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
               </span>
-            </span>
-          )}
-        </button>
+            )}
+          </button>
+        )}
       </SheetTrigger>
 
       <SheetContent

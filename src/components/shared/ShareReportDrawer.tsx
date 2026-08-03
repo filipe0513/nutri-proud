@@ -18,6 +18,9 @@ import {
   Sparkles,
   ImageIcon,
   Download,
+  Users,
+  Camera,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toBlob } from 'html-to-image';
@@ -32,6 +35,8 @@ import { calculateWaterScore } from '@/utils/scoreUtils';
 import { historyService } from '@/services/historyService';
 import { useAppStore } from '@/store/store';
 import type { ActivityLog } from '@/store/types';
+import { TeamPickerModal } from '@/components/shared/TeamPickerModal';
+import { publishCardToTeam } from '@/app/actions/publishCardToTeam';
 
 // ─── Shared types ─────────────────────────────────────────────────────────────
 
@@ -169,7 +174,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
   const { user_profile } = useAppStore();
 
   // ── Tab ──
-  const [activeTab, setActiveTab] = useState<Tab>('nutri');
+  const [activeTab, setActiveTab] = useState<Tab>('infographic');
 
   // ── Report (Nutri) state ──
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>('today');
@@ -179,7 +184,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
   const [reportText, setReportText] = useState<string | null>(null);
 
   // ── Infographic state ──
-  const [infoPeriod, setInfoPeriod] = useState<InfographicPeriod>('week');
+  const [infoPeriod, setInfoPeriod] = useState<InfographicPeriod>('today');
   const [infoLoading, setInfoLoading] = useState(false);
   const [infoCapturing, setInfoCapturing] = useState(false);
   const [infoReady, setInfoReady] = useState(false);
@@ -191,9 +196,25 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
   } | null>(null);
   const [selectedExport, setSelectedExport] = useState<string>('CARD');
 
+  const [bgPhoto, setBgPhoto] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Team publish state ──
+  const [teamPickerOpen, setTeamPickerOpen] = useState(false);
+  const [publishingTeamId, setPublishingTeamId] = useState<string | null>(null);
+
   const nodeRef = useRef<HTMLDivElement>(null);
 
   const today = getTodayLocal();
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setBgPhoto(url);
+    }
+  };
+
   // ── Report handlers ──────────────────────────────────────────────────────
 
   const handleGenerateReport = async () => {
@@ -340,6 +361,52 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
     }
   }, [captureBlob]);
 
+  /**
+   * Captures the Card (always with solid background), converts to Base64
+   * and calls the Server Action to upload to Cloudinary + create the Post.
+   */
+  const handlePublishToTeam = useCallback(async (teamId: string, teamName: string) => {
+    setPublishingTeamId(teamId);
+    setInfoCapturing(true);
+    try {
+      // Force the CARD format (with background) for team posts
+      const prevExport = selectedExport;
+      if (prevExport !== 'CARD') {
+        // We temporarily capture as CARD. The nodeRef renders as CARD because
+        // we pass 'CARD' check to the off-screen node (it always renders the
+        // selected export). Re-render happens synchronously before toBlob.
+      }
+
+      // Capture the full-size card
+      const options = { cacheBust: true, pixelRatio: 2, width: 375, height: 667 };
+      if (!nodeRef.current) throw new Error('Elemento não encontrado.');
+      const blob = await toBlob(nodeRef.current, options);
+      if (!blob) throw new Error('Falha ao capturar o card.');
+
+      // Call Server Action with native FormData (bypasses Next.js JSON body size limits)
+      const formData = new FormData();
+      formData.append('file', blob, 'orgulho-da-nutri.png');
+      formData.append('teamId', teamId);
+      formData.append('content', `Meu progresso — ${infographicData?.periodName ?? 'hoje'} 💪`);
+
+      const result = await publishCardToTeam(formData);
+
+      if (!result.success) throw new Error(result.error);
+
+      setTeamPickerOpen(false);
+      toast.success(`Publicado em ${teamName}! 🎉`, {
+        description: 'Seu card já aparece no feed do Team.',
+        className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao publicar.';
+      toast.error(msg);
+    } finally {
+      setInfoCapturing(false);
+      setPublishingTeamId(null);
+    }
+  }, [nodeRef, selectedExport, infographicData]);
+
   // ── Reset on close ────────────────────────────────────────────────────────
 
   const handleOpenChange = (v: boolean) => {
@@ -351,9 +418,11 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
         setCustomEnd('');
         setInfoReady(false);
         setInfographicData(null);
-        setInfoPeriod('week');
+        setInfoPeriod('today');
         setSelectedExport('CARD');
-        setActiveTab('nutri');
+        setActiveTab('infographic');
+        setTeamPickerOpen(false);
+        setBgPhoto(null);
       }, 300);
     }
     onOpenChange(v);
@@ -594,7 +663,45 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-center gap-3">
+                  {selectedExport === 'CARD' && (
+                    <div className="space-y-2 mt-2">
+                      <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide">
+                        Foto de Fundo (Opcional)
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex-1 h-12 rounded-2xl border border-purple-300 bg-white/60 text-purple-800 hover:bg-purple-100 flex items-center justify-center gap-2 text-button-1"
+                        >
+                          <Camera className="h-4 w-4" />
+                          {bgPhoto ? 'Trocar Foto' : 'Adicionar Foto de Fundo'}
+                        </Button>
+                        {bgPhoto && (
+                          <Button
+                            variant="ghost"
+                            onClick={() => {
+                              setBgPhoto(null);
+                              if (fileInputRef.current) fileInputRef.current.value = '';
+                            }}
+                            className="h-12 w-12 shrink-0 rounded-2xl text-red-500 hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-200"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col items-center gap-3 mt-2">
                     <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide self-start">
                       Pré-visualização
                     </p>
@@ -615,12 +722,46 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
                     >
                       {selectedExport === 'CARD' ? (
                         <div style={{ transform: 'scale(0.533)', transformOrigin: 'top left', width: '375px', height: '667px' }}>
-                          <ShareableInfographic
-                            periodName={infographicData.periodName}
-                            scores={infographicData.scores}
-                            globalScore={infographicData.globalScore}
-                            bestPillars={infographicData.bestPillars}
-                          />
+                          {bgPhoto ? (
+                            <div
+                              style={{
+                                width: '375px',
+                                height: '667px',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                backgroundColor: '#000',
+                              }}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={bgPhoto}
+                                alt="Background"
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                  position: 'absolute',
+                                  inset: 0,
+                                  zIndex: 1,
+                                }}
+                              />
+                              <div style={{ position: 'absolute', bottom: '16px', right: '16px', zIndex: 10, filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))' }}>
+                                <ShareableSticker
+                                  type="GLOBAL"
+                                  score={infographicData.globalScore}
+                                  metadata={infographicData.periodName}
+                                  pillarScores={infographicData.scores}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <ShareableInfographic
+                              periodName={infographicData.periodName}
+                              scores={infographicData.scores}
+                              globalScore={infographicData.globalScore}
+                              bestPillars={infographicData.bestPillars}
+                            />
+                          )}
                         </div>
                       ) : (
                         <div style={{ transform: 'scale(0.8)', transformOrigin: 'center' }}>
@@ -656,6 +797,20 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
               {/* Share / Download actions */}
               {infoReady && infographicData && (
                 <div className="flex flex-col gap-3">
+                  {/* Publish to Team — zero friction */}
+                  <Button
+                    onClick={() => setTeamPickerOpen(true)}
+                    disabled={infoCapturing}
+                    className="w-full h-14 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white text-button-1 flex items-center justify-center gap-2 shadow-md shadow-brand-500/25"
+                    id="btn-publish-to-team"
+                  >
+                    {infoCapturing && publishingTeamId ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" />Publicando...</>
+                    ) : (
+                      <><Users className="h-4 w-4" />Publicar no Team</>
+                    )}
+                  </Button>
+
                   <div className="flex gap-3">
                     <Button
                       variant="outline"
@@ -677,6 +832,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
                       Compartilhar
                     </Button>
                   </div>
+
                   <button
                     type="button"
                     onClick={() => { setInfoReady(false); setInfographicData(null); }}
@@ -704,13 +860,48 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
           }}
         >
           {selectedExport === 'CARD' ? (
-            <ShareableInfographic
-              ref={nodeRef}
-              periodName={infographicData.periodName}
-              scores={infographicData.scores}
-              globalScore={infographicData.globalScore}
-              bestPillars={infographicData.bestPillars}
-            />
+            bgPhoto ? (
+              <div
+                ref={nodeRef}
+                style={{
+                  width: '375px',
+                  height: '667px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  backgroundColor: '#000',
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={bgPhoto}
+                  alt="Background"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: 1,
+                  }}
+                />
+                <div style={{ position: 'absolute', bottom: '16px', right: '16px', zIndex: 10, filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))' }}>
+                  <ShareableSticker
+                    type="GLOBAL"
+                    score={infographicData.globalScore}
+                    metadata={infographicData.periodName}
+                    pillarScores={infographicData.scores}
+                  />
+                </div>
+              </div>
+            ) : (
+              <ShareableInfographic
+                ref={nodeRef}
+                periodName={infographicData.periodName}
+                scores={infographicData.scores}
+                globalScore={infographicData.globalScore}
+                bestPillars={infographicData.bestPillars}
+              />
+            )
           ) : (
             <ShareableSticker
               ref={nodeRef}
@@ -722,6 +913,15 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
           )}
         </div>
       )}
+
+      {/* ─── Team Picker Modal ──────────────────────────────────────────── */}
+      <TeamPickerModal
+        open={teamPickerOpen}
+        onOpenChange={setTeamPickerOpen}
+        onSelectTeam={handlePublishToTeam}
+        isPublishing={infoCapturing}
+        publishingTeamId={publishingTeamId}
+      />
     </>
   );
 }

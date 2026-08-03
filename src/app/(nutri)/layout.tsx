@@ -1,0 +1,116 @@
+import { redirect } from 'next/navigation';
+import { auth } from '@/auth';
+import { UserRole } from '@/types/roles';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Settings, LogOut } from 'lucide-react';
+import { signOut } from '@/auth';
+
+/**
+ * Layout exclusivo da Nutricionista.
+ *
+ * Guarda RBAC: somente usuários com role NUTRITIONIST podem acessar
+ * as rotas dentro do time (nutri). Qualquer outro usuário é redirecionado
+ * para a home do paciente (/).
+ *
+ * Design: sem BottomNav mobile. Sidebar/Header estilo admin/desktop.
+ */
+export default async function NutriLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await auth();
+
+  // Não autenticado → tela de login
+  if (!session?.user?.id) {
+    redirect('/welcome');
+  }
+
+  // Não é nutricionista → home do paciente
+  if (session.user.role !== UserRole.NUTRITIONIST) {
+    redirect('/');
+  }
+
+  const userName = session.user.name ?? 'Nutricionista';
+  const userImage = session.user.image;
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* ── Top Header da Nutri ──────────────────────────────────── */}
+      <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+          {/* Logo / Brand */}
+          <Link href="/dashboard" className="flex items-center gap-2.5 flex-shrink-0">
+            <span className="text-title-3 font-bold text-neutral-600">Dashboard Nutri</span>
+          </Link>
+
+          {/* Nav links (desktop) */}
+          <nav className="hidden md:flex items-center gap-1" aria-label="Navegação da nutricionista">
+            <Link
+              href="/dashboard"
+              className="px-4 py-2 text-body-2 font-medium text-neutral-500 rounded-xl hover:bg-slate-100 transition-colors"
+            >
+              Meus Pacientes
+            </Link>
+          </nav>
+
+          {/* User menu */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Avatar */}
+            <div className="flex items-center gap-2">
+              {userImage ? (
+                <Image
+                  src={userImage}
+                  alt={userName}
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 rounded-full object-cover ring-2 ring-brand-500/30"
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-brand-100 flex items-center justify-center ring-2 ring-brand-500/30">
+                  <span className="text-caption-1 font-bold text-brand-500">
+                    {userName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <span className="hidden sm:block text-body-2 font-medium text-neutral-500 max-w-[120px] truncate">
+                {userName}
+              </span>
+            </div>
+
+            {/* Settings link */}
+            <Link
+              href="/dashboard/settings"
+              aria-label="Configurações"
+              className="h-8 w-8 flex items-center justify-center rounded-xl text-neutral-400 hover:bg-slate-100 hover:text-neutral-500 transition-colors"
+            >
+              <Settings className="h-4 w-4" />
+            </Link>
+
+            {/* Logout */}
+            <form
+              action={async () => {
+                'use server';
+                await signOut({ redirectTo: '/welcome' });
+              }}
+            >
+              <button
+                type="submit"
+                aria-label="Sair"
+                className="h-8 w-8 flex items-center justify-center rounded-xl text-neutral-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </form>
+          </div>
+        </div>
+      </header>
+
+      {/* ── Conteúdo Principal ───────────────────────────────────── */}
+      <main className="flex-1 w-full">
+        {children}
+      </main>
+    </div>
+  );
+}

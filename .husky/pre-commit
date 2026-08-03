@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# ============================================================
+# .husky/pre-commit — Proteção contra migrate reset
+#
+# Impede commits que contenham `prisma migrate reset` em
+# qualquer arquivo rastreado (scripts, configs, código).
+#
+# INCIDENTE: 03/08/2026 — o comando apagou TODO o banco de
+# produção (Supabase) porque prisma.config.ts usa DIRECT_URL.
+# ============================================================
+
+DANGEROUS_PATTERN="migrate reset"
+
+# Arquivos staged, excluindo: documentação (.md), o próprio
+# wrapper de segurança e o histórico de migrations (que pode
+# ter referências ao comando como comentário)
+STAGED_FILES=$(git diff --cached --name-only \
+  | grep -v -E '\.md$|prisma-safe\.sh|prisma/migrations/|\.husky/')
+
+if [ -n "$STAGED_FILES" ]; then
+  MATCHES=$(echo "$STAGED_FILES" | xargs grep -l "$DANGEROUS_PATTERN" 2>/dev/null || true)
+
+  if [ -n "$MATCHES" ]; then
+    echo ""
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║  🚨  PRE-COMMIT BLOQUEADO                                   ║"
+    echo "╠══════════════════════════════════════════════════════════════╣"
+    echo "║  Arquivo(s) staged contém 'prisma migrate reset':            ║"
+    echo "║"
+    echo "$MATCHES" | while read -r file; do
+      echo "║    ❌  $file"
+    done
+    echo "║                                                              ║"
+    echo "║  Este comando está PROIBIDO — veja .agents/AGENTS.md.        ║"
+    echo "║  Remova a referência antes de commitar.                      ║"
+    echo "║                                                              ║"
+    echo "║  ALTERNATIVAS SEGURAS:                                       ║"
+    echo "║  • Nova migration: npx prisma migrate dev --name <nome>     ║"
+    echo "║  • Aplicar prod:   npx prisma migrate deploy                ║"
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo ""
+    exit 1
+  fi
+fi
+
+exit 0

@@ -1,6 +1,10 @@
 export interface UserProfile {
+  id?: string;
   name: string;
+  email?: string | null;
+  image?: string | null;
   is_anonymous?: boolean;
+  oneSignalId?: string | null;
   profile: {
     weight_kg: number;
     height_cm: number;
