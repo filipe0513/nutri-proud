@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "SquadRole" AS ENUM ('ADMIN', 'MEMBER');
+CREATE TYPE "TeamRole" AS ENUM ('ADMIN', 'MEMBER');
 
 -- CreateEnum
 CREATE TYPE "PostType" AS ENUM ('USER_GENERATED', 'SYSTEM_MILESTONE');
@@ -8,7 +8,7 @@ CREATE TYPE "PostType" AS ENUM ('USER_GENERATED', 'SYSTEM_MILESTONE');
 ALTER TABLE "User" ADD COLUMN     "one_signal_id" TEXT;
 
 -- CreateTable
-CREATE TABLE "Squad" (
+CREATE TABLE "Team" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -16,19 +16,19 @@ CREATE TABLE "Squad" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Squad_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Team_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "SquadMember" (
+CREATE TABLE "TeamMember" (
     "id" TEXT NOT NULL,
-    "squad_id" TEXT NOT NULL,
+    "team_id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
-    "role" "SquadRole" NOT NULL DEFAULT 'MEMBER',
+    "role" "TeamRole" NOT NULL DEFAULT 'MEMBER',
     "mute_notifications" BOOLEAN NOT NULL DEFAULT false,
     "joined_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "SquadMember_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "TeamMember_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -37,7 +37,7 @@ CREATE TABLE "Post" (
     "content" TEXT,
     "image_url" TEXT,
     "type" "PostType" NOT NULL DEFAULT 'USER_GENERATED',
-    "squad_id" TEXT NOT NULL,
+    "team_id" TEXT NOT NULL,
     "author_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -68,22 +68,22 @@ CREATE TABLE "Comment" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Squad_invite_code_key" ON "Squad"("invite_code");
+CREATE UNIQUE INDEX "Team_invite_code_key" ON "Team"("invite_code");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "SquadMember_squad_id_user_id_key" ON "SquadMember"("squad_id", "user_id");
+CREATE UNIQUE INDEX "TeamMember_team_id_user_id_key" ON "TeamMember"("team_id", "user_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Reaction_post_id_user_id_emoji_key" ON "Reaction"("post_id", "user_id", "emoji");
 
 -- AddForeignKey
-ALTER TABLE "SquadMember" ADD CONSTRAINT "SquadMember_squad_id_fkey" FOREIGN KEY ("squad_id") REFERENCES "Squad"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "TeamMember" ADD CONSTRAINT "TeamMember_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "SquadMember" ADD CONSTRAINT "SquadMember_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "TeamMember" ADD CONSTRAINT "TeamMember_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Post" ADD CONSTRAINT "Post_squad_id_fkey" FOREIGN KEY ("squad_id") REFERENCES "Squad"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Post" ADD CONSTRAINT "Post_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Post" ADD CONSTRAINT "Post_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -101,13 +101,13 @@ ALTER TABLE "Comment" ADD CONSTRAINT "Comment_post_id_fkey" FOREIGN KEY ("post_i
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- Enable RLS (required for Supabase — never skip this)
-ALTER TABLE "Squad" ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON TABLE "Squad" FROM anon;
-REVOKE ALL ON TABLE "Squad" FROM authenticated;
+ALTER TABLE "Team" ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE "Team" FROM anon;
+REVOKE ALL ON TABLE "Team" FROM authenticated;
 
-ALTER TABLE "SquadMember" ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON TABLE "SquadMember" FROM anon;
-REVOKE ALL ON TABLE "SquadMember" FROM authenticated;
+ALTER TABLE "TeamMember" ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE "TeamMember" FROM anon;
+REVOKE ALL ON TABLE "TeamMember" FROM authenticated;
 
 ALTER TABLE "Post" ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE "Post" FROM anon;
