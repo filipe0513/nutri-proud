@@ -3,13 +3,13 @@ import { JoinTeamClient } from './JoinTeamClient';
 import { Users } from 'lucide-react';
 
 interface JoinTeamPageProps {
-  params: {
+  params: Promise<{
     code: string;
-  };
+  }>;
 }
 
 export default async function JoinTeamPage({ params }: JoinTeamPageProps) {
-  const { code } = params;
+  const { code } = await params;
 
   // Busca as informações do time para mostrar ao usuário
   const team = await prisma.team.findUnique({

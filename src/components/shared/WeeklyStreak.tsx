@@ -14,6 +14,15 @@ interface WeekDay {
   isFuture: boolean;
 }
 
+interface WeekHistoryItem {
+  id: string;
+  startDate: string;
+  endDate: string;
+  averageScore: number;
+  degree: string;
+  isCurrentWeek: boolean;
+}
+
 import { getScoreColors } from '@/utils/scoreUtils';
 
 // ─── Stagger animation variants ───────────────────────────────────────────────
@@ -180,24 +189,68 @@ function StreakDay({ day, activeAnimation }: { day: WeekDay, activeAnimation?: '
   );
 }
 
-// ─── Streak counter helper ────────────────────────────────────────────────────
-
-function computeStreak(days: WeekDay[]): number {
-  // Count consecutive scored (score !== null) days from the most recent non-future day backwards
-  // Today with score=0 still counts as "active" (user is in the game)
-  const past = [...days].reverse().filter((d) => !d.isFuture);
-  let streak = 0;
-  for (const d of past) {
-    if (d.score !== null) streak++;
-    else break;
+function computeWeeklyStreakText(history: WeekHistoryItem[]): string {
+  const completedWeeks = history.filter((w) => !w.isCurrentWeek);
+  
+  if (completedWeeks.length === 0) {
+    return "Semana inicial, foco total";
   }
-  return streak;
+
+  const degreeValue: Record<string, number> = {
+    'Excelente': 5,
+    'Muito Boa': 4,
+    'Boa': 3,
+    'Regular': 2,
+    'Ruim': 1,
+  };
+
+  let maxGrauValue = 0;
+  let maxGrauLabel = '';
+  
+  for (const w of completedWeeks) {
+    const val = degreeValue[w.degree] || 0;
+    if (val > maxGrauValue) {
+      maxGrauValue = val;
+      maxGrauLabel = w.degree;
+    }
+  }
+
+  let streak = 0;
+  for (const w of completedWeeks) {
+    if ((degreeValue[w.degree] || 0) >= maxGrauValue) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+
+  const getDegreePlural = (label: string) => {
+    if (label === 'Excelente') return 'Excelentes';
+    if (label === 'Muito Boa') return 'Muito Boas';
+    if (label === 'Boa') return 'Boas';
+    if (label === 'Regular') return 'Regulares';
+    return 'Ruins';
+  };
+
+  if (streak > 0) {
+    if (streak === 1) {
+      return `1 semana ${maxGrauLabel.toLowerCase()}`;
+    }
+    return `${streak} semanas ${getDegreePlural(maxGrauLabel).toLowerCase()} seguidas`;
+  } else {
+    let x = 0;
+    for (const w of completedWeeks) {
+      if ((degreeValue[w.degree] || 0) >= maxGrauValue) x++;
+    }
+    return `${x}/${completedWeeks.length} semanas ${getDegreePlural(maxGrauLabel).toLowerCase()}`;
+  }
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function WeeklyStreak() {
   const [days, setDays] = useState<WeekDay[]>([]);
+  const [history, setHistory] = useState<WeekHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const activityLogs = useAppStore((state) => state.activity_logs);
   
@@ -210,9 +263,11 @@ export function WeeklyStreak() {
 
   useEffect(() => {
     let isMounted = true;
-    fetch('/api/progress/weekly')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: WeekDay[] | null) => {
+    Promise.all([
+      fetch('/api/progress/weekly').then((res) => (res.ok ? res.json() : null)),
+      fetch('/api/progress/history-weeks').then((res) => (res.ok ? res.json() : null))
+    ])
+      .then(([data, historyData]: [WeekDay[] | null, WeekHistoryItem[] | null]) => {
         if (!isMounted) return;
         if (data) {
           const isOverlayOpen = useAppStore.getState().successOverlay?.isOpen;
@@ -220,6 +275,7 @@ export function WeeklyStreak() {
             pendingDaysUpdateRef.current = data;
           } else {
             setDays(data);
+            if (historyData) setHistory(historyData);
             const today = data.find((d) => d.isToday);
             if (today && today.score !== null) {
               previousTodayScoreRef.current = today.score;
@@ -245,6 +301,10 @@ export function WeeklyStreak() {
       const data = pendingDaysUpdateRef.current;
       if (data) {
         setDays(data);
+        fetch('/api/progress/history-weeks')
+          .then((res) => (res.ok ? res.json() : null))
+          .then((hist) => { if (hist) setHistory(hist); });
+          
         const today = data.find((d) => d.isToday);
         if (today && today.score !== null) {
           if (previousTodayScoreRef.current !== null && today.score > previousTodayScoreRef.current) {
@@ -277,27 +337,25 @@ export function WeeklyStreak() {
     );
   }
 
-  const streak = computeStreak(days);
+  const streakText = computeWeeklyStreakText(history);
 
   return (
-    <Link href="/profile/me" aria-label="Ver meu perfil" className="block group">
+    <Link href="/history/weeks" aria-label="Ver histórico de semanas" className="block group">
       <div className="space-y-2">
         {/* Header row */}
         <div className="flex items-center justify-between px-1">
           <p className="text-body-2 font-semibold text-neutral-400">
             Como está sua semana atual
           </p>
-          {streak > 0 && (
-            <motion.span
-              initial={{ opacity: 0, x: 8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5, duration: 0.4 }}
-              className="inline-flex items-center gap-1 text-caption-1 font-bold text-orange-500"
-            >
-              <Flame className="w-3.5 h-3.5 fill-orange-500 text-orange-500" />
-              {streak} {streak === 1 ? 'dia apenas' : 'dias seguidos'}
-            </motion.span>
-          )}
+          <motion.span
+            initial={{ opacity: 0, x: 8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+            className="inline-flex items-center gap-1 text-caption-1 font-bold text-orange-500"
+          >
+            <Flame className="w-3.5 h-3.5 fill-orange-500 text-orange-500" />
+            {streakText}
+          </motion.span>
         </div>
 
         {/* Squircles row */}

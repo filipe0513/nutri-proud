@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, Plus, KeyRound, ChevronRight, Copy, Check } from 'lucide-react';
+import { Users, Plus, KeyRound, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { fetchMyTeams, createTeam, joinTeamByCode } from '@/store/api';
 import type { TeamSummary } from '@/types/teamTypes';
@@ -18,7 +18,6 @@ export default function TeamsHubPage() {
   const [joinDrawerOpen, setJoinDrawerOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -75,17 +74,6 @@ export default function TeamsHubPage() {
       toast.error(msg);
     } finally {
       setIsJoining(false);
-    }
-  };
-
-  const handleCopyCode = async (code: string) => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopiedCode(code);
-      toast.success('Código copiado!');
-      setTimeout(() => setCopiedCode(null), 2000);
-    } catch {
-      toast.error('Não foi possível copiar.');
     }
   };
 
@@ -165,23 +153,6 @@ export default function TeamsHubPage() {
                   </div>
                 </button>
 
-                {/* Invite code row */}
-                <div className="mt-3 pt-3 border-t border-neutral-100 flex items-center justify-between">
-                  <p className="text-caption-2 text-neutral-400 font-mono">
-                    Código: <span className="font-semibold text-neutral-500">{team.inviteCode.slice(0, 8)}</span>
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyCode(team.inviteCode)}
-                    className="flex items-center gap-1.5 text-caption-2 text-brand-500 hover:text-brand-600 transition-colors"
-                  >
-                    {copiedCode === team.inviteCode ? (
-                      <><Check className="w-3 h-3" /> Copiado!</>
-                    ) : (
-                      <><Copy className="w-3 h-3" /> Copiar</>
-                    )}
-                  </button>
-                </div>
               </div>
             ))}
           </div>

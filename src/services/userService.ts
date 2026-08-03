@@ -123,10 +123,10 @@ export const userService = {
     });
 
     // 2. Cria a Team padrão da nutri
-    const teamName = user.name ? `Team da ${user.name}` : 'Meu Team';
+    const teamName = user.name ? `Time da ${user.name}` : 'Meu Time';
     const team = await createTeam(userId, {
       name: teamName,
-      description: 'Team criado automaticamente ao ativar a conta de nutricionista.',
+      description: 'Time criado automaticamente ao ativar a conta de nutricionista.',
     });
 
     // 3. Registro de auditoria

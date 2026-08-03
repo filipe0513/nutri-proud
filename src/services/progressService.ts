@@ -32,6 +32,18 @@ export interface WeekDay {
   isFuture: boolean;
 }
 
+export type WeekDegree = 'Excelente' | 'Muito Boa' | 'Boa' | 'Regular' | 'Ruim';
+
+export interface WeekHistoryItem {
+  id: string; // usually the Monday's date string
+  startDate: Date;
+  endDate: Date;
+  averageScore: number;
+  degree: WeekDegree;
+  isCurrentWeek: boolean;
+}
+
+
 /**
  * Returns the Monday of the week that contains `referenceDate`,
  * resolved in America/Sao_Paulo timezone.
@@ -134,4 +146,93 @@ export async function getWeeklyProgress(userId: string): Promise<WeekDay[]> {
   return weekDays;
 }
 
-export const progressService = { getWeeklyProgress };
+/**
+ * Computes the weekly history for a user, from their first log until the current week.
+ *
+ * @param userId - The authenticated user's ID.
+ * @returns Array of `WeekHistoryItem` objects (newest first).
+ */
+export async function getWeeklyHistory(userId: string): Promise<WeekHistoryItem[]> {
+  const now = new Date();
+  const todayKey = getLocalDateKey(now);
+  const currentMonday = getMondayOfWeek(now);
+
+  const firstLog = await prisma.dailyLog.findFirst({
+    where: { userId },
+    orderBy: { eventTime: 'asc' },
+  });
+
+  const startMonday = firstLog ? getMondayOfWeek(new Date(firstLog.eventTime)) : currentMonday;
+
+  const allLogs = await prisma.dailyLog.findMany({
+    where: {
+      userId,
+      eventTime: { gte: startMonday, lte: getLocalEndOfDay(now) },
+    },
+    orderBy: { eventTime: 'asc' },
+  });
+
+  const userProfile = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { targets: true, profile: true },
+  }) ?? {};
+
+  const logsByDay = new Map<string, typeof allLogs>();
+  for (const log of allLogs) {
+    const key = getLocalDateKey(new Date(log.eventTime));
+    if (!logsByDay.has(key)) logsByDay.set(key, []);
+    logsByDay.get(key)!.push(log);
+  }
+
+  const weeks: WeekHistoryItem[] = [];
+  let currentWeekStart = new Date(startMonday);
+
+  while (currentWeekStart <= currentMonday) {
+    let scoreSum = 0;
+    let count = 0;
+
+    for (let i = 0; i < 7; i++) {
+      const dayDate = new Date(currentWeekStart.getTime() + i * 24 * 60 * 60 * 1000);
+      const dayKey = getLocalDateKey(dayDate);
+
+      // Do not include future days in the average
+      if (dayKey > todayKey) continue;
+
+      const dayLogs = logsByDay.get(dayKey) ?? [];
+      let score = 0; // Empty past/current days have a score of 0
+      if (dayLogs.length > 0) {
+        score = historyService.calculateDayScore(dayLogs, userProfile);
+      }
+      
+      scoreSum += score;
+      count++;
+    }
+
+    const averageScore = count > 0 ? Math.round(scoreSum / count) : 0;
+    
+    let degree: WeekDegree = 'Ruim';
+    if (averageScore > 90) degree = 'Excelente';
+    else if (averageScore > 80) degree = 'Muito Boa';
+    else if (averageScore > 70) degree = 'Boa';
+    else if (averageScore > 60) degree = 'Regular';
+
+    const weekEndDate = new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+
+    weeks.push({
+      id: getLocalDateKey(currentWeekStart),
+      startDate: currentWeekStart,
+      endDate: weekEndDate,
+      averageScore,
+      degree,
+      isCurrentWeek: currentWeekStart.getTime() === currentMonday.getTime(),
+    });
+
+    // Advance 7 days
+    currentWeekStart = new Date(currentWeekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+  }
+
+  // Return newest week first
+  return weeks.reverse();
+}
+
+export const progressService = { getWeeklyProgress, getWeeklyHistory };
