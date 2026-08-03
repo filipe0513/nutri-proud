@@ -67,7 +67,7 @@ export function CurrentPlanCard() {
             href="/pricing"
             className="flex items-center gap-1 text-button-1 font-bold text-brand-500 hover:text-brand-600 transition-colors"
           >
-            Upgrade
+            {isPro ? 'Mudar Plano' : 'Upgrade'}
             <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
