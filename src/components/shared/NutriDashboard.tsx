@@ -23,10 +23,7 @@ interface MockGroup {
   members: number;
   activeToday: number;
 }
-const MOCK_GROUPS: MockGroup[] = [
-  { id: '1', name: 'Time Detox Verão', members: 8, activeToday: 5 },
-  { id: '2', name: 'Emagrecimento Turma A', members: 12, activeToday: 9 },
-];
+const MOCK_GROUPS: MockGroup[] = [];
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
