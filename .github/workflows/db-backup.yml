@@ -16,10 +16,8 @@ jobs:
     steps:
       - name: 📦 Install Supabase CLI
         run: |
-          LATEST=$(curl -s https://api.github.com/repos/supabase/cli/releases/latest | grep '"tag_name"' | cut -d'"' -f4 | sed 's/v//')
-          curl -fsSL "https://github.com/supabase/cli/releases/download/v${LATEST}/supabase_linux_amd64.tar.gz" \
+          curl -fsSL https://github.com/supabase/cli/releases/download/v2.30.4/supabase_linux_amd64.tar.gz \
             | tar xz -C /usr/local/bin supabase
-          echo "Supabase CLI v${LATEST} instalado"
 
       - name: 🔌 Dump database schema + data
         env:
