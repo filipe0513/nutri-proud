@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/store/store";
 import { profileSettingsSchema, ProfileSettingsForm } from "@/schemas/profileSchema";
 import { toast } from "sonner";
-import { Pencil, LogOut, ArrowLeft } from "lucide-react";
+import { LogOut, ArrowLeft, Pencil } from "lucide-react";
 import { signOut } from "next-auth/react";
 import packageInfo from "../../../../../package.json";
 import { AvatarUploadButton } from "@/components/shared/AvatarUploadButton";
+import { CurrentPlanCard } from "@/components/shared/CurrentPlanCard";
 import { ReleaseNotesDrawer } from "@/components/shared/ReleaseNotesDrawer";
 import {
   Drawer,
@@ -77,6 +78,9 @@ export default function NutriSettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="h-4" />
+      <CurrentPlanCard />
 
       {/* ── Block 1: Dados Pessoais ── */}
       <Card className="bg-white border-slate-200 shadow-sm rounded-3xl overflow-hidden">

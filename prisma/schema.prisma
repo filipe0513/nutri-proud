@@ -19,6 +19,12 @@ enum PostType {
   SYSTEM_MILESTONE
 }
 
+enum Plan {
+  FREE
+  START
+  PRO
+}
+
 // ── Auth & Core ────────────────────────────────────────────
 
 model User {
@@ -28,6 +34,7 @@ model User {
   image         String?
   is_anonymous  Boolean        @default(false)
   role          String         @default("USER")
+  plan          Plan           @default(FREE)
   oneSignalId   String?        @map("one_signal_id")
   emailVerified DateTime?
   profile       Json?
