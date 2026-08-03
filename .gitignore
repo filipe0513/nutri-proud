@@ -42,7 +42,7 @@ yarn-error.log*
 .vercel
 
 # ia
-.github
+.github/*.md
 .claude
 PLAN_*
 
