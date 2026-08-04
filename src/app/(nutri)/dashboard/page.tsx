@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { NutriDashboard } from '@/components/shared/NutriDashboard';
 import { auth } from '@/auth';
-import { getMyTeams } from '@/services/teamService';
+import { getDashboardTeams } from '@/services/teamService';
 import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
@@ -14,6 +14,10 @@ export const metadata: Metadata = {
  *
  * O guarda de RBAC está no layout pai (nutri)/layout.tsx.
  * Aqui buscamos os dados do banco e renderizamos o dashboard.
+ *
+ * Para usuários ADMIN sem nenhum time criado, getDashboardTeams
+ * executa o auto-seeding de "Meu Consultório (Admin)" automaticamente,
+ * garantindo que o Admin nunca veja um Empty State vazio.
  */
 export default async function NutriDashboardPage() {
   const session = await auth();
@@ -21,7 +25,8 @@ export default async function NutriDashboardPage() {
     redirect('/welcome');
   }
 
-  const teams = await getMyTeams(session.user.id);
-  
+  const teams = await getDashboardTeams(session.user.id, session.user.role);
+
   return <NutriDashboard teams={teams} />;
 }
+

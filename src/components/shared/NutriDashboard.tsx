@@ -160,9 +160,13 @@ export function NutriDashboard({ teams }: NutriDashboardProps) {
       });
   };
 
-  // Se o usuário nutricionista não tem nenhum paciente em nenhum time, exibir o empty state
-  // O Team padrão sempre existe, então verificamos se há algum paciente
-  const totalPatients = teams.reduce((acc, t) => acc + t.memberCount, 0) - teams.length; // Subtraindo 1 por team (a própria nutri é ADMIN)
+  // Patient count: we only subtract the team owner when they have real patients
+  // beyond themselves (memberCount > 1). When the admin is the sole member
+  // (dogfooding), they ARE the patient — memberCount should not be reduced.
+  const totalPatients = teams.reduce(
+    (acc, t) => acc + (t.memberCount > 1 ? t.memberCount - 1 : t.memberCount),
+    0,
+  );
   if (totalPatients <= 0) {
     const defaultTeam = teams[0];
     return (
@@ -226,7 +230,7 @@ export function NutriDashboard({ teams }: NutriDashboardProps) {
 
         <div className="space-y-3">
           {teams.map((group) => {
-            const memberCount = Math.max(0, group.memberCount - 1); // Desconta a própria nutri
+            const memberCount = group.memberCount > 1 ? group.memberCount - 1 : group.memberCount;
             return (
               <GroupCard
                 key={group.id}
