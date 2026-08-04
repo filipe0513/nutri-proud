@@ -9,10 +9,11 @@ import { PatientHome } from '@/components/shared/PatientHome';
  *
  * ┌──────────────────────────────────────────────────────────────┐
  * │  Role           │  Destino                                   │
- * ├──────────────────────────────────────────────────────────────┤
+ * ├─────────────────│────────────────────────────────────────────┤
  * │  NUTRITIONIST   │  redirect('/dashboard') — layout limpo     │
+ * │  ADMIN          │  <PatientHome> com View Switcher            │
  * │  USER / anônimo │  <PatientHome /> renderizado em /          │
- * └──────────────────────────────────────────────────────────────┘
+ * └─────────────────┗────────────────────────────────────────────┘
  *
  * Nota: a URL / permanece para pacientes para manter compatibilidade
  * com os testes E2E (que navegam para '/' e esperam o PatientHome).
@@ -30,6 +31,7 @@ export default async function RootHomePage() {
     redirect('/dashboard');
   }
 
-  // Pacientes e usuários anônimos veem o painel gamificado
-  return <PatientHome />;
+  // Pacientes, ADMINs e usuários anônimos vêem o painel gamificado
+  // ADMINs recebem a role para exibir o View Switcher no header
+  return <PatientHome userRole={role} />;
 }

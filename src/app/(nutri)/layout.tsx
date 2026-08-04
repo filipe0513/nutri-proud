@@ -5,13 +5,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Settings, LogOut } from 'lucide-react';
 import { signOut } from '@/auth';
+import { AdminViewSwitcher } from '@/components/shared/AdminViewSwitcher';
 
 /**
  * Layout exclusivo da Nutricionista.
  *
- * Guarda RBAC: somente usuários com role NUTRITIONIST podem acessar
- * as rotas dentro do time (nutri). Qualquer outro usuário é redirecionado
- * para a home do paciente (/).
+ * Guarda RBAC: usuários com role NUTRITIONIST **ou ADMIN** podem acessar
+ * as rotas dentro do grupo (nutri). ADMINs operam em "God Mode".
+ * Qualquer outro usuário é redirecionado para a home do paciente (/).
  *
  * Design: sem BottomNav mobile. Sidebar/Header estilo admin/desktop.
  */
@@ -27,8 +28,9 @@ export default async function NutriLayout({
     redirect('/welcome');
   }
 
-  // Não é nutricionista → home do paciente
-  if (session.user.role !== UserRole.NUTRITIONIST) {
+  // Não é nutricionista nem admin → home do paciente
+  const allowedRoles: string[] = [UserRole.NUTRITIONIST, UserRole.ADMIN];
+  if (!allowedRoles.includes(session.user.role)) {
     redirect('/');
   }
 
@@ -57,6 +59,9 @@ export default async function NutriLayout({
 
           {/* User menu */}
           <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Admin View Switcher — visible only to ADMIN users */}
+            <AdminViewSwitcher role={session.user.role} />
+
             {/* Avatar */}
             <div className="flex items-center gap-2">
               {userImage ? (

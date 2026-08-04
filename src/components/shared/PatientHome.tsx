@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { LimitWarningDrawer } from '@/components/shared/LimitWarningDrawer';
 import { LifesaverDrawer } from '@/components/shared/LifesaverDrawer';
 import { TopHeader } from '@/components/shared/TopHeader';
+import { AdminViewSwitcher } from '@/components/shared/AdminViewSwitcher';
 import { toLocalISOString } from '@/lib/utils';
 import { calculateWaterScore, calculateFoodScore } from '@/utils/scoreUtils';
 import { getLocalStartOfDay } from '@/utils/dateUtils';
@@ -63,7 +64,7 @@ const ACTION_LIST = [
   { id: 'note', label: 'Adicionar nota', icon: StickyNote, color: 'var(--color-highlight-300)', bg: 'bg-yellow-50' },
 ];
 
-function PatientHomeContent() {
+function PatientHomeContent({ userRole }: { userRole?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addLog, user_profile, activity_logs, initializeData } = useAppStore();
@@ -238,9 +239,19 @@ function PatientHomeContent() {
     </div>
   );
 
+  const isAdmin = userRole === 'ADMIN';
+
   return (
     <div className="pb-32 pt-24 px-6 max-w-lg mx-auto space-y-6">
-      <TopHeader leftAction="avatar" rightAction="notifications" />
+      <TopHeader
+        leftAction="avatar"
+        rightAction={isAdmin ? 'none' : 'notifications'}
+        rightElement={
+          isAdmin ? (
+            <AdminViewSwitcher role={userRole} />
+          ) : undefined
+        }
+      />
       {/* 1. Greeting + Streak Badge */}
       <StoryHeader />
 
@@ -420,10 +431,10 @@ function PatientHomeContent() {
   );
 }
 
-export function PatientHome() {
+export function PatientHome({ userRole }: { userRole?: string }) {
   return (
     <Suspense fallback={<div className="pb-24 pt-8 px-6" />}>
-      <PatientHomeContent />
+      <PatientHomeContent userRole={userRole} />
     </Suspense>
   );
 }
