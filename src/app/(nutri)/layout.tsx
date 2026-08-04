@@ -3,8 +3,6 @@ import { auth } from '@/auth';
 import { UserRole } from '@/types/roles';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Settings, LogOut } from 'lucide-react';
-import { signOut } from '@/auth';
 import { AdminViewSwitcher } from '@/components/shared/AdminViewSwitcher';
 
 /**
@@ -62,18 +60,22 @@ export default async function NutriLayout({
             {/* Admin View Switcher — visible only to ADMIN users */}
             <AdminViewSwitcher role={session.user.role} />
 
-            {/* Avatar */}
-            <div className="flex items-center gap-2">
+            {/* Avatar — clicável p/ configurações (igual à home) */}
+            <Link
+              href="/dashboard/settings"
+              aria-label="Configurações"
+              className="flex items-center gap-2 rounded-full hover:opacity-80 transition-opacity group"
+            >
               {userImage ? (
                 <Image
                   src={userImage}
                   alt={userName}
                   width={32}
                   height={32}
-                  className="h-8 w-8 rounded-full object-cover ring-2 ring-brand-500/30"
+                  className="h-8 w-8 rounded-full object-cover ring-2 ring-brand-500/30 group-hover:ring-brand-500/60 transition-all"
                 />
               ) : (
-                <div className="h-8 w-8 rounded-full bg-brand-100 flex items-center justify-center ring-2 ring-brand-500/30">
+                <div className="h-8 w-8 rounded-full bg-brand-100 flex items-center justify-center ring-2 ring-brand-500/30 group-hover:ring-brand-500/60 transition-all">
                   <span className="text-caption-1 font-bold text-brand-500">
                     {userName.charAt(0).toUpperCase()}
                   </span>
@@ -82,32 +84,7 @@ export default async function NutriLayout({
               <span className="hidden sm:block text-body-2 font-medium text-neutral-500 max-w-[120px] truncate">
                 {userName}
               </span>
-            </div>
-
-            {/* Settings link */}
-            <Link
-              href="/dashboard/settings"
-              aria-label="Configurações"
-              className="h-8 w-8 flex items-center justify-center rounded-xl text-neutral-400 hover:bg-slate-100 hover:text-neutral-500 transition-colors"
-            >
-              <Settings className="h-4 w-4" />
             </Link>
-
-            {/* Logout */}
-            <form
-              action={async () => {
-                'use server';
-                await signOut({ redirectTo: '/welcome' });
-              }}
-            >
-              <button
-                type="submit"
-                aria-label="Sair"
-                className="h-8 w-8 flex items-center justify-center rounded-xl text-neutral-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </form>
           </div>
         </div>
       </header>
