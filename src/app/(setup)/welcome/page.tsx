@@ -12,6 +12,8 @@ import { toast } from "sonner";
 
 const emailSchema = z.string().email("Por favor, insira um e-mail válido.");
 
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "contato@orgulhodanutri.com.br";
+
 function WelcomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -174,6 +176,21 @@ function WelcomeContent() {
             {loadingAnon ? "Criando sessão..." : "Explorar sem conta"}
           </Button>
         )}
+
+        <div className="pt-4">
+          <a
+            href={`mailto:${ADMIN_EMAIL}?subject=Solicitação de Acesso Nutri - Orgulho da Nutri&body=Olá! Sou nutricionista e gostaria de testar o painel profissional.%0D%0A%0D%0AMeu e-mail de cadastro no app é: [DIGITE SEU E-MAIL AQUI]%0D%0A%0D%0AAbraços!`}
+            className="block w-full"
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full h-14 hover:bg-white/30 text-orange-600 font-medium text-button-1 rounded-2xl transition-all"
+            >
+              Sou Nutricionista (Acesso Profissional)
+            </Button>
+          </a>
+        </div>
       </motion.div>
       </div>
     </div>
