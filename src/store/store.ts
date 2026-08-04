@@ -41,7 +41,7 @@ interface AppState {
   /** Success Overlay (Full Screen Toast) */
   successOverlay: { isOpen: boolean; message: string; submessage?: string; category?: string } | null;
   showSuccessOverlay: (data: { message: string; submessage?: string; category?: string }) => void;
-  hideSuccessOverlay: () => void;
+  hideSuccessOverlay: (triggerAnimation?: boolean) => void;
 
   /** Animação condicional para Squircle (Streak) após log */
   justLoggedAnimate: boolean;
@@ -65,16 +65,13 @@ export const useAppStore = create<AppState>()((set, get) => ({
       setJustLoggedAnimate: (animate) => set({ justLoggedAnimate: animate }),
       showSuccessOverlay: (data) => {
         set({ successOverlay: { isOpen: true, ...data } });
-        setTimeout(() => {
-          set((state) => {
-            if (state.successOverlay?.isOpen) {
-              return { successOverlay: null, justLoggedAnimate: true };
-            }
-            return state;
-          });
-        }, 1500);
       },
-      hideSuccessOverlay: () => set({ successOverlay: null }),
+      hideSuccessOverlay: (triggerAnimation = false) => set((state) => {
+        if (state.successOverlay?.isOpen) {
+          return { successOverlay: null, justLoggedAnimate: triggerAnimation };
+        }
+        return state;
+      }),
 
       initializeData: async () => {
         const [profile, logs] = await Promise.all([

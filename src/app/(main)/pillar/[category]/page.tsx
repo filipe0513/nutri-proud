@@ -5,11 +5,13 @@ import { useMemo, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Droplet, Moon, Utensils, Dumbbell, Smile, CheckCircle2, Lightbulb, Eye } from 'lucide-react';
+import { Droplet, Moon, Utensils, Dumbbell, Smile, CheckCircle2, Lightbulb, Eye, Share2 } from 'lucide-react';
 import { useAppStore } from '@/store/store';
 import { ActivityLog } from '@/store/types';
 import { getLocalStartOfDay } from '@/utils/dateUtils';
 import { TopHeader } from '@/components/shared/TopHeader';
+import { ShareReportDrawer } from '@/components/shared/ShareReportDrawer';
+import type { InfographicPillar } from '@/components/share/ShareableInfographic';
 
 // Aqui eu importo os drawers existentes, mas vou precisar controla-los de fora ou replicar a chamada.
 // Como o Drawer do Shadcn pode ser controlado por estado global ou id, vamos passar um trigger customizado.
@@ -27,6 +29,8 @@ const PILLAR_DATA: Record<string, any> = {
     colorClass: 'text-blue-500',
     bgClass: 'bg-blue-50',
     ctaColor: 'bg-blue-500 hover:bg-blue-600',
+    ringColor: '#3b82f6',
+    infoPillar: 'WATER' as InfographicPillar,
     why: ['⚡ Acelera o metabolismo', '🧠 Melhora o foco e cognição', '💧 Limpa toxinas do corpo'],
     how: ['Deixe uma garrafa na mesa', 'Beba um copo cheio ao acordar', 'Beba antes de sentir sede'],
     DrawerComponent: BottomSheet_Water,
@@ -37,6 +41,8 @@ const PILLAR_DATA: Record<string, any> = {
     colorClass: 'text-indigo-500',
     bgClass: 'bg-indigo-50',
     ctaColor: 'bg-indigo-500 hover:bg-indigo-600',
+    ringColor: '#6366f1',
+    infoPillar: 'SLEEP' as InfographicPillar,
     why: ['🔋 Restaura energia e músculos', '😌 Reduz estresse e ansiedade', '🛡️ Fortalece o sistema imune'],
     how: ['Evite telas 1h antes de deitar', 'Mantenha o quarto escuro e frio', 'Tenha horário fixo para dormir'],
     DrawerComponent: BottomSheet_Sleep,
@@ -47,6 +53,8 @@ const PILLAR_DATA: Record<string, any> = {
     colorClass: 'text-green-500',
     bgClass: 'bg-green-50',
     ctaColor: 'bg-green-600 hover:bg-green-700',
+    ringColor: '#22c55e',
+    infoPillar: 'FOOD' as InfographicPillar,
     why: ['🧱 Fornece blocos de construção muscular', '🔥 Combustível para o dia', '🦠 Nutre a flora intestinal'],
     how: ['Priorize alimentos integrais', 'Coma proteína em todas refeições', 'Evite ultraprocessados'],
     DrawerComponent: MealEqualizerDrawer,
@@ -57,6 +65,8 @@ const PILLAR_DATA: Record<string, any> = {
     colorClass: 'text-red-500',
     bgClass: 'bg-red-50',
     ctaColor: 'bg-red-500 hover:bg-red-600',
+    ringColor: '#ef4444',
+    infoPillar: 'TRAINING' as InfographicPillar,
     why: ['💪 Constrói massa magra', '🦴 Fortalece ossos e articulações', '❤️ Protege o coração'],
     how: ['Aqueça antes de começar', 'Priorize a execução correta', 'Descanse entre os treinos'],
     DrawerComponent: WorkoutEqualizerDrawer,
@@ -67,11 +77,60 @@ const PILLAR_DATA: Record<string, any> = {
     colorClass: 'text-amber-600',
     bgClass: 'bg-amber-50',
     ctaColor: 'bg-amber-600 hover:bg-amber-700',
+    ringColor: '#d97706',
+    infoPillar: 'GUT' as InfographicPillar,
     why: ['🧠 Produz 90% da serotonina', '🛡️ É a base da imunidade', '💩 Elimina o que não serve mais'],
     how: ['Coma mais fibras (frutas/veg)', 'Beba muita água', 'Movimente o corpo diariamente'],
     DrawerComponent: BottomSheet_Poop,
   }
 };
+
+// ─── Animated SVG Progress Ring ───────────────────────────────────────────────
+
+interface ProgressRingProps {
+  percentage: number;
+  color: string;
+  size?: number;
+  strokeWidth?: number;
+}
+
+function ProgressRing({ percentage, color, size = 120, strokeWidth = 8 }: ProgressRingProps) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      className="drop-shadow-md"
+      style={{ transform: 'rotate(-90deg)' }}
+    >
+      {/* Background track */}
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="rgba(0,0,0,0.08)"
+        strokeWidth={strokeWidth}
+      />
+      {/* Progress arc */}
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}
+      />
+    </svg>
+  );
+}
 
 export default function PillarInsightsPage() {
   const { category } = useParams();
@@ -79,6 +138,7 @@ export default function PillarInsightsPage() {
   const data = PILLAR_DATA[catKey];
   const { user_profile, activity_logs } = useAppStore();
   const [editingLog, setEditingLog] = useState<ActivityLog | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const targetText = useMemo(() => {
     if (!user_profile) return '';
@@ -164,13 +224,45 @@ export default function PillarInsightsPage() {
       {/* Hero Section */}
       <div className={`${data.bgClass} pt-24 pb-16 px-6 rounded-b-[40px] relative`}>
         <div className="flex flex-col items-center justify-center mt-8 space-y-4">
-          <div className="h-24 w-24 rounded-full bg-white/80 shadow-sm flex items-center justify-center">
-            <Icon className={`h-12 w-12 ${data.colorClass}`} />
+
+          {/* Progress ring wrapping icon */}
+          <div className="relative flex items-center justify-center">
+            <ProgressRing
+              percentage={progressPercentage}
+              color={data.ringColor}
+              size={120}
+              strokeWidth={8}
+            />
+            {/* Icon centered inside the ring */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-20 w-20 rounded-full bg-white/80 shadow-sm flex items-center justify-center">
+                <Icon className={`h-10 w-10 ${data.colorClass}`} />
+              </div>
+            </div>
           </div>
-          <div className="text-center">
+
+          <div className="text-center relative">
             <h1 className="text-title-1 font-bold text-neutral-800">{data.title}</h1>
             <p className="text-body-1 font-medium text-neutral-500 mt-1">{targetText}</p>
+
+            {/* Share button — top right of the title block */}
+            <button
+              type="button"
+              id={`btn-pillar-share-${catKey}`}
+              aria-label={`Compartilhar ${data.title}`}
+              onClick={() => setShareOpen(true)}
+              className="absolute -right-10 top-0 p-2 rounded-full bg-white/60 hover:bg-white/90 text-neutral-500 hover:text-neutral-700 transition-all shadow-sm active:scale-95 border border-white/40"
+            >
+              <Share2 className="h-4 w-4" />
+            </button>
           </div>
+
+          {/* Progress percentage label */}
+          {progressPercentage > 0 && (
+            <p className="text-caption-1 font-bold" style={{ color: data.ringColor }}>
+              {Math.round(progressPercentage)}% da meta diária
+            </p>
+          )}
         </div>
       </div>
 
@@ -289,6 +381,14 @@ export default function PillarInsightsPage() {
         onOpenChange={(o: boolean) => {
           if (!o) setEditingLog(null);
         }}
+      />
+
+      {/* Share Drawer */}
+      <ShareReportDrawer
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        type="PILLAR"
+        pillar={data.infoPillar}
       />
     </div>
   );

@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Drawer,
   DrawerContent,
@@ -43,10 +44,17 @@ import { publishCardToTeam } from '@/app/actions/publishCardToTeam';
 type ReportPeriod = 'today' | 'week' | 'month' | 'custom';
 type InfographicPeriod = 'today' | 'week' | 'month';
 type Tab = 'nutri' | 'infographic';
+export type ShareContextType = 'DAILY_SCORE' | 'PILLAR' | 'STREAK';
 
 interface ShareReportDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** ISO date YYYY-MM-DD to pre-pin the period (defaults to today) */
+  date?: string;
+  /** If provided, the drawer pre-selects the sticker for this pillar */
+  pillar?: InfographicPillar;
+  /** Contextual mode that adjusts the title and default tab/export */
+  type?: ShareContextType;
 }
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
@@ -168,9 +176,25 @@ const INFOGRAPHIC_PERIOD_OPTIONS: { id: InfographicPeriod; label: string; icon: 
   { id: 'month', label: '30 dias', icon: '🗓️' },
 ];
 
+// ─── Context title map ────────────────────────────────────────────────────────
+
+const CONTEXT_TITLE: Record<ShareContextType, string> = {
+  DAILY_SCORE: 'Compartilhar Dia',
+  PILLAR: 'Compartilhar Pilar',
+  STREAK: 'Compartilhar Conquista',
+};
+
+const PILLAR_EXPORT_MAP: Record<InfographicPillar, string> = {
+  WATER: 'STICKER_WATER',
+  FOOD: 'STICKER_FOOD',
+  TRAINING: 'STICKER_TRAINING',
+  SLEEP: 'STICKER_SLEEP',
+  GUT: 'STICKER_GUT',
+};
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps) {
+export function ShareReportDrawer({ open, onOpenChange, date, pillar, type }: ShareReportDrawerProps) {
   const { user_profile } = useAppStore();
 
   // ── Tab ──
@@ -193,6 +217,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
     globalScore: number;
     bestPillars: InfographicPillar[];
     periodName: string;
+    isEmpty?: boolean;
   } | null>(null);
   const [selectedExport, setSelectedExport] = useState<string>('CARD');
 
@@ -206,6 +231,22 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
   const nodeRef = useRef<HTMLDivElement>(null);
 
   const today = getTodayLocal();
+
+  // ── Sync context props when drawer opens ──────────────────────────────────
+  useEffect(() => {
+    if (!open) return;
+    // When a specific pillar is requested → open infographic tab with that sticker pre-selected
+    if (pillar) {
+      setActiveTab('infographic');
+      setSelectedExport(PILLAR_EXPORT_MAP[pillar]);
+    }
+    // When a specific date is passed → use 'today' period (single day)
+    // The actual filtering is done via a custom date range if different from today
+    if (date && date !== getTodayLocal()) {
+      setInfoPeriod('today'); // period label stays 'today', but we override the date in the fetch
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -283,24 +324,39 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
     setInfoReady(false);
     setInfographicData(null);
     try {
-      const { startDate, endDate } = getInfographicDateRange(infoPeriod);
+      // If a specific date was passed (e.g. from history), use it as the single-day range
+      let startDate: string;
+      let endDate: string;
+      if (date && infoPeriod === 'today') {
+        startDate = date;
+        endDate = date;
+      } else {
+        ({ startDate, endDate } = getInfographicDateRange(infoPeriod));
+      }
       const params = new URLSearchParams({ startDate, endDate, limit: '200', page: '1' });
       const res = await fetch(`/api/logs?${params.toString()}`);
       if (!res.ok) throw new Error('Falha ao buscar registros');
       const data: { logs: ActivityLog[] } = await res.json();
       const logs = data.logs ?? [];
 
-      const { scores, globalScore, bestPillars } = computeInfographicScores(logs, user_profile);
+      const isEmpty = logs.length === 0;
+      const { scores, globalScore, bestPillars } = isEmpty
+        ? { scores: { WATER: 0, FOOD: 0, TRAINING: 0, SLEEP: 0, GUT: 0 } as PillarScores, globalScore: 0, bestPillars: [] as InfographicPillar[] }
+        : computeInfographicScores(logs, user_profile);
       const periodName = buildPeriodName(infoPeriod, startDate, endDate);
 
-      setInfographicData({ scores, globalScore, bestPillars, periodName });
+      setInfographicData({ scores, globalScore, bestPillars, periodName, isEmpty });
       setInfoReady(true);
+      // If a pillar was requested and there's data, ensure its sticker is selected
+      if (pillar && !isEmpty) {
+        setSelectedExport(PILLAR_EXPORT_MAP[pillar]);
+      }
     } catch {
       toast.error('Não foi possível gerar o infográfico. Tente novamente.');
     } finally {
       setInfoLoading(false);
     }
-  }, [infoPeriod, user_profile]);
+  }, [infoPeriod, user_profile, date, pillar]);
 
   const captureBlob = useCallback(async (): Promise<Blob | null> => {
     if (!nodeRef.current) return null;
@@ -419,7 +475,8 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
         setInfoReady(false);
         setInfographicData(null);
         setInfoPeriod('today');
-        setSelectedExport('CARD');
+        // Reset export: if pillar context, restore to that pillar sticker; else 'CARD'
+        setSelectedExport(pillar ? PILLAR_EXPORT_MAP[pillar] : 'CARD');
         setActiveTab('infographic');
         setTeamPickerOpen(false);
         setBgPhoto(null);
@@ -437,7 +494,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
           <DrawerHeader className="px-0 shrink-0">
             <DrawerTitle className="text-title-2 text-purple-950 flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-500" />
-              Compartilhar
+              {type ? CONTEXT_TITLE[type] : 'Compartilhar'}
             </DrawerTitle>
           </DrawerHeader>
 
@@ -638,8 +695,26 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
                 </div>
               </div>
 
+              {/* Empty state when no logs exist for the period */}
+              {infoReady && infographicData?.isEmpty && (
+                <div className="flex flex-col items-center justify-center py-10 space-y-3 text-center">
+                  <span className="text-5xl">🌱</span>
+                  <p className="text-body-1 font-semibold text-purple-800">Sem registros neste período</p>
+                  <p className="text-body-2 text-purple-600/70">
+                    Não encontramos logs para gerar o infográfico. Comece a registrar sua rotina!
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setInfoReady(false); setInfographicData(null); }}
+                    className="text-caption-1 text-purple-500 hover:text-purple-700 underline underline-offset-2 transition-colors"
+                  >
+                    Tentar outro período
+                  </button>
+                </div>
+              )}
+
               {/* Preview */}
-              {infoReady && infographicData && (
+              {infoReady && infographicData && !infographicData.isEmpty && (
                 <div className="flex flex-col gap-4">
                   <div className="space-y-2">
                     <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide">
@@ -795,7 +870,7 @@ export function ShareReportDrawer({ open, onOpenChange }: ShareReportDrawerProps
               )}
 
               {/* Share / Download actions */}
-              {infoReady && infographicData && (
+              {infoReady && infographicData && !infographicData.isEmpty && (
                 <div className="flex flex-col gap-3">
                   {/* Publish to Team — zero friction */}
                   <Button
