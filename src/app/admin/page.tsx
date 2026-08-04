@@ -2,10 +2,11 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, Activity, BrainCircuit } from "lucide-react";
+import { Users, Activity, BrainCircuit, ShieldCheck } from "lucide-react";
 import { WeeklyVolumeChart, SourceDistributionChart, LoginAttemptsChart } from "./charts";
 import { HeavyUsersTable } from "./heavy-users-table";
 import { UsersManagementTable } from "./users-management-table";
+import { AdminViewSwitcher } from "@/components/shared/AdminViewSwitcher";
 export default async function AdminPage() {
   const session = await auth();
 
@@ -132,16 +133,34 @@ export default async function AdminPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-neutral-100 p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <header className="flex flex-col gap-2">
+    <div className="min-h-screen bg-neutral-100">
+      {/* ── Sticky Top Header ─────────────────────────────────────── */}
+      <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
+          {/* Brand */}
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <div className="h-8 w-8 rounded-xl bg-brand-500 flex items-center justify-center">
+              <ShieldCheck className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-title-3 font-bold text-neutral-600 hidden sm:block">
+              Centro de Comando
+            </span>
+          </div>
+
+          {/* View Switcher */}
+          <AdminViewSwitcher role={session.user.role as string} />
+        </div>
+      </header>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 space-y-8">
+        <div className="flex flex-col gap-1">
           <h1 className="text-title-1 font-bold text-neutral-800">
             Centro de Comando Premium
           </h1>
           <p className="text-body-1 text-neutral-500">
             Análise comportamental avançada e métricas de sistema do Orgulho da Nutri.
           </p>
-        </header>
+        </div>
 
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
