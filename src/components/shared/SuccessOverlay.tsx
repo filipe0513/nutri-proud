@@ -3,8 +3,11 @@
 
 import { useAppStore } from '@/store/store';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, Droplet, Moon, Utensils, Dumbbell, Smile } from 'lucide-react';
+import { CheckCircle2, Droplet, Moon, Utensils, Dumbbell, Smile, Share2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { ShareReportDrawer } from '@/components/shared/ShareReportDrawer';
+import type { InfographicPillar } from '@/components/share/ShareableInfographic';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   water: Droplet,
@@ -25,24 +28,69 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export function SuccessOverlay() {
   const successOverlay = useAppStore(state => state.successOverlay);
+  const hideSuccessOverlay = useAppStore(state => state.hideSuccessOverlay);
   const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) return null;
 
   const isOpen = successOverlay?.isOpen;
   const message = successOverlay?.message || '';
   const submessage = successOverlay?.submessage || '';
   const category = successOverlay?.category || 'default';
 
+  const showButtons = category === 'water' || category === 'food' || category === 'workout';
+  const duration = showButtons ? 3 : 1.5;
+  const [timeLeft, setTimeLeft] = useState(duration);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [sharePillar, setSharePillar] = useState<InfographicPillar | null>(null);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (showButtons) {
+        setTimeLeft(3);
+        const interval = setInterval(() => {
+          setTimeLeft(prev => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              hideSuccessOverlay(true);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        return () => clearInterval(interval);
+      } else {
+        const timeout = setTimeout(() => {
+          hideSuccessOverlay(true);
+        }, 1500);
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [isOpen, showButtons, hideSuccessOverlay]);
+
+  const handleShare = () => {
+    const pillarMap: Record<string, InfographicPillar> = {
+      water: 'WATER',
+      food: 'FOOD',
+      workout: 'TRAINING'
+    };
+    if (category && pillarMap[category]) {
+      setSharePillar(pillarMap[category]);
+      setShareOpen(true);
+    }
+    hideSuccessOverlay(true);
+  };
+
+  if (!isClient) return null;
+
   const Icon = category && CATEGORY_ICONS[category] ? CATEGORY_ICONS[category] : CheckCircle2;
   const gradient = CATEGORY_COLORS[category] || CATEGORY_COLORS.default;
 
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -90,9 +138,40 @@ export function SuccessOverlay() {
                 {submessage}
               </motion.p>
             )}
+
+            {showButtons && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="w-full mt-8 space-y-3"
+              >
+                <Button 
+                  onClick={handleShare}
+                  className="w-full bg-white text-neutral-800 hover:bg-white/90 h-14 rounded-2xl font-bold shadow-lg text-button-1"
+                >
+                  <Share2 className="w-5 h-5 mr-2" />
+                  Compartilhar
+                </Button>
+                <Button 
+                  onClick={() => hideSuccessOverlay(true)}
+                  variant="ghost"
+                  className="w-full text-white/90 hover:bg-white/10 hover:text-white h-14 rounded-2xl text-button-1"
+                >
+                  Fechar ({timeLeft}s)
+                </Button>
+              </motion.div>
+            )}
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+      <ShareReportDrawer
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        type="PILLAR"
+        pillar={sharePillar || undefined}
+      />
+    </>
   );
 }

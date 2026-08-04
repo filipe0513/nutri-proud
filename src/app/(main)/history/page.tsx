@@ -9,8 +9,9 @@ import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ActivityLog } from "@/store/types";
 import { useAppStore } from "@/store/store";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Share2 } from "lucide-react";
 import { TopHeader } from "@/components/shared/TopHeader";
+import { ShareReportDrawer } from "@/components/shared/ShareReportDrawer";
 import { BottomSheet_Water } from "@/components/shared/BottomSheet_Water";
 import { BottomSheet_Sleep } from "@/components/shared/BottomSheet_Sleep";
 import { BottomSheet_Poop } from "@/components/shared/BottomSheet_Poop";
@@ -79,6 +80,8 @@ export default function HistoryPage() {
 
   const [editingLog, setEditingLog] = useState<ActivityLog | null>(null);
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareDate, setShareDate] = useState<string>('');
 
   const toggleDay = (date: string) => {
     setExpandedDays(prev => ({ ...prev, [date]: prev[date] === false ? true : false }));
@@ -157,8 +160,22 @@ export default function HistoryPage() {
                       Score: {Math.min(100, dayScore)}%
                     </span>
                   </div>
-                  <div className="p-1 rounded-full hover:bg-neutral-200/50 text-neutral-400 transition-colors">
-                    {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      aria-label="Compartilhar"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShareDate(date);
+                        setShareOpen(true);
+                      }}
+                      className="p-2 rounded-full hover:bg-neutral-200/50 text-neutral-400 transition-colors"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </button>
+                    <div className="p-1 rounded-full hover:bg-neutral-200/50 text-neutral-400 transition-colors">
+                      {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                    </div>
                   </div>
                 </div>
 
@@ -250,6 +267,12 @@ export default function HistoryPage() {
           editingLog?.category === "workout" ? editingLog : undefined
         }
         customTrigger={<div className="hidden" />}
+      />
+      <ShareReportDrawer
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        type="DAILY_SCORE"
+        date={shareDate || undefined}
       />
       <JacadaDrawer
         open={editingLog?.category === "jacada"}
