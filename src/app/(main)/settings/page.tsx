@@ -30,6 +30,8 @@ import { TopHeader } from "@/components/shared/TopHeader";
 
 // ── Helpers ──────────────────────────────────────────────────
 
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "contato@orgulhodanutri.com.br";
+
 const GOAL_LABELS: Record<string, string> = {
   fat_loss: "Emagrecimento",
   muscle_gain: "Ganho de Massa",
@@ -190,6 +192,30 @@ export default function SettingsPage() {
       </SemanticBlock>
 
       <div className="h-4" />
+
+      {/* ── Nutri Concierge Banner ── */}
+      <Card className="bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl overflow-hidden">
+        <CardContent className="p-6 space-y-4 text-center">
+          <div>
+            <h3 className="text-title-3 font-bold text-neutral-600">É Profissional de Saúde?</h3>
+            <p className="text-body-2 text-neutral-500 mt-1">
+              Solicite acesso ao painel de controle e acompanhe seus pacientes.
+            </p>
+          </div>
+          <a
+            href={`mailto:${ADMIN_EMAIL}?subject=Solicitação de Acesso Nutri - Orgulho da Nutri&body=Olá! Sou nutricionista e gostaria de testar o painel profissional.%0D%0A%0D%0AMeu e-mail de cadastro no app é: ${user_profile?.email || "[DIGITE SEU E-MAIL AQUI]"}%0D%0A%0D%0AAbraços!`}
+            className="block"
+          >
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 border-neutral-300 text-neutral-700 hover:bg-neutral-50 font-bold rounded-xl transition-colors"
+            >
+              Solicitar acesso como Nutri
+            </Button>
+          </a>
+        </CardContent>
+      </Card>
 
       {/* Logout & Version */}
       <div className="space-y-4 pt-4">
