@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { UserRole } from '@/types/roles';
 import type { PostWithAuthor, ReactionCount, TeamSummary } from '@/types/teamTypes';
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
@@ -27,6 +28,48 @@ export async function getMyTeams(userId: string): Promise<TeamSummary[]> {
     memberCount: team._count.members,
     createdAt: team.createdAt.toISOString(),
   }));
+}
+
+/**
+ * Returns the teams for the dashboard, with auto-seed for ADMIN users.
+ *
+ * Business rule: If the requesting user has role ADMIN and has zero teams,
+ * a "Meu Consultório (Admin)" team is created atomically, and the admin is
+ * registered as both the team ADMIN **and** as a MEMBER patient, so they
+ * immediately see their own health data in the B2B view (dogfooding).
+ */
+export async function getDashboardTeams(
+  userId: string,
+  userRole: string,
+): Promise<TeamSummary[]> {
+  const teams = await getMyTeams(userId);
+
+  // Only auto-seed for ADMIN users with no teams
+  if (userRole !== UserRole.ADMIN || teams.length > 0) {
+    return teams;
+  }
+
+  // ── Auto-seed: create "Meu Consultório (Admin)" ──────────────────────────
+  //
+  // Creates the team and adds the admin as the sole ADMIN member in a single
+  // atomic transaction. The admin's own membership (role: ADMIN) is enough —
+  // the patient-listing query will include the owner's logs because we no
+  // longer exclude the owner from the member list in NutriDashboard.
+  await prisma.$transaction(async (tx) => {
+    await tx.team.create({
+      data: {
+        name: 'Meu Consultório (Admin)',
+        description:
+          'Time de dogfooding automático. Você é o dono e também o primeiro paciente.',
+        members: {
+          create: { userId, role: 'ADMIN' },
+        },
+      },
+    });
+  });
+
+  // Re-fetch so the returned list reflects the newly created team
+  return getMyTeams(userId);
 }
 
 /**
