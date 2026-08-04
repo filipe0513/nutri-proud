@@ -21,8 +21,8 @@ export const userService = {
       throw new Error('Usuário não encontrado.');
     }
 
-    // Nutricionistas têm acesso irrestrito
-    if (user.role === UserRole.NUTRITIONIST) {
+    // Nutricionistas e ADMINs têm acesso irrestrito
+    if (user.role === UserRole.NUTRITIONIST || user.role === UserRole.ADMIN) {
       return true;
     }
 
@@ -61,8 +61,8 @@ export const userService = {
 
     if (!user) return false;
 
-    // Nutricionistas não passam pelo onboarding de paciente
-    if (user.role === UserRole.NUTRITIONIST) {
+    // Nutricionistas e ADMINs não passam pelo onboarding de paciente
+    if (user.role === UserRole.NUTRITIONIST || user.role === UserRole.ADMIN) {
       return true;
     }
 
