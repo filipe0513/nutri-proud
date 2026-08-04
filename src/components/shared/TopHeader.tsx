@@ -16,6 +16,8 @@ interface TopHeaderProps {
   rightAction?: TopHeaderRightAction;
   title?: string;
   rightElement?: React.ReactNode;
+  /** Rendered to the left of the main right action (e.g. alongside notifications). */
+  extraRightElement?: React.ReactNode;
   onBack?: () => void;
 }
 
@@ -24,6 +26,7 @@ export function TopHeader({
   rightAction = 'notifications',
   title,
   rightElement,
+  extraRightElement,
   onBack,
 }: TopHeaderProps) {
   const router = useRouter();
@@ -79,7 +82,8 @@ export function TopHeader({
         </div>
 
         {/* Right Action */}
-        <div className="flex items-center justify-end w-12">
+        <div className="flex items-center justify-end gap-2 w-auto">
+          {extraRightElement}
           {rightElement ? (
             rightElement
           ) : rightAction === 'notifications' ? (
