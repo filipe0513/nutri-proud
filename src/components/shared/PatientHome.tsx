@@ -245,11 +245,9 @@ function PatientHomeContent({ userRole }: { userRole?: string }) {
     <div className="pb-32 pt-24 px-6 max-w-lg mx-auto space-y-6">
       <TopHeader
         leftAction="avatar"
-        rightAction={isAdmin ? 'none' : 'notifications'}
-        rightElement={
-          isAdmin ? (
-            <AdminViewSwitcher role={userRole} />
-          ) : undefined
+        rightAction="notifications"
+        extraRightElement={
+          isAdmin ? <AdminViewSwitcher role={userRole} /> : undefined
         }
       />
       {/* 1. Greeting + Streak Badge */}
