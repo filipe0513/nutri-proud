@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
+import { after } from 'next/server';
 import { logSchema, foodDetailsSchema } from '@/schemas/logSchema';
 import { prisma } from '@/lib/prisma';
 import { DailyLog } from '@prisma/client';
@@ -8,6 +9,7 @@ import { auth } from '@/auth';
 import { cookies } from 'next/headers';
 import { logService, getLocalDayInterval } from '@/services/logService';
 import { PermissionError } from '@/services/userService';
+import { triggerService } from '@/services/triggerService';
 
 
 async function getUserId() {
@@ -34,6 +36,20 @@ export async function POST(request: Request) {
 
     const log = await logService.saveLog(userId, data);
     
+    // Background evaluation for B2B triggers
+    const userTeams = await prisma.teamMember.findMany({
+      where: { userId },
+      select: { teamId: true }
+    });
+
+    if (userTeams.length > 0) {
+      after(() => {
+        for (const t of userTeams) {
+          triggerService.evaluatePatientTriggers(userId, t.teamId, log).catch(console.error);
+        }
+      });
+    }
+
     return NextResponse.json({ message: "Validado e salvo com sucesso!", log }, { status: 201 });
   } catch (error: any) {
     if (error instanceof PermissionError) {

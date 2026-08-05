@@ -4,6 +4,7 @@ import { UserRole } from '@/types/roles';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AdminViewSwitcher } from '@/components/shared/AdminViewSwitcher';
+import { NutriBottomNav } from '@/components/shared/NutriBottomNav';
 
 /**
  * Layout exclusivo da Nutricionista.
@@ -12,7 +13,7 @@ import { AdminViewSwitcher } from '@/components/shared/AdminViewSwitcher';
  * as rotas dentro do grupo (nutri). ADMINs operam em "God Mode".
  * Qualquer outro usuário é redirecionado para a home do paciente (/).
  *
- * Design: sem BottomNav mobile. Sidebar/Header estilo admin/desktop.
+ * Design: BottomNav customizado no mobile e Sidebar/Header no desktop.
  */
 export default async function NutriLayout({
   children,
@@ -90,9 +91,11 @@ export default async function NutriLayout({
       </header>
 
       {/* ── Conteúdo Principal ───────────────────────────────────── */}
-      <main className="flex-1 w-full">
+      <main className="flex-1 w-full pb-28 md:pb-0">
         {children}
       </main>
+
+      <NutriBottomNav />
     </div>
   );
 }
