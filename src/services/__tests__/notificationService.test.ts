@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { triggerWaterReminders, triggerJacadaRecovery, getUserNotifications, markAsRead, createInsightNotification, createJacadaNotification } from '../notificationService';
+import { triggerWaterReminders, triggerJacadaRecovery, getUserNotifications, markAsRead, createInsightNotification, createJacadaNotification, dispatchNotification } from '../notificationService';
 import { prismaMock } from '@/lib/__mocks__/prisma';
 
 vi.mock('@/lib/prisma', async () => {
@@ -126,5 +126,55 @@ describe('notificationService', () => {
         }),
       })
     );
+  });
+
+  // ─── dispatchNotification ───────────────────────────────────────────────────
+
+  describe('dispatchNotification', () => {
+    it('should respect user preferences and dispatch to enabled channels', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'user1',
+        email: 'test@test.com',
+        oneSignalId: 'onesignal-123',
+        notification_preferences: {
+          REMINDER: { in_app: true, email: true, push: false },
+        },
+      } as any);
+
+      prismaMock.notification.create.mockResolvedValue({ id: 'new_id' } as any);
+
+      const result = await dispatchNotification('user1', 'REMINDER', 'Title', 'Body');
+      
+      expect(result.success).toBe(true);
+      expect(result.dispatched).toEqual({ in_app: true, email: true, push: false });
+      expect(prismaMock.notification.create).toHaveBeenCalled();
+    });
+
+    it('should fallback to default true if preference is missing', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'user1',
+        email: 'test@test.com',
+        oneSignalId: 'onesignal-123',
+        notification_preferences: {},
+      } as any);
+
+      prismaMock.notification.create.mockResolvedValue({ id: 'new_id' } as any);
+
+      const result = await dispatchNotification('user1', 'EVOLUTION', 'Title', 'Body');
+      
+      expect(result.success).toBe(true);
+      expect(result.dispatched).toEqual({ in_app: true, email: true, push: true });
+      expect(prismaMock.notification.create).toHaveBeenCalled();
+    });
+
+    it('should return error if user not found', async () => {
+      prismaMock.user.findUnique.mockResolvedValue(null);
+
+      const result = await dispatchNotification('invalid_user', 'SYSTEM', 'Title', 'Body');
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('User not found');
+      expect(prismaMock.notification.create).not.toHaveBeenCalled();
+    });
   });
 });

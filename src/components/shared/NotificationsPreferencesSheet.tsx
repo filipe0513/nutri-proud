@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useAppStore } from "@/store/store";
 import { toast } from "sonner";
+import { usePathname } from "next/navigation";
 
 interface NotificationsPreferencesSheetProps {
   open: boolean;
@@ -17,7 +18,11 @@ export function NotificationsPreferencesSheet({
   onOpenChange,
 }: NotificationsPreferencesSheetProps) {
   const { user_profile, updateProfile } = useAppStore();
-  const isNutri = user_profile?.role === "ADMIN" || user_profile?.role === "NUTRI";
+  const pathname = usePathname();
+  
+  // No god-mode (se o nutri estiver na home do paciente, ele vê preferencias de paciente)
+  const isNutriContext = pathname?.startsWith("/dashboard") || pathname?.startsWith("/admin");
+  const isNutri = isNutriContext && (user_profile?.role === "ADMIN" || user_profile?.role === "NUTRI");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [prefs, setPrefs] = useState<Record<string, any>>({});
@@ -41,14 +46,14 @@ export function NotificationsPreferencesSheet({
 
   const categories = isNutri 
     ? [
-        { id: "EVOLUTION", label: "Check-ins de Evolução" },
-        { id: "RISK_ALERTS", label: "Alertas de Risco" },
-        { id: "SYSTEM", label: "Sistema" },
+        { id: "EVOLUTION", label: "Check-ins de Evolução", desc: "Avisos quando o paciente responde formulários" },
+        { id: "RISK_ALERTS", label: "Alertas de Risco", desc: "Sinaliza pacientes ociosos ou com queda de engajamento" },
+        { id: "SYSTEM", label: "Sistema", desc: "Novos pacientes, convites e atualizações" },
       ]
     : [
-        { id: "REMINDERS", label: "Lembretes" },
-        { id: "MILESTONES", label: "Conquistas" },
-        { id: "NUTRI_ALERTS", label: "Avisos da Nutri" },
+        { id: "REMINDERS", label: "Lembretes e Avisos", desc: "Rotina de água, refeições, sono, etc" },
+        { id: "MILESTONES", label: "Conquistas", desc: "Celebração de metas diárias e ofensivas" },
+        { id: "NUTRI_ALERTS", label: "Mensagens da Nutri", desc: "Insights e orientações do seu nutricionista" },
       ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,7 +98,10 @@ export function NotificationsPreferencesSheet({
               const catPrefs = prefs[cat.id] || { push: true, email: true, in_app: true };
               return (
                 <div key={cat.id} className="space-y-3 bg-white/40 p-4 rounded-2xl border border-white/40">
-                  <h4 className="text-body-1 font-bold text-neutral-600">{cat.label}</h4>
+                  <div className="flex flex-col mb-1">
+                    <h4 className="text-body-1 font-bold text-neutral-600">{cat.label}</h4>
+                    <p className="text-caption-2 text-neutral-400">{cat.desc}</p>
+                  </div>
                   
                   <div className="flex items-center justify-between">
                     <span className="text-body-2 text-neutral-500">No Aplicativo (Sino)</span>
