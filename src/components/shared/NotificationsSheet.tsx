@@ -180,12 +180,12 @@ export function NotificationsSheet({
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center mt-16 space-y-3 text-center px-4">
               <div className="h-14 w-14 rounded-full bg-neutral-100 flex items-center justify-center">
-                <Bell className="h-6 w-6 text-neutral-300" />
+                <Bell className="h-6 w-6 text-neutral-400" />
               </div>
-              <p className="text-body-1 font-medium text-neutral-400">
+              <p className="text-body-1 font-medium text-neutral-500">
                 Nenhuma notificação ainda
               </p>
-              <p className="text-body-2 text-neutral-300">
+              <p className="text-body-2 text-neutral-400">
                 Insights e análises da Nutri vão aparecer aqui.
               </p>
             </div>
