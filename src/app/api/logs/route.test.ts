@@ -20,6 +20,9 @@ vi.mock('@/lib/prisma', () => ({
     dailyLog: {
       findMany: vi.fn(),
     },
+    teamMember: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
   },
 }));
 
