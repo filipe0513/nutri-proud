@@ -25,7 +25,7 @@ export function PoopAnalysisDrawer({
       <DrawerContent className="!bg-amber-50/95 backdrop-blur-lg border-t border-amber-200 shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-10">
         <DrawerHeader className="px-0 pb-4">
           <DrawerTitle className="text-title-2 text-amber-950 flex items-center gap-2">
-            <span className="text-3xl">💩</span> A Nutri analisou seu intestino
+            <span className="text-3xl">💩</span> Análise da Nutri
           </DrawerTitle>
           <p className="text-body-2 text-amber-800/70 mt-1">
             Correlação com sua alimentação recente.
