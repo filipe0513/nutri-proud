@@ -121,11 +121,27 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     scoresByDate[dateStr] = Math.min(100, Math.round(data.total / data.count));
   }
 
+  // Fetch Evolution Logs
+  const evolutionLogsRaw = await prisma.dailyLog.findMany({
+    where: {
+      userId: targetUserId,
+      category: 'evolution',
+    },
+    orderBy: { eventTime: 'desc' },
+  });
+
+  const evolutionLogs = evolutionLogsRaw.map((log) => ({
+    id: log.id,
+    event_time: log.eventTime.toISOString(),
+    details: log.details as { photo_url: string; weight_kg: number },
+  }));
+
   return (
     <ProfileClient
       user={user}
       scoresByDate={scoresByDate}
       initialPosts={posts}
+      evolutionLogs={evolutionLogs}
       isMe={isMe}
     />
   );

@@ -19,9 +19,15 @@ export const sleepDetailsSchema = z.object({
   quality_feeling: z.enum(['cansado', 'normal', 'revigorado']),
 }).strict();
 
+// Schema para os detalhes de Evolução (Check-in)
+export const evolutionDetailsSchema = z.object({
+  photo_url: z.string().url('A foto é obrigatória.'),
+  weight_kg: z.number().min(20, 'Peso inválido').max(300, 'Peso inválido'),
+}).strict();
+
 // Schema Principal do Log
 export const logSchema = z.object({
-  category: z.enum(['water', 'sleep', 'poop', 'food', 'workout', 'note', 'jacada']),
+  category: z.enum(['water', 'sleep', 'poop', 'food', 'workout', 'note', 'jacada', 'evolution']),
   primary_value: z.number().min(0).max(100),
   details: z.record(z.string(), z.unknown()).optional(),
   // event_time is optional; when provided it must not be in the future
