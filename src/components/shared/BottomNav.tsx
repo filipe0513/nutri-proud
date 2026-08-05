@@ -2,15 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, History, Share2, Users, Plus } from 'lucide-react';
+import { Home, History, Users, Plus, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BottomNavProps {
-  onShareClick?: () => void;
   onAddLogClick?: () => void;
 }
 
-export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
+export function BottomNav({ onAddLogClick }: BottomNavProps) {
   const pathname = usePathname();
 
   // Hide nav when inside a Story/Pillar screen or a specific Team feed
@@ -27,7 +26,7 @@ export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
   ];
 
   const rightItems = [
-    { label: 'Nutri', icon: Share2, href: null as null, onClick: onShareClick },
+    { label: 'Evolução', icon: TrendingUp, href: '/evolution' },
     { label: 'Times', icon: Users, href: '/teams' },
   ];
 
@@ -71,28 +70,9 @@ export function BottomNav({ onShareClick, onAddLogClick }: BottomNavProps) {
         <Plus className="h-7 w-7 stroke-[2.5px]" />
       </button>
 
-      {/* Right: Compartilhar + Times */}
+      {/* Right: Evolução + Times */}
       {rightItems.map((item) => {
         const isActive = item.href ? pathname === item.href : false;
-
-        if (!item.href) {
-          return (
-            <button
-              key={item.label}
-              type="button"
-              id="btn-share-nutri"
-              aria-label={item.label}
-              onClick={item.onClick}
-              className={cn(
-                'flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300',
-                'text-neutral-500/80 hover:text-brand-400 hover:bg-glass-light-1',
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              <span className="text-caption-2 mt-0.5 font-medium">{item.label}</span>
-            </button>
-          );
-        }
 
         return (
           <Link

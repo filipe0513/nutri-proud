@@ -7,6 +7,9 @@ import { PostCard } from '@/components/shared/PostCard';
 import { toggleReaction } from '@/store/api';
 import type { PostWithAuthor } from '@/types/teamTypes';
 import { toast } from 'sonner';
+import { Calendar } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface ProfileClientProps {
   user: {
@@ -16,6 +19,7 @@ interface ProfileClientProps {
   };
   scoresByDate: Record<string, number>;
   initialPosts: PostWithAuthor[];
+  evolutionLogs?: { id: string; event_time: string; details: { photo_url: string; weight_kg: number } }[];
   isMe: boolean;
 }
 
@@ -28,7 +32,7 @@ function getInitials(name: string | null): string {
   return name.slice(0, 2).toUpperCase();
 }
 
-export function ProfileClient({ user, scoresByDate, initialPosts, isMe }: ProfileClientProps) {
+export function ProfileClient({ user, scoresByDate, initialPosts, evolutionLogs, isMe }: ProfileClientProps) {
   const posts = initialPosts;
 
   const handleToggleReaction = async (postId: string, emoji: string) => {
@@ -73,6 +77,48 @@ export function ProfileClient({ user, scoresByDate, initialPosts, isMe }: Profil
         <section className="mb-8">
           <ProfileCalendar scoresByDate={scoresByDate} />
         </section>
+
+        {/* Evolution Gallery */}
+        {evolutionLogs && evolutionLogs.length > 0 && (
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-4 px-2">
+              <h3 className="text-title-3 font-semibold text-neutral-500">
+                Evolução
+              </h3>
+              <span className="text-caption-2 text-neutral-400 bg-neutral-100 px-3 py-1 rounded-full">
+                {evolutionLogs.length} {evolutionLogs.length === 1 ? 'registro' : 'registros'}
+              </span>
+            </div>
+            <div className="flex overflow-x-auto gap-4 pb-4 px-2 snap-x hide-scrollbar">
+              {evolutionLogs.map((log) => (
+                <div 
+                  key={log.id} 
+                  className="min-w-[140px] w-[140px] snap-center bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm rounded-2xl overflow-hidden flex flex-col shrink-0"
+                >
+                  <div className="relative aspect-[3/4] bg-neutral-200">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                      src={log.details.photo_url} 
+                      alt="Evolução" 
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-2 left-2 text-white font-bold leading-none">
+                      {log.details.weight_kg} <span className="text-[10px] opacity-80">kg</span>
+                    </div>
+                  </div>
+                  <div className="p-2 bg-white/50 flex items-center justify-center gap-1.5 text-neutral-500">
+                    <Calendar className="h-3 w-3 opacity-70" />
+                    <span className="text-[10px] font-medium uppercase">
+                      {format(new Date(log.event_time), "MMM d", { locale: ptBR })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Visual Separator */}
         <div className="h-px bg-white/40 w-full mb-8 shadow-sm"></div>
