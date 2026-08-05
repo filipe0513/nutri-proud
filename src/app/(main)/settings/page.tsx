@@ -6,7 +6,6 @@ import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import { useAppStore } from "@/store/store";
 import {
   profileSettingsSchema,
@@ -20,6 +19,7 @@ import { signOut } from "next-auth/react";
 import packageInfo from "../../../../package.json";
 import { AvatarUploadButton } from "@/components/shared/AvatarUploadButton";
 import { ReleaseNotesDrawer } from "@/components/shared/ReleaseNotesDrawer";
+import { NotificationsPreferencesSheet } from "@/components/shared/NotificationsPreferencesSheet";
 import {
   Drawer,
   DrawerContent,
@@ -275,11 +275,10 @@ export default function SettingsPage() {
         onSave={saveSection}
       />
 
-      {/* ── Drawer: Notificações ── */}
-      <NotificationsPreferencesDrawer
+      {/* ── Sheet: Notificações ── */}
+      <NotificationsPreferencesSheet
         open={activeDrawer === "notifications"}
         onOpenChange={(o) => !o && setActiveDrawer(null)}
-        onSave={saveSection}
       />
 
       <ReleaseNotesDrawer 
@@ -622,11 +621,12 @@ function MealsDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="!bg-white/95 backdrop-blur-2xl border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12 max-h-[85vh] overflow-y-auto">
-        <DrawerHeader className="px-0">
+      <DrawerContent className="!bg-white/95 backdrop-blur-2xl border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12 max-h-[90vh]">
+        <DrawerHeader className="px-0 shrink-0">
           <DrawerTitle className="text-title-2 text-neutral-500">Minhas Refeições</DrawerTitle>
           <DrawerDescription className="text-body-2 text-neutral-400">Quais refeições fazem parte da sua rotina diária?</DrawerDescription>
         </DrawerHeader>
+        <div className="overflow-y-auto -mx-6 px-6 max-h-[60vh] pb-4">
         <form onSubmit={handleSubmit((data) => onSave(data))} className="space-y-4 mt-2">
           <Controller
             name="planned_meals"
@@ -682,111 +682,9 @@ function MealsDrawer({
             Salvar
           </Button>
         </form>
+        </div>
       </DrawerContent>
     </Drawer>
   );
 }
 
-// ── Drawer: Notificações ─────────────────────────────────────
-
-function NotificationsPreferencesDrawer({
-  open,
-  onOpenChange,
-  onSave,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onSave: (data: Partial<ProfileSettingsForm> & { notification_preferences?: Record<string, any> }) => Promise<void>;
-}) {
-  const userProfile = useAppStore((state) => state.user_profile);
-  const isNutri = userProfile?.role === "ADMIN" || userProfile?.role === "NUTRI";
-  
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [prefs, setPrefs] = useState<Record<string, any>>({});
-
-  useEffect(() => {
-    if (open && userProfile) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPrefs(userProfile.notification_preferences || {});
-    }
-  }, [open, userProfile]);
-
-  const handleToggle = (category: string, channel: string, value: boolean) => {
-    setPrefs((prev) => ({
-      ...prev,
-      [category]: {
-        ...(prev[category] || { push: true, email: true, in_app: true }),
-        [channel]: value,
-      },
-    }));
-  };
-
-  const categories = isNutri 
-    ? [
-        { id: "EVOLUTION", label: "Check-ins de Evolução" },
-        { id: "RISK_ALERTS", label: "Alertas de Risco" },
-        { id: "SYSTEM", label: "Sistema" },
-      ]
-    : [
-        { id: "REMINDERS", label: "Lembretes" },
-        { id: "MILESTONES", label: "Conquistas" },
-        { id: "NUTRI_ALERTS", label: "Avisos da Nutri" },
-      ];
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave({ notification_preferences: prefs });
-  };
-
-  return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="!bg-white/95 backdrop-blur-2xl border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12 max-h-[85vh] overflow-y-auto">
-        <DrawerHeader className="px-0">
-          <DrawerTitle className="text-title-2 text-neutral-500">Notificações</DrawerTitle>
-          <DrawerDescription className="text-body-2 text-neutral-400">Escolha o que você quer receber e onde</DrawerDescription>
-        </DrawerHeader>
-        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-          {categories.map((cat) => {
-            const catPrefs = prefs[cat.id] || { push: true, email: true, in_app: true };
-            return (
-              <div key={cat.id} className="space-y-3 bg-white/40 p-4 rounded-2xl border border-white/40">
-                <h4 className="text-body-1 font-bold text-neutral-600">{cat.label}</h4>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-body-2 text-neutral-500">No Aplicativo (Sino)</span>
-                  <Switch 
-                    checked={catPrefs.in_app} 
-                    onCheckedChange={(v) => handleToggle(cat.id, "in_app", v)} 
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-body-2 text-neutral-500">Notificação no Celular (Push)</span>
-                  <Switch 
-                    checked={catPrefs.push} 
-                    onCheckedChange={(v) => handleToggle(cat.id, "push", v)} 
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-body-2 text-neutral-500">E-mail</span>
-                  <Switch 
-                    checked={catPrefs.email} 
-                    onCheckedChange={(v) => handleToggle(cat.id, "email", v)} 
-                  />
-                </div>
-              </div>
-            );
-          })}
-          <Button
-            type="submit"
-            className="w-full h-14 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-button-1 shadow-lg"
-          >
-            Salvar
-          </Button>
-        </form>
-      </DrawerContent>
-    </Drawer>
-  );
-}

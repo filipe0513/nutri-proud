@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Bell, Sparkles, Droplets, Target, Settings, Utensils } from "lucide-react";
 import { useAppStore } from "@/store/store";
+import { NotificationsPreferencesSheet } from "@/components/shared/NotificationsPreferencesSheet";
 
 interface NotificationsSheetProps {
   open?: boolean;
@@ -79,6 +80,8 @@ export function NotificationsSheet({
   
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = externalOnOpenChange !== undefined ? externalOnOpenChange : setInternalOpen;
+  
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
   
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { setActiveDrawer, setPendingInsightData } = useAppStore();
@@ -165,14 +168,21 @@ export function NotificationsSheet({
       >
         <SheetHeader className="p-6 border-b border-white/20 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <SheetTitle className="text-title-2 text-neutral-500">
+            <SheetTitle className="text-title-2 text-neutral-500 flex items-center gap-2">
               Notificações
+              {unreadCount > 0 && (
+                <span className="text-caption-1 text-neutral-400 font-normal">
+                  {unreadCount} não {unreadCount === 1 ? "lida" : "lidas"}
+                </span>
+              )}
             </SheetTitle>
-            {unreadCount > 0 && (
-              <span className="text-caption-1 text-neutral-400">
-                {unreadCount} não {unreadCount === 1 ? "lida" : "lidas"}
-              </span>
-            )}
+            <button
+              onClick={() => setPreferencesOpen(true)}
+              className="p-2 -mr-2 rounded-full hover:bg-white/50 text-neutral-400 hover:text-neutral-600 transition-colors"
+              aria-label="Configurações de Notificação"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
           </div>
         </SheetHeader>
 
@@ -241,6 +251,10 @@ export function NotificationsSheet({
           )}
         </div>
       </SheetContent>
+      <NotificationsPreferencesSheet
+        open={preferencesOpen}
+        onOpenChange={setPreferencesOpen}
+      />
     </Sheet>
   );
 }
