@@ -32,6 +32,9 @@ export const fetchUserProfile = async (): Promise<UserProfile | null> => {
           main_goal: 'health',
         };
       }
+      if (!data.profile.notification_preferences) {
+        data.profile.notification_preferences = {};
+      }
     }
     
     return data.profile || null;

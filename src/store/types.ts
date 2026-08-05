@@ -19,6 +19,8 @@ export interface UserProfile {
     sleep_hours_per_night: number;
     weekly_workouts: number;
   };
+  notification_preferences?: Record<string, { push: boolean; email: boolean; in_app: boolean }>;
+  role?: string;
 }
 
 export type Category = 'water' | 'food' | 'sleep' | 'workout' | 'poop' | 'note' | 'jacada';

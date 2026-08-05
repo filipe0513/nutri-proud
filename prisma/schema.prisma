@@ -44,8 +44,9 @@ model User {
   plan          Plan           @default(FREE)
   oneSignalId   String?        @map("one_signal_id")
   emailVerified DateTime?
-  profile       Json?
-  targets       Json?
+  profile                  Json?
+  targets                  Json?
+  notification_preferences Json     @default("{}")
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   logs          DailyLog[]

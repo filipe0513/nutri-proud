@@ -19,6 +19,14 @@ const userProfilePayloadSchema = z.object({
     sleep_hours_per_night: z.number().min(4).max(12),
     weekly_workouts: z.number().min(3).max(7),
   }).passthrough(),
+  notification_preferences: z.record(
+    z.string(),
+    z.object({
+      push: z.boolean().default(true),
+      email: z.boolean().default(true),
+      in_app: z.boolean().default(true),
+    })
+  ).optional(),
 }).passthrough();
 
 async function getUserId() {
@@ -56,6 +64,7 @@ export async function POST(request: Request) {
         profile: data.profile as any,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         targets: data.targets as any,
+        ...(data.notification_preferences ? { notification_preferences: data.notification_preferences } : {}),
       }
     });
     
