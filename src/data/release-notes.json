@@ -1,5 +1,16 @@
 [
   {
+    "version": "2.1.0",
+    "date": "2026-08-05",
+    "highlights": [
+      "🔔 Preferências de Notificação: Agora você tem controle total sobre quais alertas deseja receber diretamente nas Configurações!",
+      "📸 Evolução Visual: Nova página de Check-in de fotos para você acompanhar suas mudanças físicas com facilidade.",
+      "🚀 Compartilhamento Contextual: Compartilhar suas vitórias ficou mais fácil! Botões adicionados direto nas mensagens de sucesso.",
+      "👩‍⚕️ Funcionalidades para Nutris: Novos atalhos no cabeçalho, feed aprimorado e fluxo de onboarding 'Concierge' para novas assinaturas.",
+      "🛠️ Melhorias e Correções: Mais estabilidade, navegação aprimorada no cabeçalho e infraestrutura robusta para painéis."
+    ]
+  },
+  {
     "version": "2.0.0",
     "date": "2026-08-03",
     "highlights": [
