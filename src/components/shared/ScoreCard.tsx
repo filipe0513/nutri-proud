@@ -42,45 +42,50 @@ export function ScoreCard() {
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-        className="bg-gradient-score rounded-3xl p-6 relative overflow-hidden min-h-[160px] flex flex-col justify-between shadow-lg"
-      >
-        {/* Share button — top right, above the emoji */}
-        <button
-          type="button"
-          id="btn-score-card-share"
-          aria-label="Compartilhar score do dia"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShareOpen(true);
-          }}
-          className="absolute top-4 right-5 z-10 p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition-all active:scale-95 backdrop-blur-sm"
+      <div className="flex flex-col gap-3">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="bg-gradient-score rounded-3xl p-6 relative overflow-hidden min-h-[160px] flex flex-col justify-between shadow-lg"
         >
-          <Share2 className="h-4 w-4" />
-        </button>
-
-        {/* Decorative emoji */}
-        <div className="absolute top-4 right-[3.25rem] text-5xl opacity-80 select-none pointer-events-none">
-          {getScoreEmoji(todayScore)}
-        </div>
-
-        <p className="text-body-2 text-white/90 font-medium">Score do dia</p>
-
-        <div>
-          <div className="flex items-baseline space-x-1">
-            <span className="text-[3.5rem] font-extrabold text-white leading-none tracking-tight">
-              {todayScore}
-            </span>
-            <span className="text-body-1 text-white/70 font-normal">/100</span>
+          {/* Decorative emoji */}
+          <div className="absolute top-4 right-5 text-5xl opacity-80 select-none pointer-events-none">
+            {getScoreEmoji(todayScore)}
           </div>
-          <p className="text-body-1 text-white/80 mt-1">
-            {getScoreMessage(todayScore)}
-          </p>
+
+          <p className="text-body-2 text-white/90 font-medium">Score do dia</p>
+
+          <div>
+            <div className="flex items-baseline space-x-1">
+              <span className="text-[3.5rem] font-extrabold text-white leading-none tracking-tight">
+                {todayScore}
+              </span>
+              <span className="text-body-1 text-white/70 font-normal">/100</span>
+            </div>
+            <p className="text-body-1 text-white/80 mt-1">
+              {getScoreMessage(todayScore)}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Share button — below the card, right aligned */}
+        <div className="flex justify-end px-1">
+          <button
+            type="button"
+            id="btn-score-card-share"
+            aria-label="Compartilhar score do dia"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShareOpen(true);
+            }}
+            className="flex items-center gap-2 text-body-2 font-medium text-neutral-400 hover:text-brand-500 transition-colors active:scale-95"
+          >
+            <Share2 className="h-4 w-4" />
+            <span>Compartilhar</span>
+          </button>
         </div>
-      </motion.div>
+      </div>
 
       <ShareReportDrawer
         open={shareOpen}
