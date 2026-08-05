@@ -41,8 +41,7 @@ export function ScoreCard() {
   }, [activity_logs, user_profile]);
 
   return (
-    <>
-      <div className="flex flex-col gap-3">
+      <>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -67,10 +66,8 @@ export function ScoreCard() {
               {getScoreMessage(todayScore)}
             </p>
           </div>
-        </motion.div>
 
-        {/* Share button — below the card, right aligned */}
-        <div className="flex justify-end px-1">
+          {/* Share button — inside the card, bottom right */}
           <button
             type="button"
             id="btn-score-card-share"
@@ -79,13 +76,11 @@ export function ScoreCard() {
               e.stopPropagation();
               setShareOpen(true);
             }}
-            className="flex items-center gap-2 text-body-2 font-medium text-neutral-400 hover:text-brand-500 transition-colors active:scale-95"
+            className="absolute bottom-5 right-5 z-10 p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition-all active:scale-95 backdrop-blur-sm flex items-center justify-center"
           >
-            <Share2 className="h-4 w-4" />
-            <span>Compartilhar</span>
+            <Share2 className="h-5 w-5" />
           </button>
-        </div>
-      </div>
+        </motion.div>
 
       <ShareReportDrawer
         open={shareOpen}

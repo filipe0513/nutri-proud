@@ -1,5 +1,23 @@
 import { z } from 'zod';
 
+export const notificationChannelSchema = z.object({
+  push: z.boolean().default(true),
+  email: z.boolean().default(true),
+  in_app: z.boolean().default(true),
+});
+
+export const notificationCategoryKeys = [
+  'REMINDERS', 'MILESTONES', 'NUTRI_ALERTS',
+  'EVOLUTION', 'RISK_ALERTS', 'SYSTEM'
+] as const;
+
+export const notificationPreferencesSchema = z.record(
+  z.enum(notificationCategoryKeys),
+  notificationChannelSchema
+);
+
+export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>;
+
 export const ALL_MEALS = [
   { id: 'breakfast',        label: 'Café da manhã' },
   { id: 'morning_snack',    label: 'Lanche da manhã' },

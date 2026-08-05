@@ -20,6 +20,63 @@ export async function markAsRead(notificationId: string, userId: string) {
 }
 
 /**
+ * Função centralizadora de envio de notificações, respeitando as preferências do usuário.
+ */
+export async function dispatchNotification(
+  userId: string,
+  category: string,
+  title: string,
+  body: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dataPayload?: any
+) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { notification_preferences: true, email: true, oneSignalId: true },
+  });
+
+  if (!user) return { success: false, error: 'User not found' };
+
+  // Parse preferences safely, falling back to all enabled
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const prefsRaw = (user.notification_preferences as Record<string, any>) || {};
+  const catPrefs = prefsRaw[category] || { push: true, email: true, in_app: true };
+
+  const results = { in_app: false, email: false, push: false };
+
+  // 1. In-App Bell
+  if (catPrefs.in_app !== false) {
+    await prisma.notification.create({
+      data: {
+        id: uuidv4(),
+        userId,
+        title,
+        message: body,
+        category,
+        actionType: dataPayload?.actionType || null,
+      },
+    });
+    results.in_app = true;
+  }
+
+  // 2. Email (Resend stub)
+  if (catPrefs.email !== false && user.email) {
+    // Stub call for email service
+    console.log(`[NotificationService] Sending Email to ${user.email}: ${title} - ${body}`);
+    results.email = true;
+  }
+
+  // 3. Push (OneSignal stub)
+  if (catPrefs.push !== false && user.oneSignalId) {
+    // Stub call for OneSignal API
+    console.log(`[NotificationService] Sending Push to ${user.oneSignalId}: ${title} - ${body}`);
+    results.push = true;
+  }
+
+  return { success: true, dispatched: results };
+}
+
+/**
  * Cria uma notificação persistente para um insight gerado pela IA.
  * Chamada pelo insightService logo após salvar o AiInsight no banco.
  */
