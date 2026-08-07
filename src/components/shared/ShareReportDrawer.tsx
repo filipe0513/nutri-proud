@@ -19,7 +19,6 @@ import {
   Sparkles,
   ImageIcon,
   Download,
-  Users,
   Camera,
   Trash2,
 } from 'lucide-react';
@@ -38,6 +37,8 @@ import { useAppStore } from '@/store/store';
 import type { ActivityLog } from '@/store/types';
 import { TeamPickerModal } from '@/components/shared/TeamPickerModal';
 import { publishCardToTeam } from '@/app/actions/publishCardToTeam';
+import { fetchMyTeams } from '@/store/api';
+import type { TeamSummary } from '@/types/teamTypes';
 
 // ─── Shared types ─────────────────────────────────────────────────────────────
 
@@ -231,6 +232,8 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
   // ── Team publish state ──
   const [teamPickerOpen, setTeamPickerOpen] = useState(false);
   const [publishingTeamId, setPublishingTeamId] = useState<string | null>(null);
+  const [teams, setTeams] = useState<TeamSummary[]>([]);
+  const [shareToTeamCheckbox, setShareToTeamCheckbox] = useState(false);
 
   const nodeRef = useRef<HTMLDivElement>(null);
 
@@ -257,6 +260,15 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
       setCustomStart(weekStart);
       setCustomEnd(weekEnd);
     }
+    
+    // Fetch user teams
+    fetchMyTeams()
+      .then((data) => {
+        setTeams(data);
+        if (data.length > 0) setShareToTeamCheckbox(true);
+      })
+      .catch(() => setTeams([]));
+      
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
   
@@ -382,39 +394,78 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
     return toBlob(nodeRef.current, options);
   }, [selectedExport]);
 
+  const handlePublishToTeamBg = useCallback(async (teamId: string, teamName: string, blob: Blob) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', blob, 'orgulho-da-nutri.png');
+      formData.append('teamId', teamId);
+      formData.append('content', `Meu progresso — ${infographicData?.periodName ?? 'hoje'} 💪`);
+
+      const result = await publishCardToTeam(formData);
+      if (!result.success) throw new Error(result.error);
+      
+      toast.success(`Publicado em ${teamName}! 🎉`, {
+        description: 'Seu card já aparece no feed do grupo.',
+        className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao publicar no time.';
+      toast.error(msg);
+    }
+  }, [infographicData]);
+
   const handleShareInfographic = useCallback(async () => {
     setInfoCapturing(true);
+    let capturedBlob: Blob | null = null;
     try {
-      const blob = await captureBlob();
-      if (!blob) throw new Error('Blob vazio');
-      const file = new File([blob], 'orgulho-da-nutri.png', { type: 'image/png' });
+      capturedBlob = await captureBlob();
+      if (!capturedBlob) throw new Error('Blob vazio');
+      const file = new File([capturedBlob], 'orgulho-da-nutri.png', { type: 'image/png' });
+      let sharedNatively = false;
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'Meu Orgulho da Nutri',
-          text: 'Olha como foi meu foco no Orgulho da Nutri! 💪 https://orgulhodanutri.com',
-        });
-        // Fecha o drawer após compartilhar com sucesso
-        onOpenChange(false);
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'Meu Orgulho da Nutri',
+            text: 'Olha como foi meu foco no Orgulho da Nutri! 💪 https://orgulhodanutri.com',
+          });
+          sharedNatively = true;
+        } catch {
+          // User cancelled
+        }
       } else {
         // Fallback: download
-        const url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(capturedBlob);
         const a = document.createElement('a');
         a.href = url;
         a.download = 'orgulho-da-nutri.png';
         a.click();
         URL.revokeObjectURL(url);
         toast.success('Imagem salva!', { description: 'O infográfico foi baixado para o seu dispositivo.' });
-        onOpenChange(false);
       }
+
+      if (shareToTeamCheckbox && teams.length > 0) {
+        if (teams.length === 1) {
+          toast.info(`Publicando no time ${teams[0].name}...`);
+          handlePublishToTeamBg(teams[0].id, teams[0].name, capturedBlob);
+          if (sharedNatively) onOpenChange(false);
+        } else {
+           setTeamPickerOpen(true);
+        }
+      } else {
+        if (sharedNatively) onOpenChange(false);
+      }
+
     } catch (err) {
       const isAbort = err instanceof DOMException && err.name === 'AbortError';
       if (!isAbort) toast.error('Não foi possível compartilhar. Tente salvar a imagem.');
     } finally {
-      setInfoCapturing(false);
+      if (!shareToTeamCheckbox || teams.length === 0 || teams.length === 1) {
+        setInfoCapturing(false);
+      }
     }
-  }, [captureBlob, onOpenChange]);
+  }, [captureBlob, onOpenChange, shareToTeamCheckbox, teams, handlePublishToTeamBg]);
 
   const handleDownloadInfographic = useCallback(async () => {
     setInfoCapturing(true);
@@ -469,6 +520,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
       if (!result.success) throw new Error(result.error);
 
       setTeamPickerOpen(false);
+      setInfoCapturing(false);
       toast.success(`Publicado em ${teamName}! 🎉`, {
         description: 'Seu card já aparece no feed do grupo.',
         className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
@@ -477,8 +529,8 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro ao publicar.';
       toast.error(msg);
-    } finally {
       setInfoCapturing(false);
+    } finally {
       setPublishingTeamId(null);
     }
   }, [nodeRef, selectedExport, infographicData, onOpenChange]);
@@ -500,6 +552,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
         setActiveTab('infographic');
         setTeamPickerOpen(false);
         setBgPhoto(null);
+        if (teams.length > 0) setShareToTeamCheckbox(true);
       }, 300);
     }
     onOpenChange(v);
@@ -892,21 +945,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
               {/* Share / Download actions */}
               {infoReady && infographicData && !infographicData.isEmpty && (
                 <div className="flex flex-col gap-3">
-                  {/* Publish to Team — zero friction */}
-                  <Button
-                    onClick={() => setTeamPickerOpen(true)}
-                    disabled={infoCapturing}
-                    className="w-full h-14 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white text-button-1 flex items-center justify-center gap-2 shadow-md shadow-brand-500/25"
-                    id="btn-publish-to-team"
-                  >
-                    {infoCapturing && publishingTeamId ? (
-                      <><Loader2 className="h-4 w-4 animate-spin" />Publicando...</>
-                    ) : (
-                      <><Users className="h-4 w-4" />Publicar no Grupo</>
-                    )}
-                  </Button>
-
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 mt-4">
                     <Button
                       variant="outline"
                       onClick={handleDownloadInfographic}
@@ -915,7 +954,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
                       id="btn-download-infographic"
                     >
                       {infoCapturing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                      Salvar
+                      Salvar Apenas
                     </Button>
                     <Button
                       onClick={handleShareInfographic}
@@ -927,6 +966,20 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
                       Compartilhar
                     </Button>
                   </div>
+                  
+                  {teams.length > 0 && (
+                    <label className="flex items-center gap-2 mt-2 px-1 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={shareToTeamCheckbox} 
+                        onChange={(e) => setShareToTeamCheckbox(e.target.checked)}
+                        className="w-5 h-5 rounded text-purple-600 focus:ring-purple-500 bg-white border-purple-300"
+                      />
+                      <span className="text-body-2 text-purple-800">
+                        Compartilhar também no feed do meu time
+                      </span>
+                    </label>
+                  )}
 
                   <button
                     type="button"
