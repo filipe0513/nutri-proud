@@ -9,7 +9,7 @@ import { ScoreCard } from '@/components/shared/ScoreCard';
 import { InsightsBanner } from '@/components/shared/InsightsBanner';
 import { InsightsDrawer } from '@/components/shared/InsightsDrawer';
 import { WeeklyStreak } from '@/components/shared/WeeklyStreak';
-import { Sparkles, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Droplets, Utensils, Dumbbell, Moon, Smile, StickyNote } from 'lucide-react';
 import { JacadaDrawer } from '@/components/shared/JacadaDrawer';
 import { BottomSheet_Water } from '@/components/shared/BottomSheet_Water';
@@ -292,79 +292,67 @@ function PatientHomeContent({ userRole }: { userRole?: string }) {
         </div>
       </div>
 
-      {/* 4. Insights Banner */}
+      {/* 4. Insights Banner + Nota (agrupados semanticamente) */}
       <InsightsBanner />
 
-      {/* 5. Quick Actions — Vertical List */}
-      <div className="space-y-3">
-        <div className="flex items-center space-x-2 px-1">
-          <Sparkles className="h-4 w-4 text-neutral-400" />
-          <p className="text-body-2 font-semibold text-neutral-400">
-            Ações rápidas
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          {/* Lifesaver Button (Conditional) */}
-          {isLifesaverTime && (
-            <div
-              className="flex items-center bg-red-50 rounded-2xl px-4 py-4 border border-red-200 shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-[0.98] group"
-              onClick={() => setOpenDrawer('lifesaver', 'CARD')}
-            >
-              <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                <LifeBuoy className="h-5 w-5 text-red-500" />
-              </div>
-              <span className="text-body-1 font-bold text-red-700 ml-4 flex-1">
-                🆘 Como salvo meu dia?
-              </span>
-              <ChevronRight className="h-4 w-4 text-red-300" />
+      {/* Adicionar Nota — logo abaixo dos Insights da Nutri */}
+      {renderActionItem(ACTION_LIST[0], (
+        <Drawer open={openDrawer === 'note' || undefined} onOpenChange={(o) => o ? setOpenDrawer('note', 'CARD') : setOpenDrawer(null)}>
+          <DrawerTrigger asChild>
+            {actionTrigger(ACTION_LIST[0])}
+          </DrawerTrigger>
+          <DrawerContent className="!bg-white/95 backdrop-blur-2xl border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
+            <DrawerHeader className="px-0">
+              <DrawerTitle className="text-title-2 text-neutral-500">Adicionar Nota</DrawerTitle>
+            </DrawerHeader>
+            <div className="flex flex-col mt-4 space-y-4">
+              <textarea 
+                className="flex min-h-[120px] w-full rounded-2xl border border-neutral-200/60 bg-neutral-100 px-4 py-3 text-input-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                placeholder="Como você está se sentindo? Alguma observação?"
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+              />
+              <DrawerClose asChild>
+                <Button 
+                  className="h-14 rounded-2xl bg-brand-500 text-white text-button-1"
+                  onClick={() => {
+                    if (!noteText.trim()) return;
+                    addLog({
+                      event_time: toLocalISOString(new Date()),
+                      category: 'note',
+                      primary_value: 100,
+                      details: { notes: noteText },
+                      source: useAppStore.getState().activeDrawerSource || 'CARD'
+                    });
+                    toast.success('Nota salva com sucesso!', {
+                      className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success'
+                    });
+                    setNoteText('');
+                  }}
+                >
+                  Salvar Nota
+                </Button>
+              </DrawerClose>
             </div>
-          )}
+          </DrawerContent>
+        </Drawer>
+      ))}
 
-          {/* Note */}
-          {renderActionItem(ACTION_LIST[0], (
-            <Drawer open={openDrawer === 'note' || undefined} onOpenChange={(o) => o ? setOpenDrawer('note', 'CARD') : setOpenDrawer(null)}>
-              <DrawerTrigger asChild>
-                {actionTrigger(ACTION_LIST[0])}
-              </DrawerTrigger>
-              <DrawerContent className="!bg-white/95 backdrop-blur-2xl border-t border-white shadow-[0_-15px_60px_-10px_rgba(0,0,0,0.15)] rounded-t-[32px] px-6 pb-12">
-                <DrawerHeader className="px-0">
-                  <DrawerTitle className="text-title-2 text-neutral-500">Adicionar Nota</DrawerTitle>
-                </DrawerHeader>
-                <div className="flex flex-col mt-4 space-y-4">
-                  <textarea 
-                    className="flex min-h-[120px] w-full rounded-2xl border border-neutral-200/60 bg-neutral-100 px-4 py-3 text-input-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                    placeholder="Como você está se sentindo? Alguma observação?"
-                    value={noteText}
-                    onChange={(e) => setNoteText(e.target.value)}
-                  />
-                  <DrawerClose asChild>
-                    <Button 
-                      className="h-14 rounded-2xl bg-brand-500 text-white text-button-1"
-                      onClick={() => {
-                        if (!noteText.trim()) return;
-                        addLog({
-                          event_time: toLocalISOString(new Date()),
-                          category: 'note',
-                          primary_value: 100,
-                          details: { notes: noteText },
-                          source: useAppStore.getState().activeDrawerSource || 'CARD'
-                        });
-                        toast.success('Nota salva com sucesso!', {
-                          className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success'
-                        });
-                        setNoteText('');
-                      }}
-                    >
-                      Salvar Nota
-                    </Button>
-                  </DrawerClose>
-                </div>
-              </DrawerContent>
-            </Drawer>
-          ))}
+      {/* 5. Lifesaver (condicional) */}
+      {isLifesaverTime && (
+        <div
+          className="flex items-center bg-red-50 rounded-2xl px-4 py-4 border border-red-200 shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-[0.98] group"
+          onClick={() => setOpenDrawer('lifesaver', 'CARD')}
+        >
+          <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+            <LifeBuoy className="h-5 w-5 text-red-500" />
+          </div>
+          <span className="text-body-1 font-bold text-red-700 ml-4 flex-1">
+            🆘 Como salvo meu dia?
+          </span>
+          <ChevronRight className="h-4 w-4 text-red-300" />
         </div>
-      </div>
+      )}
 
       <BottomSheet_Water
         open={openDrawer === 'water'}

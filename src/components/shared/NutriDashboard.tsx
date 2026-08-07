@@ -50,7 +50,7 @@ function RetentionRadar() {
         {/* Call to action pós-MVP */}
         <div className="pt-2 border-t border-neutral-200/40 flex items-center justify-center gap-1">
           <p className="text-caption-2 text-neutral-500 text-center">
-            🚧 Em breve — conecte seus pacientes via Team
+            🚧 Em breve — conecte seus pacientes via Grupo
           </p>
         </div>
       </div>

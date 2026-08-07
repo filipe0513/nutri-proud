@@ -91,7 +91,7 @@ export default async function NutriLayout({
       </header>
 
       {/* ── Conteúdo Principal ───────────────────────────────────── */}
-      <main className="flex-1 w-full pb-28 md:pb-0">
+      <main className="flex-1 w-full pb-28 md:pb-0 overflow-y-auto">
         {children}
       </main>
 

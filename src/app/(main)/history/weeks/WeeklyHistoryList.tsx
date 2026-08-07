@@ -27,9 +27,17 @@ function formatDate(date: Date | string) {
   }).format(d).replace('.', '');
 }
 
+/** Formata uma Date para string ISO YYYY-MM-DD no fuso local */
+function toLocalISODate(date: Date): string {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 10);
+}
+
 export function WeeklyHistoryList({ history }: WeeklyHistoryListProps) {
   const [shareOpen, setShareOpen] = useState(false);
-  const [shareDate, setShareDate] = useState<string>('');
+  const [shareWeekStart, setShareWeekStart] = useState<string>('');
+  const [shareWeekEnd, setShareWeekEnd] = useState<string>('');
 
   if (history.length === 0) {
     return <p className="text-body-2 text-neutral-400 text-center mt-10">Nenhum histórico encontrado.</p>;
@@ -66,15 +74,11 @@ export function WeeklyHistoryList({ history }: WeeklyHistoryListProps) {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                aria-label="Compartilhar"
+                aria-label="Compartilhar semana"
                 onClick={() => {
-                  const end = new Date(week.endDate);
-                  // Pass the end date of the week as the "date" prop for the report
-                  // The report drawer will likely just use this date for a daily score 
-                  // or we can adjust it if type="STREAK". The task says "Share por semana",
-                  // meaning maybe we just pass type="STREAK" or "DAILY_SCORE"?
-                  // Actually the instruction just says "type='STREAK'" in the Drawer refactor options.
-                  setShareDate(end.toISOString().split('T')[0]);
+                  // Passa o intervalo exato da semana para o drawer pré-selecionar o período correto
+                  setShareWeekStart(toLocalISODate(new Date(week.startDate)));
+                  setShareWeekEnd(toLocalISODate(new Date(week.endDate)));
                   setShareOpen(true);
                 }}
                 className="p-2 rounded-full hover:bg-neutral-200/50 text-neutral-400 transition-colors"
@@ -99,7 +103,8 @@ export function WeeklyHistoryList({ history }: WeeklyHistoryListProps) {
         open={shareOpen}
         onOpenChange={setShareOpen}
         type="STREAK"
-        date={shareDate || undefined}
+        weekStart={shareWeekStart || undefined}
+        weekEnd={shareWeekEnd || undefined}
       />
     </>
   );

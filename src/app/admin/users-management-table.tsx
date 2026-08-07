@@ -216,7 +216,7 @@ export function UsersManagementTable({
                                     Alterar a role para{" "}
                                     <strong>NUTRITIONIST</strong>
                                   </li>
-                                  <li>Criar o Team padrão da nutricionista</li>
+                                  <li>Criar o Consultório padrão da nutricionista</li>
                                   <li>Remover metas de paciente</li>
                                   <li>
                                     Redirecionar para o dashboard de gestão no

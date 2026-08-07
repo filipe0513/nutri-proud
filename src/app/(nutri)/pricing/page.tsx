@@ -70,7 +70,7 @@ export default function PricingPage() {
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <ul className="space-y-3 text-body-2 text-neutral-600">
-              <li className="flex items-center gap-2"><Check className="h-5 w-5 text-brand-500" /> 1 Grupo (Team)</li>
+              <li className="flex items-center gap-2"><Check className="h-5 w-5 text-brand-500" /> 1 Grupo</li>
               <li className="flex items-center gap-2"><Check className="h-5 w-5 text-brand-500" /> Até 5 Pacientes</li>
               <li className="flex items-center gap-2 text-neutral-400"><Check className="h-5 w-5 text-neutral-300" /> Histórico Limitado</li>
             </ul>

@@ -55,6 +55,10 @@ interface ShareReportDrawerProps {
   pillar?: InfographicPillar;
   /** Contextual mode that adjusts the title and default tab/export */
   type?: ShareContextType;
+  /** ISO date YYYY-MM-DD — início da semana a pré-selecionar (Weekly Streak) */
+  weekStart?: string;
+  /** ISO date YYYY-MM-DD — fim da semana a pré-selecionar (Weekly Streak) */
+  weekEnd?: string;
 }
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
@@ -194,7 +198,7 @@ const PILLAR_EXPORT_MAP: Record<InfographicPillar, string> = {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ShareReportDrawer({ open, onOpenChange, date, pillar, type }: ShareReportDrawerProps) {
+export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, weekStart, weekEnd }: ShareReportDrawerProps) {
   const { user_profile } = useAppStore();
 
   // ── Tab ──
@@ -244,6 +248,14 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type }: Sh
     // The actual filtering is done via a custom date range if different from today
     if (date && date !== getTodayLocal()) {
       setInfoPeriod('today'); // period label stays 'today', but we override the date in the fetch
+    }
+    // When a weekly range is passed (from WeeklyStreak) → pre-select 'week' with those dates
+    if (weekStart && weekEnd) {
+      setActiveTab('infographic');
+      setInfoPeriod('week');
+      // Override the date range via customStart/customEnd used in custom mode
+      setCustomStart(weekStart);
+      setCustomEnd(weekEnd);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -319,20 +331,23 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type }: Sh
     return options;
   }, [infographicData]);
 
+  // ── Resolve the actual infographic date range (supports weekStart/weekEnd override) ──
+  const resolvedInfoDateRange = useCallback((): { startDate: string; endDate: string } => {
+    if (weekStart && weekEnd && infoPeriod === 'week') {
+      return { startDate: weekStart, endDate: weekEnd };
+    }
+    if (date && infoPeriod === 'today') {
+      return { startDate: date, endDate: date };
+    }
+    return getInfographicDateRange(infoPeriod);
+  }, [weekStart, weekEnd, infoPeriod, date]);
+
   const handleGenerateInfographic = useCallback(async () => {
     setInfoLoading(true);
     setInfoReady(false);
     setInfographicData(null);
     try {
-      // If a specific date was passed (e.g. from history), use it as the single-day range
-      let startDate: string;
-      let endDate: string;
-      if (date && infoPeriod === 'today') {
-        startDate = date;
-        endDate = date;
-      } else {
-        ({ startDate, endDate } = getInfographicDateRange(infoPeriod));
-      }
+      const { startDate, endDate } = resolvedInfoDateRange();
       const params = new URLSearchParams({ startDate, endDate, limit: '200', page: '1' });
       const res = await fetch(`/api/logs?${params.toString()}`);
       if (!res.ok) throw new Error('Falha ao buscar registros');
@@ -356,7 +371,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type }: Sh
     } finally {
       setInfoLoading(false);
     }
-  }, [infoPeriod, user_profile, date, pillar]);
+  }, [infoPeriod, user_profile, pillar, resolvedInfoDateRange]);
 
   const captureBlob = useCallback(async (): Promise<Blob | null> => {
     if (!nodeRef.current) return null;
@@ -380,6 +395,8 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type }: Sh
           title: 'Meu Orgulho da Nutri',
           text: 'Olha como foi meu foco no Orgulho da Nutri! 💪 https://orgulhodanutri.com',
         });
+        // Fecha o drawer após compartilhar com sucesso
+        onOpenChange(false);
       } else {
         // Fallback: download
         const url = URL.createObjectURL(blob);
@@ -389,6 +406,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type }: Sh
         a.click();
         URL.revokeObjectURL(url);
         toast.success('Imagem salva!', { description: 'O infográfico foi baixado para o seu dispositivo.' });
+        onOpenChange(false);
       }
     } catch (err) {
       const isAbort = err instanceof DOMException && err.name === 'AbortError';
@@ -396,7 +414,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type }: Sh
     } finally {
       setInfoCapturing(false);
     }
-  }, [captureBlob]);
+  }, [captureBlob, onOpenChange]);
 
   const handleDownloadInfographic = useCallback(async () => {
     setInfoCapturing(true);
@@ -410,12 +428,13 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type }: Sh
       a.click();
       URL.revokeObjectURL(url);
       toast.success('Imagem salva!', { description: 'O infográfico foi baixado com sucesso.' });
+      onOpenChange(false);
     } catch {
       toast.error('Não foi possível salvar a imagem.');
     } finally {
       setInfoCapturing(false);
     }
-  }, [captureBlob]);
+  }, [captureBlob, onOpenChange]);
 
   /**
    * Captures the Card (always with solid background), converts to Base64
@@ -451,9 +470,10 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type }: Sh
 
       setTeamPickerOpen(false);
       toast.success(`Publicado em ${teamName}! 🎉`, {
-        description: 'Seu card já aparece no feed do Team.',
+        description: 'Seu card já aparece no feed do grupo.',
         className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
       });
+      onOpenChange(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro ao publicar.';
       toast.error(msg);
@@ -461,7 +481,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type }: Sh
       setInfoCapturing(false);
       setPublishingTeamId(null);
     }
-  }, [nodeRef, selectedExport, infographicData]);
+  }, [nodeRef, selectedExport, infographicData, onOpenChange]);
 
   // ── Reset on close ────────────────────────────────────────────────────────
 
@@ -882,7 +902,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type }: Sh
                     {infoCapturing && publishingTeamId ? (
                       <><Loader2 className="h-4 w-4 animate-spin" />Publicando...</>
                     ) : (
-                      <><Users className="h-4 w-4" />Publicar no Team</>
+                      <><Users className="h-4 w-4" />Publicar no Grupo</>
                     )}
                   </Button>
 
