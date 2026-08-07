@@ -35,10 +35,23 @@ git add package.json package-lock.json src/data/release-notes.json
 git commit -m "chore(release): v<nova-versao>"
 ```
 
-## 6. Merge para Main e Notificação
+## 6. Merge para Main e Criação de Tag
 1. Mude para a main: `git checkout main`
 2. Dê merge na dev: `git merge dev`
-3. Notifique o usuário (no chat) que o deploy local está concluído e as notas foram geradas. Peça para ele fazer o push final com:
-`git push origin main`
+3. Crie a tag anotada para o release:
+```bash
+git tag -a v<nova-versao> -m "Release v<nova-versao>"
+```
+4. Volte para a dev para continuar o desenvolvimento:
+```bash
+git checkout dev
+```
 
-> NOTA: Nunca dê git push por conta própria. Deixe isso como responsabilidade do usuário.
+## 7. Notificação Final
+Notifique o usuário (no chat) que o deploy local está concluído, as notas foram geradas e a tag foi criada. Peça para ele fazer o push final com:
+```bash
+git push origin main && git push origin --tags
+```
+
+> NOTA: Nunca dê `git push` por conta própria. Deixe isso como responsabilidade do usuário.
+> A tag deve **sempre** usar o formato `v<nova-versao>` (ex: `v2.2.0`), ser anotada (`-a`) e incluída no push junto com a branch `main`.
