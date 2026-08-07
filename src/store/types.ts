@@ -1,3 +1,5 @@
+import { UserRole } from '@/types/roles';
+
 export interface UserProfile {
   id?: string;
   name: string;
@@ -20,7 +22,7 @@ export interface UserProfile {
     weekly_workouts: number;
   };
   notification_preferences?: Record<string, { push: boolean; email: boolean; in_app: boolean }>;
-  role?: string;
+  role?: UserRole;
 }
 
 export type Category = 'water' | 'food' | 'sleep' | 'workout' | 'poop' | 'note' | 'jacada';

@@ -39,6 +39,10 @@ export async function POST(
       return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
     }
 
+    if (session.user.role !== 'NUTRITIONIST' && session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Acesso negado. Apenas nutricionistas e administradores podem criar posts.' }, { status: 403 });
+    }
+
     const { id: teamId } = await params;
     const body = await request.json();
     const parsed = createPostSchema.safeParse(body);

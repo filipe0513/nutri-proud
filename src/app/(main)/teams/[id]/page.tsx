@@ -21,6 +21,8 @@ export default function TeamFeedPage() {
 
   const router = useRouter();
   const currentUserId = useAppStore(state => state.user_profile?.id);
+  const userRole = useAppStore(state => state.user_profile?.role);
+  const canCreatePost = userRole === 'NUTRITIONIST' || userRole === 'ADMIN';
   const [team, setTeam] = useState<TeamSummary | null>(null);
   const [posts, setPosts] = useState<PostWithAuthor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -151,19 +153,23 @@ export default function TeamFeedPage() {
       </main>
 
       {/* FAB - Floating Action Button */}
-      <button
-        onClick={() => setShareDrawerOpen(true)}
-        className="fixed bottom-8 right-6 z-40 w-14 h-14 bg-gradient-fab shadow-lg shadow-brand-500/30 rounded-full flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all"
-        aria-label="Nova publicação"
-      >
-        <Plus className="w-7 h-7" />
-      </button>
+      {canCreatePost && (
+        <>
+          <button
+            onClick={() => setShareDrawerOpen(true)}
+            className="fixed bottom-8 right-6 z-40 w-14 h-14 bg-gradient-fab shadow-lg shadow-brand-500/30 rounded-full flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all"
+            aria-label="Nova publicação"
+          >
+            <Plus className="w-7 h-7" />
+          </button>
 
-      <ShareToTeamDrawer
-        open={shareDrawerOpen}
-        onOpenChange={setShareDrawerOpen}
-        onShareScore={handleShareScore}
-      />
+          <ShareToTeamDrawer
+            open={shareDrawerOpen}
+            onOpenChange={setShareDrawerOpen}
+            onShareScore={handleShareScore}
+          />
+        </>
+      )}
 
       {/* Settings Drawer */}
       <Drawer open={settingsDrawerOpen} onOpenChange={setSettingsDrawerOpen}>

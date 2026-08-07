@@ -1,5 +1,5 @@
-
 import type { NextAuthConfig } from 'next-auth';
+import { UserRole } from '@/types/roles';
 
 export const authConfig = {
   providers: [],
@@ -9,7 +9,7 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role as string;
+        token.role = user.role as UserRole;
       }
       return token;
     },
@@ -20,10 +20,10 @@ export const authConfig = {
       if (session.user) {
         if (user) {
           session.user.id = user.id;
-          session.user.role = user.role as string;
+          session.user.role = user.role as UserRole;
         } else if (token) {
           session.user.id = token.sub as string;
-          session.user.role = token.role as string;
+          session.user.role = token.role as UserRole;
         }
       }
       return session;

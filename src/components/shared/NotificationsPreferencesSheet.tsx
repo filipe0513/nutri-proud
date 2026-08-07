@@ -22,7 +22,7 @@ export function NotificationsPreferencesSheet({
   
   // No god-mode (se o nutri estiver na home do paciente, ele vê preferencias de paciente)
   const isNutriContext = pathname?.startsWith("/dashboard") || pathname?.startsWith("/admin");
-  const isNutri = isNutriContext && (user_profile?.role === "ADMIN" || user_profile?.role === "NUTRI");
+  const isNutri = isNutriContext && (user_profile?.role === "ADMIN" || user_profile?.role === "NUTRITIONIST");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [prefs, setPrefs] = useState<Record<string, any>>({});

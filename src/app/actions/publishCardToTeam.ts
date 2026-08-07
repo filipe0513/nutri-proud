@@ -23,6 +23,10 @@ export async function publishCardToTeam(formData: FormData): Promise<{ success: 
       return { success: false, error: 'Não autorizado.' };
     }
 
+    if (session.user.role !== 'NUTRITIONIST' && session.user.role !== 'ADMIN') {
+      return { success: false, error: 'Acesso negado. Apenas nutricionistas e administradores podem criar posts.' };
+    }
+
     const file = formData.get('file') as File | null;
     const rawTeamId = formData.get('teamId') as string;
     const rawContent = formData.get('content') as string | null;
