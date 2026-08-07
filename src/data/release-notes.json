@@ -1,5 +1,16 @@
 [
   {
+    "version": "2.2.0",
+    "date": "2026-08-07",
+    "highlights": [
+      "📸 Evolução visual: Nova tela de Check-in de fotos para acompanhar o seu progresso diretamente no aplicativo!",
+      "🔔 Notificações Inteligentes e Personalizadas: Escolha exatamente o que quer receber, agora com suporte nativo a Push Notifications.",
+      "👩‍⚕️ Funcionalidades para Nutris B2B: Novo painel e feed inteligente para nutris acompanharem seus pacientes de perto.",
+      "📊 Analytics e Compartilhamento: Compartilhe suas conquistas mais facilmente, e melhorias invisíveis com integração ao PostHog.",
+      "🛡️ Segurança e Ajustes Visuais: Diversas melhorias na usabilidade e segurança avançada nos grupos (squads)."
+    ]
+  },
+  {
     "version": "2.1.0",
     "date": "2026-08-05",
     "highlights": [
