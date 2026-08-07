@@ -26,7 +26,7 @@ export default function TeamsHubPage() {
     setIsLoading(true);
     fetchMyTeams()
       .then((data) => { if (!cancelled) setTeams(data); })
-      .catch(() => { if (!cancelled) toast.error('Erro ao carregar teams'); })
+      .catch(() => { if (!cancelled) toast.error('Erro ao carregar times'); })
       .finally(() => { if (!cancelled) setIsLoading(false); });
     return () => { cancelled = true; };
   }, []);

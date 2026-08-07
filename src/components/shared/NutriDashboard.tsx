@@ -183,7 +183,7 @@ export function NutriDashboard({ teams }: NutriDashboardProps) {
   }
 
   return (
-    <div className="pb-12 pt-8 px-4 sm:px-6 max-w-4xl mx-auto space-y-6">
+    <div className="pb-24 pt-8 px-4 sm:px-6 max-w-4xl mx-auto space-y-6 overflow-y-auto h-full">
 
       {/* ── Welcome Header ─────────────────────────────────────────── */}
       <section className="space-y-1">

@@ -139,7 +139,7 @@ export function ProfileClient({ user, scoresByDate, initialPosts, evolutionLogs,
               </h4>
               <p className="text-body-2 text-neutral-400 mt-1 max-w-[240px]">
                 {isMe
-                  ? 'Compartilhe seu progresso com o team para ver suas postagens aqui.'
+                  ? 'Compartilhe seu progresso com o time para ver suas postagens aqui.'
                   : 'Este usuário ainda não fez nenhuma publicação.'}
               </p>
             </div>
