@@ -46,6 +46,10 @@ interface AppState {
   /** Animação condicional para Squircle (Streak) após log */
   justLoggedAnimate: boolean;
   setJustLoggedAnimate: (animate: boolean) => void;
+
+  /** Controla se o modal de permissão push foi dispensado nessa sessão */
+  pushPromptDismissed: boolean;
+  setPushPromptDismissed: (dismissed: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
@@ -63,6 +67,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
       successOverlay: null,
       justLoggedAnimate: false,
       setJustLoggedAnimate: (animate) => set({ justLoggedAnimate: animate }),
+      pushPromptDismissed: false,
+      setPushPromptDismissed: (dismissed) => set({ pushPromptDismissed: dismissed }),
       showSuccessOverlay: (data) => {
         set({ successOverlay: { isOpen: true, ...data } });
       },

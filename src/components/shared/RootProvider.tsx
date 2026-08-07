@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/store';
 import { Toaster } from '@/components/ui/sonner';
 import { SuccessOverlay } from './SuccessOverlay';
 import { OneSignalInit } from './OneSignalInit';
+import { PushPermissionModal } from './PushPermissionModal';
 
 /**
  * RootProvider — responsável apenas por inicializar os dados do Zustand e
@@ -30,6 +31,7 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       <OneSignalInit />
+      <PushPermissionModal />
       {children}
       <Toaster position="top-center" richColors />
       <SuccessOverlay />

@@ -43,6 +43,7 @@ model User {
   role          String         @default("USER")
   plan          Plan           @default(FREE)
   oneSignalId   String?        @map("one_signal_id")
+  pushEnabled   Boolean        @default(false) @map("push_enabled")
   emailVerified DateTime?
   profile                  Json?
   targets                  Json?

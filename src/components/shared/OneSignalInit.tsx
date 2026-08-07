@@ -23,12 +23,9 @@ export function OneSignalInit() {
         });
         isInitDone.current = true;
         
-        // Pede a permissão de notificação ao usuário para que o OneSignal valide a instalação
-        OneSignal.Slidedown.promptPush();
-        
         // Se já tiver userId quando inicializou, loga agora
         if (useAppStore.getState().user_profile?.id) {
-          OneSignal.login(useAppStore.getState().user_profile!.id!).catch((err) => {
+          OneSignal.login(useAppStore.getState().user_profile!.id!).catch((err: unknown) => {
              console.error('Erro ao vincular usuário (pós-init):', err);
           });
         }
