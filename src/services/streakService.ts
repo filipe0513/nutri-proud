@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { getLocalDateKey, getLocalStartOfDay } from '@/utils/dateUtils';
 
 const MIN_PRIMARY_VALUE = 70;
 
@@ -9,19 +10,6 @@ function getISOWeek(date: Date): string {
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
   return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
-}
-
-function toDateString(date: Date): string {
-  return date.toLocaleDateString('pt-BR', {
-    timeZone: 'America/Sao_Paulo',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).split('/').reverse().join('-');
-}
-
-function getLocalDateInBrazil(date: Date): Date {
-  return new Date(date.getTime() - 3 * 3600 * 1000);
 }
 
 
@@ -47,13 +35,13 @@ export async function calculateWorkoutWeeklyStreak(
   // Group logs by ISO week
   const weekMap = new Map<string, number>();
   for (const log of logs) {
-    const week = getISOWeek(getLocalDateInBrazil(new Date(log.eventTime)));
+    const week = getISOWeek(getLocalStartOfDay(new Date(log.eventTime)));
     weekMap.set(week, (weekMap.get(week) ?? 0) + 1);
   }
 
   // Build sorted list of unique weeks (descending), skip current (possibly incomplete) week
   const today = new Date();
-  const currentWeek = getISOWeek(getLocalDateInBrazil(today));
+  const currentWeek = getISOWeek(getLocalStartOfDay(today));
 
   const completedWeeks = Array.from(weekMap.keys())
     .filter((w) => w !== currentWeek)
@@ -114,7 +102,7 @@ export async function calculateDailyStreak(
   // Group by date: pick the max primaryValue for each day
   const dayMap = new Map<string, number>();
   for (const log of logs) {
-    const day = toDateString(new Date(log.eventTime));
+    const day = getLocalDateKey(new Date(log.eventTime));
     const current = dayMap.get(day) ?? 0;
     if (log.primaryValue > current) {
       dayMap.set(day, log.primaryValue);
@@ -123,21 +111,18 @@ export async function calculateDailyStreak(
 
   // Walk backwards from yesterday (today may be incomplete)
   let streak = 0;
-  const nowInBrazil = getLocalDateInBrazil(new Date());
-  const today = new Date(Date.UTC(nowInBrazil.getUTCFullYear(), nowInBrazil.getUTCMonth(), nowInBrazil.getUTCDate()));
-
-  const checkDate = new Date(today);
-
-  checkDate.setDate(checkDate.getDate() - 1); // start from yesterday
+  const todayStart = getLocalStartOfDay();
+  const checkDate = new Date(todayStart);
+  checkDate.setUTCDate(checkDate.getUTCDate() - 1); // start from yesterday
 
   while (true) {
-    const dayStr = toDateString(checkDate);
+    const dayStr = getLocalDateKey(checkDate);
     const val = dayMap.get(dayStr);
 
     if (val === undefined || val < MIN_PRIMARY_VALUE) break;
 
     streak++;
-    checkDate.setDate(checkDate.getDate() - 1);
+    checkDate.setUTCDate(checkDate.getUTCDate() - 1);
   }
 
   return streak;
