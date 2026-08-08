@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/auth';
-import { cookies } from 'next/headers';
+import { getUserId } from '@/lib/apiAuth';
 import { z } from 'zod';
 
 const userProfilePayloadSchema = z.object({
@@ -28,14 +27,6 @@ const userProfilePayloadSchema = z.object({
     })
   ).optional(),
 }).passthrough();
-
-async function getUserId() {
-  const session = await auth();
-  if (session?.user?.id) return session.user.id;
-  
-  const cookieStore = await cookies();
-  return cookieStore.get('anon_user_id')?.value;
-}
 
 export async function POST(request: Request) {
   try {

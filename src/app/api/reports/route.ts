@@ -1,17 +1,8 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { cookies } from 'next/headers';
+import { getUserId } from '@/lib/apiAuth';
 import { reportQuerySchema } from '@/schemas/reportSchema';
 import { reportService } from '@/services/reportService';
 import { prisma } from '@/lib/prisma';
-
-async function getUserId() {
-  const session = await auth();
-  if (session?.user?.id) return session.user.id;
-
-  const cookieStore = await cookies();
-  return cookieStore.get('anon_user_id')?.value;
-}
 
 export async function GET(request: Request) {
   try {

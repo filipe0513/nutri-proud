@@ -2,17 +2,8 @@
 import { NextResponse } from 'next/server';
 import { jacadaSchema } from '@/schemas/logSchema';
 import { logService } from '@/services/logService';
-import { auth } from '@/auth';
-import { cookies } from 'next/headers';
+import { getUserId } from '@/lib/apiAuth';
 import { PermissionError } from '@/services/userService';
-
-async function getUserId() {
-  const session = await auth();
-  if (session?.user?.id) return session.user.id;
-  
-  const cookieStore = await cookies();
-  return cookieStore.get('anon_user_id')?.value;
-}
 
 export async function POST(request: Request) {
   try {

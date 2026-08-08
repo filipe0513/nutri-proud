@@ -2,18 +2,9 @@ export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { cookies } from 'next/headers';
+import { getUserId } from '@/lib/apiAuth';
 import { insightService } from '@/services/insightService';
 import { generateInsightInputSchema } from '@/schemas/insightSchema';
-
-async function getUserId() {
-  const session = await auth();
-  if (session?.user?.id) return session.user.id;
-
-  const cookieStore = await cookies();
-  return cookieStore.get('anon_user_id')?.value;
-}
 
 /**
  * POST /api/insights/generate

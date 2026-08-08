@@ -3,8 +3,7 @@ export const maxDuration = 60;
 
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { auth } from '@/auth';
-import { cookies } from 'next/headers';
+import { getUserId } from '@/lib/apiAuth';
 import { createJacadaNotification } from '@/services/notificationService';
 import { prisma } from '@/lib/prisma';
 import { rateLimit } from '@/lib/rateLimit';
@@ -19,14 +18,6 @@ const jacadaReactionSchema = z.object({
   alcohol: z.number().min(0).max(5),
   logId: z.string().uuid().optional(),
 }).strict();
-
-async function getUserId(): Promise<string | undefined> {
-  const session = await auth();
-  if (session?.user?.id) return session.user.id;
-
-  const cookieStore = await cookies();
-  return cookieStore.get('anon_user_id')?.value;
-}
 
 function buildHistorySummary(
   logs: Array<{ eventTime: Date; details: unknown }>

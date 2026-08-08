@@ -3,8 +3,7 @@ export const maxDuration = 60;
 
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { auth } from '@/auth';
-import { cookies } from 'next/headers';
+import { getUserId } from '@/lib/apiAuth';
 import { rateLimit } from '@/lib/rateLimit';
 import { z } from 'zod';
 
@@ -20,14 +19,6 @@ const lifesaverSchema = z.object({
     poop: z.number().min(0).max(100),
   }),
 }).strict();
-
-async function getUserId(): Promise<string | undefined> {
-  const session = await auth();
-  if (session?.user?.id) return session.user.id;
-
-  const cookieStore = await cookies();
-  return cookieStore.get('anon_user_id')?.value;
-}
 
 export async function POST(request: Request) {
   try {

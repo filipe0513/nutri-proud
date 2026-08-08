@@ -1,18 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { logSchema, foodDetailsSchema } from '@/schemas/logSchema';
-import { auth } from '@/auth';
-import { cookies } from 'next/headers';
+import { getUserId } from '@/lib/apiAuth';
 import { logService } from '@/services/logService';
 import { PermissionError } from '@/services/userService';
-
-async function getUserId() {
-  const session = await auth();
-  if (session?.user?.id) return session.user.id;
-  
-  const cookieStore = await cookies();
-  return cookieStore.get('anon_user_id')?.value;
-}
 
 export async function PUT(
   request: Request,

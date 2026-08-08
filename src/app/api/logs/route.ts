@@ -5,20 +5,10 @@ import { logSchema, foodDetailsSchema } from '@/schemas/logSchema';
 import { prisma } from '@/lib/prisma';
 import { DailyLog } from '@prisma/client';
 
-import { auth } from '@/auth';
-import { cookies } from 'next/headers';
+import { getUserId } from '@/lib/apiAuth';
 import { logService, getLocalDayInterval } from '@/services/logService';
 import { PermissionError } from '@/services/userService';
 import { triggerService } from '@/services/triggerService';
-
-
-async function getUserId() {
-  const session = await auth();
-  if (session?.user?.id) return session.user.id;
-  
-  const cookieStore = await cookies();
-  return cookieStore.get('anon_user_id')?.value;
-}
 
 export async function POST(request: Request) {
   try {

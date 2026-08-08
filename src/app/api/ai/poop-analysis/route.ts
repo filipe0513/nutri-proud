@@ -3,8 +3,7 @@ export const maxDuration = 60;
 
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { auth } from '@/auth';
-import { cookies } from 'next/headers';
+import { getUserId } from '@/lib/apiAuth';
 import { prisma } from '@/lib/prisma';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -18,13 +17,6 @@ const poopAnalysisSchema = z.object({
   state: z.enum(['hard', 'liquid', 'gas', 'normal']),
   logId: z.string().uuid().optional(),
 }).strict();
-
-async function getUserId(): Promise<string | undefined> {
-  const session = await auth();
-  if (session?.user?.id) return session.user.id;
-  const cookieStore = await cookies();
-  return cookieStore.get('anon_user_id')?.value;
-}
 
 const STATE_LABELS: Record<string, string> = {
   hard: '🧱 Ressecado / Difícil',
