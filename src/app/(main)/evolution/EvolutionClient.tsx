@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Camera, Calendar, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { TopHeader } from '@/components/shared/TopHeader';
-import { EvolutionDrawer } from '@/components/shared/EvolutionDrawer';
+import { PhotoStickerShareDrawer } from '@/components/shared/PhotoStickerShareDrawer';
+import { uploadImage } from '@/app/actions/uploadImage';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface EvolutionLog {
@@ -23,8 +26,65 @@ interface EvolutionClientProps {
 }
 
 export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientProps) {
+  const router = useRouter();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showRules, setShowRules] = useState(true);
+
+  /**
+   * Preserves exact logic from EvolutionDrawer (refactored Aug 7):
+   * 1. Upload composite blob to Cloudinary
+   * 2. Save evolution log to DB
+   * 3. Post to first team's feed
+   */
+  const handleEvolutionSave = useCallback(
+    async (blob: Blob, weight?: number) => {
+      // 1. Upload to Cloudinary
+      const formData = new FormData();
+      formData.append('file', blob, 'evolution-checkin.png');
+      formData.append('folder', 'evolution');
+      const uploadResult = await uploadImage(formData);
+      if (!uploadResult.success || !uploadResult.imageUrl) {
+        throw new Error('Falha no upload.');
+      }
+
+      // 2. Save evolution log
+      const response = await fetch('/api/logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: 'evolution',
+          primary_value: 100,
+          details: {
+            photo_url: uploadResult.imageUrl,
+            weight_kg: weight,
+          },
+        }),
+      });
+      if (!response.ok) throw new Error('Falha ao salvar check-in de evolução');
+
+      // 3. Post to team feed
+      const resTeams = await fetch('/api/teams');
+      if (resTeams.ok) {
+        const teams = await resTeams.json();
+        if (Array.isArray(teams) && teams.length > 0) {
+          const teamFormData = new FormData();
+          teamFormData.append('file', blob, 'evolution.png');
+          teamFormData.append('content', `Check-in de Evolução: ${weight}kg 💪`);
+          await fetch('/api/teams/' + teams[0].id + '/posts', {
+            method: 'POST',
+            body: teamFormData,
+          });
+        }
+      }
+
+      toast.success('Evolução salva e postada!', {
+        className:
+          'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
+      });
+      router.refresh();
+    },
+    [router]
+  );
 
   return (
     <div className="pb-32 pt-24 px-6 max-w-lg mx-auto space-y-6">
@@ -33,7 +93,7 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
       {/* Hero Educativo */}
       {showRules && (
         <Card className="bg-notify-info-glass backdrop-blur-md border border-notify-info/40 shadow-sm rounded-3xl relative overflow-hidden">
-          <button 
+          <button
             onClick={() => setShowRules(false)}
             className="absolute top-4 right-4 text-notify-info hover:bg-notify-info/10 rounded-full p-1 transition-colors"
             aria-label="Esconder dicas"
@@ -56,7 +116,7 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
       )}
 
       {!showRules && (
-        <button 
+        <button
           onClick={() => setShowRules(true)}
           className="flex items-center gap-2 text-caption-1 font-medium text-brand-500 hover:text-brand-600 transition-colors mx-auto"
         >
@@ -95,23 +155,21 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
         ) : (
           <div className="grid grid-cols-2 gap-4">
             {historyLogs.map((log) => (
-              <div 
-                key={log.id} 
+              <div
+                key={log.id}
                 className="bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm rounded-2xl overflow-hidden flex flex-col group hover:shadow-md transition-all cursor-pointer"
               >
                 <div className="relative aspect-[3/4] bg-neutral-200">
-                  {/* Imagem do Cloudinary */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img 
-                    src={log.details.photo_url} 
-                    alt="Check-in de evolução" 
+                  <img
+                    src={log.details.photo_url}
+                    alt="Check-in de evolução"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
                   {/* Fade gradient bottom */}
                   <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
-                  
-                  {/* Info sobre a foto */}
+
                   <div className="absolute bottom-2 left-2 right-2 text-white flex justify-between items-end">
                     <div className="flex flex-col">
                       <span className="text-title-3 font-bold leading-none">
@@ -121,12 +179,11 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
                     </div>
                   </div>
                 </div>
-                
-                {/* Data */}
+
                 <div className="p-3 bg-white/50 flex items-center gap-1.5 text-neutral-500">
                   <Calendar className="h-3.5 w-3.5 opacity-70" />
                   <span className="text-caption-2 font-medium">
-                    {format(new Date(log.event_time), "d MMM, yyyy", { locale: ptBR })}
+                    {format(new Date(log.event_time), 'd MMM, yyyy', { locale: ptBR })}
                   </span>
                 </div>
               </div>
@@ -135,10 +192,13 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
         )}
       </section>
 
-      <EvolutionDrawer 
-        open={isDrawerOpen} 
-        onOpenChange={setIsDrawerOpen} 
-        initialWeight={initialWeight} 
+      {/* @deprecated EvolutionDrawer replaced by PhotoStickerShareDrawer */}
+      <PhotoStickerShareDrawer
+        open={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
+        context={{ type: 'EVOLUTION' }}
+        onComposed={handleEvolutionSave}
+        initialWeight={initialWeight || 70}
       />
     </div>
   );

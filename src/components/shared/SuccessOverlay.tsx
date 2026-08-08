@@ -7,6 +7,7 @@ import { CheckCircle2, Droplet, Moon, Utensils, Dumbbell, Smile, Share2 } from '
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ShareReportDrawer } from '@/components/shared/ShareReportDrawer';
+import { PhotoStickerShareDrawer } from '@/components/shared/PhotoStickerShareDrawer';
 import type { InfographicPillar } from '@/components/share/ShareableInfographic';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -26,6 +27,12 @@ const CATEGORY_COLORS: Record<string, string> = {
   default: 'from-brand-400 to-brand-600',
 };
 
+const PILLAR_MAP: Record<string, InfographicPillar> = {
+  water: 'WATER',
+  food: 'FOOD',
+  workout: 'TRAINING',
+};
+
 export function SuccessOverlay() {
   const successOverlay = useAppStore(state => state.successOverlay);
   const hideSuccessOverlay = useAppStore(state => state.hideSuccessOverlay);
@@ -40,6 +47,7 @@ export function SuccessOverlay() {
   const duration = showButtons ? 3 : 1.5;
   const [timeLeft, setTimeLeft] = useState(duration);
   const [shareOpen, setShareOpen] = useState(false);
+  const [infographicOpen, setInfographicOpen] = useState(false);
   const [sharePillar, setSharePillar] = useState<InfographicPillar | null>(null);
 
   useEffect(() => {
@@ -71,13 +79,8 @@ export function SuccessOverlay() {
   }, [isOpen, showButtons, hideSuccessOverlay]);
 
   const handleShare = () => {
-    const pillarMap: Record<string, InfographicPillar> = {
-      water: 'WATER',
-      food: 'FOOD',
-      workout: 'TRAINING'
-    };
-    if (category && pillarMap[category]) {
-      setSharePillar(pillarMap[category]);
+    if (category && PILLAR_MAP[category]) {
+      setSharePillar(PILLAR_MAP[category]);
       setShareOpen(true);
     }
     hideSuccessOverlay(true);
@@ -109,7 +112,7 @@ export function SuccessOverlay() {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1, rotate: [0, -10, 10, -10, 10, 0] }}
-              transition={{ 
+              transition={{
                 delay: 0.2,
                 scale: { type: 'spring', stiffness: 200, damping: 10 },
                 rotate: { duration: 0.5, ease: 'easeInOut' }
@@ -118,8 +121,8 @@ export function SuccessOverlay() {
             >
               <Icon size={64} className="text-white drop-shadow-md" strokeWidth={2.5} />
             </motion.div>
-            
-            <motion.h2 
+
+            <motion.h2
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -127,9 +130,9 @@ export function SuccessOverlay() {
             >
               {message}
             </motion.h2>
-            
+
             {submessage && (
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
@@ -146,14 +149,14 @@ export function SuccessOverlay() {
                 transition={{ delay: 0.5 }}
                 className="w-full mt-8 space-y-3"
               >
-                <Button 
+                <Button
                   onClick={handleShare}
                   className="w-full bg-white text-neutral-800 hover:bg-white/90 h-14 rounded-2xl font-bold shadow-lg text-button-1"
                 >
                   <Share2 className="w-5 h-5 mr-2" />
                   Compartilhar
                 </Button>
-                <Button 
+                <Button
                   onClick={() => hideSuccessOverlay(true)}
                   variant="ghost"
                   className="w-full text-white/90 hover:bg-white/10 hover:text-white h-14 rounded-2xl text-button-1"
@@ -166,9 +169,26 @@ export function SuccessOverlay() {
         </motion.div>
       )}
       </AnimatePresence>
-      <ShareReportDrawer
+
+      {/* Primary: photo + sticker share */}
+      <PhotoStickerShareDrawer
         open={shareOpen}
         onOpenChange={setShareOpen}
+        context={{
+          type: 'PILLAR',
+          pillar: sharePillar ?? 'WATER',
+          score: 100,
+        }}
+        onOpenInfographic={() => {
+          setShareOpen(false);
+          setInfographicOpen(true);
+        }}
+      />
+
+      {/* Secondary: legacy infographic */}
+      <ShareReportDrawer
+        open={infographicOpen}
+        onOpenChange={setInfographicOpen}
         type="PILLAR"
         pillar={sharePillar || undefined}
       />

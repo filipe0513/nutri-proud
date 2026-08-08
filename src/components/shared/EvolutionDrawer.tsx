@@ -1,3 +1,8 @@
+/**
+ * @deprecated Replaced by PhotoStickerShareDrawer (photo-first share flow).
+ * EvolutionClient.tsx no longer imports this component.
+ * Safe to delete once confirmed no other consumers exist.
+ */
 'use client';
 
 import { useState, useRef } from 'react';
