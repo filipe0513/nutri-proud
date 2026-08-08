@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@/auth';
+import { signAndUploadToCloudinary } from '@/lib/cloudinary';
 import { createTeamPost } from '@/services/teamService';
 import { z } from 'zod';
 
@@ -43,46 +44,7 @@ export async function publishCardToTeam(formData: FormData): Promise<{ success: 
     const { teamId, content } = parsed.data;
 
     // ── 1. Upload to Cloudinary ───────────────────────────────────────────────
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const apiKey = process.env.CLOUDINARY_API_KEY;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
-
-    if (!cloudName || !apiKey || !apiSecret) {
-      return { success: false, error: 'Configuração do Cloudinary incompleta.' };
-    }
-
-    // Build the multipart form for the Cloudinary REST API (signed upload)
-    const timestamp = Math.round(Date.now() / 1000);
-    const folder = 'team_posts';
-    const paramsToSign = `folder=${folder}&timestamp=${timestamp}`;
-
-    // Generate SHA-1 signature using Node.js crypto
-    const crypto = await import('crypto');
-    const signature = crypto
-      .createHash('sha1')
-      .update(paramsToSign + apiSecret)
-      .digest('hex');
-
-    const cloudinaryFormData = new FormData();
-    cloudinaryFormData.append('file', file);
-    cloudinaryFormData.append('api_key', apiKey);
-    cloudinaryFormData.append('timestamp', String(timestamp));
-    cloudinaryFormData.append('folder', folder);
-    cloudinaryFormData.append('signature', signature);
-
-    const uploadRes = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      { method: 'POST', body: cloudinaryFormData },
-    );
-
-    if (!uploadRes.ok) {
-      const errBody = await uploadRes.json().catch(() => ({}));
-      console.error('[publishCardToTeam] Cloudinary error:', errBody);
-      return { success: false, error: 'Falha no upload da imagem. Tente novamente.' };
-    }
-
-    const uploadData = await uploadRes.json() as { secure_url: string };
-    const imageUrl = uploadData.secure_url;
+    const imageUrl = await signAndUploadToCloudinary(file, 'team_posts');
 
     // ── 2. Create Post in DB ─────────────────────────────────────────────────
     const post = await createTeamPost(teamId, session.user.id, {
