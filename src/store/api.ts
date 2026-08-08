@@ -1,5 +1,5 @@
 import { UserProfile, ActivityLog } from './types';
-import type { TeamSummary, PostWithAuthor } from '@/types/teamTypes';
+import type { TeamSummary, PostWithAuthor, CommentWithAuthor, UnifiedFeedItem, PatientRadarData } from '@/types/teamTypes';
 
 /** Erro tipado para respostas HTTP não-ok da API. Permite detectar status 403 nos componentes. */
 export class ApiError extends Error {
@@ -195,4 +195,58 @@ export const toggleReaction = async (postId: string, emoji: string): Promise<voi
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ emoji }),
   }, 'Erro ao reagir');
+};
+
+// ── Nutri Dashboard API ──────────────────────────────────────
+
+export const fetchNutriFeed = async (types?: string[]): Promise<UnifiedFeedItem[]> => {
+  const params = types ? `?types=${types.join(',')}` : '';
+  const res = await fetch(`/api/dashboard/feed${params}`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.items || [];
+};
+
+export const fetchPatientRadar = async (): Promise<PatientRadarData> => {
+  const res = await fetch('/api/dashboard/radar');
+  if (!res.ok) return { atRisk: [], doingGreat: [] };
+  const data = await res.json();
+  return data.radar || { atRisk: [], doingGreat: [] };
+};
+
+export const fetchPostComments = async (postId: string): Promise<CommentWithAuthor[]> => {
+  const res = await fetch(`/api/posts/${postId}/comments`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.comments || [];
+};
+
+export const createPostComment = async (postId: string, text: string): Promise<CommentWithAuthor> => {
+  const res = await fetchApiOrThrow(`/api/posts/${postId}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  }, 'Erro ao comentar');
+  return res.json();
+};
+
+export const sendNutriMessage = async (patientId: string, message: string): Promise<void> => {
+  await fetchApiOrThrow('/api/dashboard/message', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ patientId, message }),
+  }, 'Erro ao enviar mensagem');
+};
+
+export const fetchAiSuggestion = async (
+  patientId: string,
+  tone: 'encouragement' | 'congratulations' | 'concern' | 'general',
+): Promise<string> => {
+  const res = await fetchApiOrThrow('/api/dashboard/message/suggest', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ patientId, tone }),
+  }, 'Erro ao gerar sugestao');
+  const data = await res.json();
+  return data.suggestion;
 };

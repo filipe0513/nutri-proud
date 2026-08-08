@@ -38,3 +38,42 @@ export interface PostWithAuthor {
   commentCount: number;
   createdAt: string; // ISO
 }
+
+// ── Comment types ──────────────────────────────────────────
+
+export interface CommentWithAuthor {
+  id: string;
+  text: string;
+  author: PostAuthor;
+  createdAt: string; // ISO
+}
+
+// ── Nutri Dashboard types ──────────────────────────────────
+
+export interface TeamFeedPostWithPatient {
+  id: string;
+  type: 'MILESTONE' | 'ALERT' | 'EVOLUTION' | 'SYSTEM';
+  content: string;
+  createdAt: string; // ISO
+  patient: PostAuthor;
+  teamName: string;
+  metadata: unknown;
+}
+
+export type UnifiedFeedItem =
+  | { kind: 'social'; post: PostWithAuthor; teamName: string }
+  | { kind: 'system'; feedPost: TeamFeedPostWithPatient };
+
+export interface PatientRadarItem {
+  patient: PostAuthor;
+  teamName: string;
+  lastLogAt: string | null; // ISO
+  daysSinceLastLog: number | null;
+  recentAvgScore: number | null;
+  status: 'at_risk' | 'doing_great' | 'normal';
+}
+
+export interface PatientRadarData {
+  atRisk: PatientRadarItem[];
+  doingGreat: PatientRadarItem[];
+}

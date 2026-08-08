@@ -4,7 +4,7 @@ import { DailyLog } from '@prisma/client';
 import { AiInsightResponse } from '@/schemas/insightSchema';
 import { getLocalStartOfDay } from '@/utils/dateUtils';
 import { createInsightNotification } from './notificationService';
-import { getWeeklyProgress } from './progressService';
+import { getPatientContext } from './patientContextService';
 
 export const insightService = {
   /**
@@ -137,85 +137,23 @@ export const insightService = {
     }
     // ─────────────────────────────────────────────────────────────────────────
 
-    // ── 1. Perfil do usuário (targets + profile) ──────────────────────────────
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { targets: true, profile: true },
-    });
+    // ── Shared patient context ──────────────────────────────────────────────
+    const ctx = await getPatientContext(userId);
+    const {
+      last30Logs, todayLogs, weeklyProgress,
+      waterGoalMl, sleepGoalHours, workoutGoalPerWeek, mealsGoalPerDay, mainGoal,
+      waterMlToday, waterPctToday, mealsToday, lastSleepScore,
+      workoutsThisWeek, daysSinceLastWorkout, weeklyFrequency,
+      currentStreak, yesterdayScore,
+    } = ctx;
 
-    type UserTargets = {
-      water_ml_per_day?: number;
-      sleep_hours_per_night?: number;
-      workouts_per_week?: number;
-      meals_per_day?: number;
-    };
-    type UserProfile = {
-      main_goal?: string;
-    };
-
-    const targets = (user?.targets ?? {}) as UserTargets;
-    const profile = (user?.profile ?? {}) as UserProfile;
-
-    const waterGoalMl = targets.water_ml_per_day ?? 2500;
-    const sleepGoalHours = targets.sleep_hours_per_night ?? 8;
-    const workoutGoalPerWeek = targets.workouts_per_week ?? 3;
-    const mealsGoalPerDay = targets.meals_per_day ?? 3;
-    const mainGoal = profile.main_goal ?? 'health';
-
-    // ── 2. Últimos 30 logs (histórico recente) ────────────────────────────────
-    const last30Logs = await prisma.dailyLog.findMany({
-      where: { userId },
-      orderBy: { eventTime: 'desc' },
-      take: 30,
-    });
-
-    // ── 3. Logs de hoje ────────────────────────────────────────────────────────
-    const dayStart = getLocalStartOfDay();
-    const todayLogs = last30Logs.filter((l) => new Date(l.eventTime) >= dayStart);
-
-    // ── 4. Métricas derivadas ─────────────────────────────────────────────────
+    // ── Derived metrics for prompt ──────────────────────────────────────────
     const hour = parseInt(localTime.slice(11, 13), 10);
     const periodLabel = hour < 12 ? 'manhã' : hour < 18 ? 'tarde' : 'noite';
 
-    // Categorias registradas hoje
     const ALL_CATEGORIES = ['WATER', 'FOOD', 'SLEEP', 'WORKOUT', 'POOP'];
     const registeredTodayUpper = new Set(todayLogs.map((l) => l.category.toUpperCase()));
     const missingCategories = ALL_CATEGORIES.filter((c) => !registeredTodayUpper.has(c));
-
-    // Água hoje: soma dos primaryValue dos logs WATER (primaryValue = % da meta)
-    const waterLogsToday = todayLogs.filter((l) => l.category.toLowerCase() === 'water');
-    const waterPctToday = waterLogsToday.reduce((sum, l) => sum + l.primaryValue, 0);
-    const waterMlToday = Math.round((waterPctToday / 100) * waterGoalMl);
-
-    // Refeições hoje
-    const mealsToday = todayLogs.filter((l) => l.category.toLowerCase() === 'food').length;
-
-    // Sono da última noite
-    const lastSleepLog = last30Logs.find((l) => l.category.toLowerCase() === 'sleep');
-    const lastSleepScore = lastSleepLog ? lastSleepLog.primaryValue : null;
-
-    // Frequência de treino nos últimos 7 dias
-    const sevenDaysAgo = new Date(dayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const workoutsThisWeek = last30Logs.filter(
-      (l) => l.category.toLowerCase() === 'workout' && new Date(l.eventTime) >= sevenDaysAgo,
-    ).length;
-
-    // Dias desde o último treino
-    const lastWorkoutLog = last30Logs.find((l) => l.category.toLowerCase() === 'workout');
-    const daysSinceLastWorkout = lastWorkoutLog
-      ? Math.floor((Date.now() - new Date(lastWorkoutLog.eventTime).getTime()) / 86_400_000)
-      : null;
-
-    // Resumo de frequência semanal (últimos 7 dias) por categoria
-    const weeklyFrequency: Record<string, number> = {};
-    for (const cat of ALL_CATEGORIES) {
-      weeklyFrequency[cat] = last30Logs.filter(
-        (l) => l.category.toUpperCase() === cat && new Date(l.eventTime) >= sevenDaysAgo,
-      ).length;
-    }
-
-    // ── 4b. Progresso semanal (Weekly Streak Context) ─────────────────────
-    const weeklyProgress = await getWeeklyProgress(userId);
 
     const PT_DAYS_FULL = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
     const weeklyProgressSummary = weeklyProgress
@@ -230,19 +168,6 @@ export const insightService = {
         return day.score !== null ? `${label}: ${day.score}/100` : `${label}: sem registro`;
       })
       .join(' | ');
-
-    // Detect streak of consecutive days with score >= 70 (excluding future days)
-    const completedDays = weeklyProgress.filter((d) => !d.isFuture && !d.isToday);
-    let currentStreak = 0;
-    for (let idx = completedDays.length - 1; idx >= 0; idx--) {
-      if ((completedDays[idx].score ?? 0) >= 70) {
-        currentStreak++;
-      } else {
-        break;
-      }
-    }
-    const yesterdayDay = completedDays[completedDays.length - 1];
-    const yesterdayScore = yesterdayDay?.score ?? null;
 
     // ── 5. Montar o contexto rico ─────────────────────────────────────────────
     const todayLogsSummary =

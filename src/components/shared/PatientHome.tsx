@@ -24,6 +24,7 @@ import { LimitWarningDrawer } from '@/components/shared/LimitWarningDrawer';
 import { LifesaverDrawer } from '@/components/shared/LifesaverDrawer';
 import { TopHeader } from '@/components/shared/TopHeader';
 import { AdminViewSwitcher } from '@/components/shared/AdminViewSwitcher';
+import { NutriMessageCard } from '@/components/shared/NutriMessageCard';
 import { toLocalISOString } from '@/lib/utils';
 import { calculateWaterScore, calculateFoodScore } from '@/utils/scoreUtils';
 import { getLocalStartOfDay } from '@/utils/dateUtils';
@@ -80,6 +81,30 @@ function PatientHomeContent({ userRole }: { userRole?: string }) {
   const setOpenDrawer = useAppStore(state => state.setActiveDrawer);
   const pendingInsightData = useAppStore(state => state.pendingInsightData);
   const setPendingInsightData = useAppStore(state => state.setPendingInsightData);
+
+  // ─── Nutri Message state ─────────────────────────────────────────────────
+  const [nutriMessages, setNutriMessages] = useState<{ id: string; title: string; message: string }[]>([]);
+
+  useEffect(() => {
+    const fetchNutriMessages = async () => {
+      try {
+        const res = await fetch('/api/notifications');
+        if (!res.ok) return;
+        const notifications = await res.json();
+        const unread = (notifications as { id: string; title: string; message: string; isRead: boolean; actionType: string | null }[])
+          .filter((n) => !n.isRead && n.actionType === 'OPEN_NUTRI_MESSAGE')
+          .map((n) => ({ id: n.id, title: n.title, message: n.message }));
+        setNutriMessages(unread);
+      } catch {
+        // silent
+      }
+    };
+    fetchNutriMessages();
+  }, []);
+
+  const handleDismissNutriMessage = (notificationId: string) => {
+    setNutriMessages((prev) => prev.filter((m) => m.id !== notificationId));
+  };
 
   // ─── Insight Drawer state ────────────────────────────────────────────────
   const [insightData, setInsightData] = useState<AiInsight | null>(null);
@@ -250,6 +275,15 @@ function PatientHomeContent({ userRole }: { userRole?: string }) {
           isAdmin ? <AdminViewSwitcher role={userRole} /> : undefined
         }
       />
+      {/* 0. Nutri Message Cards (inline, above stories) */}
+      {nutriMessages.map((msg) => (
+        <NutriMessageCard
+          key={msg.id}
+          notification={msg}
+          onDismiss={handleDismissNutriMessage}
+        />
+      ))}
+
       {/* 1. Greeting + Streak Badge */}
       <StoryHeader />
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Users,
   AlertTriangle,
@@ -7,53 +8,120 @@ import {
   Link2,
   TrendingUp,
   CheckCircle2,
+  MessageSquare,
+  Star,
 } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { NutriEmptyState } from './NutriEmptyState';
-import type { TeamSummary } from '@/types/teamTypes';
+import { NutriMessageDrawer } from './NutriMessageDrawer';
+import type { TeamSummary, PatientRadarData, PostAuthor } from '@/types/teamTypes';
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
-function RetentionRadar() {
+function PatientRadar({
+  radar,
+  onSendMessage,
+}: {
+  radar: PatientRadarData;
+  onSendMessage: (patient: PostAuthor) => void;
+}) {
+  const hasAtRisk = radar.atRisk.length > 0;
+  const hasDoingGreat = radar.doingGreat.length > 0;
+  const isEmpty = !hasAtRisk && !hasDoingGreat;
+
   return (
     <section className="space-y-3">
       {/* Header */}
       <div className="flex items-center gap-2 px-1">
         <AlertTriangle className="h-4 w-4 text-amber-500" />
         <p className="text-body-2 font-semibold text-neutral-500">
-          Radar de Retenção
+          Radar de Retencao
         </p>
       </div>
 
-      {/* Subtitle */}
-      <p className="text-caption-1 text-neutral-500 px-1">
-        Pacientes sem registro há mais de 2 dias
-      </p>
-
-      {/* Skeleton list — placeholder para a lista real */}
-      <div
-        className="rounded-3xl border border-white/40 bg-glass-light-1 backdrop-blur-sm p-4 space-y-3"
-        aria-label="Lista de pacientes em risco (carregando)"
-      >
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="flex items-center gap-3">
-            <Skeleton className="h-10 w-10 rounded-full bg-neutral-200" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-3 w-32 rounded-full bg-neutral-200" />
-              <Skeleton className="h-2 w-20 rounded-full bg-neutral-200" />
-            </div>
-            <Skeleton className="h-6 w-16 rounded-full bg-amber-200/80" />
-          </div>
-        ))}
-
-        {/* Call to action pós-MVP */}
-        <div className="pt-2 border-t border-neutral-200/40 flex items-center justify-center gap-1">
-          <p className="text-caption-2 text-neutral-500 text-center">
-            🚧 Em breve — conecte seus pacientes via Grupo
+      {isEmpty && (
+        <div className="rounded-3xl border border-white/40 bg-glass-light-1 backdrop-blur-sm p-6 text-center">
+          <p className="text-caption-1 text-neutral-400">
+            Nenhum paciente categorizado ainda. Os dados aparecerao conforme seus pacientes registrarem atividades.
           </p>
         </div>
-      </div>
+      )}
+
+      {/* At risk */}
+      {hasAtRisk && (
+        <div className="rounded-3xl border border-amber-200/60 bg-amber-50/50 backdrop-blur-sm p-4 space-y-3">
+          <p className="text-caption-1 font-semibold text-amber-700">
+            Precisam de atencao ({radar.atRisk.length})
+          </p>
+          {radar.atRisk.map((item) => (
+            <div key={item.patient.id} className="flex items-center gap-3">
+              <Avatar className="h-9 w-9">
+                {item.patient.image && (
+                  <AvatarImage src={item.patient.image} alt={item.patient.name ?? ''} referrerPolicy="no-referrer" />
+                )}
+                <AvatarFallback className="bg-amber-100 text-amber-700 text-caption-2 font-bold">
+                  {(item.patient.name ?? '?').charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-body-2 font-medium text-neutral-600 truncate">
+                  {item.patient.name ?? 'Paciente'}
+                </p>
+                <p className="text-caption-2 text-neutral-400">
+                  {item.daysSinceLastLog !== null
+                    ? `${item.daysSinceLastLog} dia(s) sem registro`
+                    : 'Nunca registrou'}
+                  {item.recentAvgScore !== null && ` · score ${item.recentAvgScore}%`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onSendMessage(item.patient)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-amber-100 text-amber-700 text-caption-2 font-semibold hover:bg-amber-200 active:scale-[0.97] transition-all"
+              >
+                <MessageSquare className="h-3 w-3" />
+                Mensagem
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Doing great */}
+      {hasDoingGreat && (
+        <div className="rounded-3xl border border-green-200/60 bg-green-50/50 backdrop-blur-sm p-4 space-y-3">
+          <p className="text-caption-1 font-semibold text-green-700">
+            Mandando bem ({radar.doingGreat.length})
+          </p>
+          {radar.doingGreat.map((item) => (
+            <div key={item.patient.id} className="flex items-center gap-3">
+              <Avatar className="h-9 w-9">
+                {item.patient.image && (
+                  <AvatarImage src={item.patient.image} alt={item.patient.name ?? ''} referrerPolicy="no-referrer" />
+                )}
+                <AvatarFallback className="bg-green-100 text-green-700 text-caption-2 font-bold">
+                  {(item.patient.name ?? '?').charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-body-2 font-medium text-neutral-600 truncate">
+                  {item.patient.name ?? 'Paciente'}
+                </p>
+                <p className="text-caption-2 text-neutral-400">
+                  {item.teamName}
+                </p>
+              </div>
+              {item.recentAvgScore !== null && (
+                <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-caption-2 font-semibold">
+                  <Star className="h-3 w-3" />
+                  {item.recentAvgScore}%
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -66,7 +134,7 @@ interface GroupCardProps {
 }
 
 function GroupCard({ name, members, activeToday, onGenerateInvite }: GroupCardProps) {
-  const adherenceRate = Math.round((activeToday / members) * 100);
+  const adherenceRate = members > 0 ? Math.round((activeToday / members) * 100) : 0;
   const isHealthy = adherenceRate >= 70;
 
   return (
@@ -133,12 +201,12 @@ function GroupCard({ name, members, activeToday, onGenerateInvite }: GroupCardPr
 
 interface NutriDashboardProps {
   teams: TeamSummary[];
+  radar: PatientRadarData;
+  activeToday: number;
 }
 
-export function NutriDashboard({ teams }: NutriDashboardProps) {
-  // Apenas para simplificar no MVP, como não temos histórico hoje de pacientes ativos, activeToday é 0.
-  // Em uma implementação futura seria buscado do backend.
-  const activeToday = 0;
+export function NutriDashboard({ teams, radar, activeToday }: NutriDashboardProps) {
+  const [messagePatient, setMessagePatient] = useState<PostAuthor | null>(null);
 
   const handleGenerateInvite = (inviteCode: string, groupName: string) => {
     const inviteLink = `${window.location.origin}/join/${inviteCode}`;
@@ -160,9 +228,6 @@ export function NutriDashboard({ teams }: NutriDashboardProps) {
       });
   };
 
-  // Patient count: we only subtract the team owner when they have real patients
-  // beyond themselves (memberCount > 1). When the admin is the sole member
-  // (dogfooding), they ARE the patient — memberCount should not be reduced.
   const totalPatients = teams.reduce(
     (acc, t) => acc + (t.memberCount > 1 ? t.memberCount - 1 : t.memberCount),
     0,
@@ -175,7 +240,7 @@ export function NutriDashboard({ teams }: NutriDashboardProps) {
           if (defaultTeam) {
             handleGenerateInvite(defaultTeam.inviteCode, defaultTeam.name);
           } else {
-            toast.error('Erro: Time padrão não encontrado.');
+            toast.error('Erro: Time padrao nao encontrado.');
           }
         }}
       />
@@ -185,17 +250,17 @@ export function NutriDashboard({ teams }: NutriDashboardProps) {
   return (
     <div className="pb-24 pt-8 px-4 sm:px-6 max-w-4xl mx-auto space-y-6 overflow-y-auto h-full">
 
-      {/* ── Welcome Header ─────────────────────────────────────────── */}
+      {/* Welcome Header */}
       <section className="space-y-1">
         <h1 className="text-title-1 font-bold text-neutral-600">
-          Meus Pacientes 👩‍⚕️
+          Meus Pacientes
         </h1>
         <p className="text-body-2 text-neutral-500">
-          Acompanhe a adesão e gerencie seus times
+          Acompanhe a adesao e gerencie seus times
         </p>
       </section>
 
-      {/* ── Summary Stats ──────────────────────────────────────────── */}
+      {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: 'Total', value: totalPatients, icon: Users, color: 'text-brand-500' },
@@ -213,10 +278,10 @@ export function NutriDashboard({ teams }: NutriDashboardProps) {
         ))}
       </div>
 
-      {/* ── Radar de Retenção ──────────────────────────────────────── */}
-      <RetentionRadar />
+      {/* Radar de Retencao */}
+      <PatientRadar radar={radar} onSendMessage={setMessagePatient} />
 
-      {/* ── Meus Times ────────────────────────────────────────────── */}
+      {/* Meus Times */}
       <section className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
@@ -225,7 +290,6 @@ export function NutriDashboard({ teams }: NutriDashboardProps) {
               Meus Times
             </p>
           </div>
-          {/* Novo time escondido para MVP focado no time padrão */}
         </div>
 
         <div className="space-y-3">
@@ -236,13 +300,20 @@ export function NutriDashboard({ teams }: NutriDashboardProps) {
                 key={group.id}
                 name={group.name}
                 members={memberCount}
-                activeToday={activeToday} // TODO: Implementar metricas de ativos reais depois
+                activeToday={activeToday}
                 onGenerateInvite={() => handleGenerateInvite(group.inviteCode, group.name)}
               />
             );
           })}
         </div>
       </section>
+
+      {/* Message Drawer */}
+      <NutriMessageDrawer
+        patient={messagePatient}
+        open={!!messagePatient}
+        onOpenChange={(open) => !open && setMessagePatient(null)}
+      />
     </div>
   );
 }
