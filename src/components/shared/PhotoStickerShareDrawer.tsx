@@ -6,7 +6,7 @@ import {
   ImageIcon,
   Download,
   Share2,
-  Users,
+  Save,
   Loader2,
   ChevronRight,
   Sparkles,
@@ -39,8 +39,8 @@ interface PhotoStickerShareDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   context: StickerContext;
-  /** Called for EVOLUTION context after compositing: saves to DB + optionally posts to squad */
-  onComposed?: (blob: Blob, weight?: number, publishToTeam?: boolean) => Promise<void>;
+  /** Called for EVOLUTION context after compositing: saves to DB + optionally posts to team */
+  onComposed?: (blob: Blob, weight?: number, publishToTeamId?: string | null) => Promise<void>;
   /** Opens the legacy infographic drawer as a secondary option */
   onOpenInfographic?: () => void;
   /** Pre-fills the weight input for EVOLUTION context */
@@ -146,15 +146,15 @@ export function PhotoStickerShareDrawer({
     return blob;
   }, []);
 
-  // ── Call onComposed once (evolution DB save + squad post) ────────────────────
+  // ── Call onComposed once (evolution DB save + optional team post) ───────────
 
   const callOnComposed = useCallback(
-    async (blob: Blob) => {
+    async (blob: Blob, teamId: string | null) => {
       if (composedRef.current || !onComposed) return;
       composedRef.current = true;
-      await onComposed(blob, context.type === 'EVOLUTION' ? weight : undefined, publishToTeam);
+      await onComposed(blob, context.type === 'EVOLUTION' ? weight : undefined, teamId);
     },
-    [onComposed, context, weight, publishToTeam]
+    [onComposed, context, weight]
   );
 
   // ── Actions ──────────────────────────────────────────────────────────────────
@@ -176,7 +176,7 @@ export function PhotoStickerShareDrawer({
       if (context.type === 'EVOLUTION') {
         onOpenChange(false);
         toast.success('Processando check-in...', { description: 'Sua evolução está sendo salva.' });
-        await callOnComposed(blob);
+        await callOnComposed(blob, null);
       }
     } catch (err) {
       const name = (err as Error)?.name;
@@ -196,7 +196,7 @@ export function PhotoStickerShareDrawer({
       });
       if (context.type === 'EVOLUTION') {
         onOpenChange(false);
-        await callOnComposed(blob);
+        await callOnComposed(blob, null);
       }
     } catch {
       toast.error('Erro ao salvar.');
@@ -206,15 +206,39 @@ export function PhotoStickerShareDrawer({
   };
 
   const handlePublishTap = async () => {
-    // EVOLUTION: onComposed handles the full save + squad post flow
+    // EVOLUTION: save to DB + optionally post to team
     if (context.type === 'EVOLUTION' && onComposed) {
+      if (!publishToTeam) {
+        setIsActing(true);
+        try {
+          const blob = await getBlob();
+          await callOnComposed(blob, null);
+          onOpenChange(false);
+        } catch {
+          toast.error('Erro ao salvar.');
+        } finally {
+          setIsActing(false);
+        }
+        return;
+      }
+      // publishToTeam = true: fetch teams to decide
       setIsActing(true);
       try {
         const blob = await getBlob();
-        await callOnComposed(blob);
-        onOpenChange(false);
+        const data = await fetchMyTeams();
+        if (data.length === 0) {
+          await callOnComposed(blob, null);
+          onOpenChange(false);
+        } else if (data.length === 1) {
+          await callOnComposed(blob, data[0].id);
+          onOpenChange(false);
+        } else {
+          // >1 teams: open picker
+          setTeams(data);
+          setTeamPickerOpen(true);
+        }
       } catch {
-        toast.error('Erro ao publicar.');
+        toast.error('Erro ao salvar.');
       } finally {
         setIsActing(false);
       }
@@ -227,9 +251,23 @@ export function PhotoStickerShareDrawer({
       setTeams(data);
       setTeamPickerOpen(true);
     } catch {
-      toast.error('Erro ao buscar squads.');
+      toast.error('Erro ao buscar times.');
     } finally {
       setLoadingTeams(false);
+    }
+  };
+
+  const handleEvolutionTeamPick = async (teamId: string) => {
+    setPublishingTeamId(teamId);
+    try {
+      const blob = await getBlob();
+      await callOnComposed(blob, teamId);
+      setTeamPickerOpen(false);
+      onOpenChange(false);
+    } catch {
+      toast.error('Erro ao publicar.');
+    } finally {
+      setPublishingTeamId(null);
     }
   };
 
@@ -243,13 +281,13 @@ export function PhotoStickerShareDrawer({
       formData.append('content', 'Progresso compartilhado no Orgulho da Nutri! 💪');
       const result = await publishCardToTeam(formData);
       if (!result.success) throw new Error(result.error ?? 'Erro ao publicar.');
-      toast.success('Publicado no squad!', {
+      toast.success('Publicado no time!', {
         className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
       });
       setTeamPickerOpen(false);
       onOpenChange(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erro ao publicar no squad.');
+      toast.error(err instanceof Error ? err.message : 'Erro ao publicar no time.');
     } finally {
       setPublishingTeamId(null);
     }
@@ -426,7 +464,7 @@ export function PhotoStickerShareDrawer({
                         onChange={(e) => setPublishToTeam(e.target.checked)}
                         className="w-4 h-4 accent-brand-500 rounded"
                       />
-                      <span className="text-body-2 text-neutral-600">Publicar também no squad</span>
+                      <span className="text-body-2 text-neutral-600">Publicar também no time</span>
                     </label>
                   </div>
                 )}
@@ -459,18 +497,18 @@ export function PhotoStickerShareDrawer({
                   </Button>
                 </div>
 
-                {/* Publish to squad */}
+                {/* Primary action: save + optional team post */}
                 <Button
                   className="w-full h-12 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white text-button-1 font-bold shadow-md active:scale-[0.98] transition-all"
                   onClick={handlePublishTap}
                   disabled={isActing || loadingTeams}
                 >
-                  {loadingTeams ? (
+                  {isActing || loadingTeams ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   ) : (
-                    <Users className="h-4 w-4 mr-2" />
+                    <Save className="h-4 w-4 mr-2" />
                   )}
-                  Publicar no Squad
+                  {context.type === 'EVOLUTION' ? 'Salvar Registro' : 'Publicar no Time'}
                 </Button>
 
                 {/* Secondary: legacy infographic */}
@@ -507,18 +545,18 @@ export function PhotoStickerShareDrawer({
         </DrawerContent>
       </Drawer>
 
-      {/* Inline team picker — non-EVOLUTION "Publicar no Squad" */}
+      {/* Inline team picker */}
       <Drawer open={teamPickerOpen} onOpenChange={setTeamPickerOpen}>
         <DrawerContent className="bg-glass-light-3 backdrop-blur-lg border-t border-white/40 max-w-lg mx-auto">
           <DrawerHeader className="pb-2">
             <DrawerTitle className="text-title-3 font-bold text-neutral-600 text-center">
-              Publicar em qual Squad?
+              Publicar em qual Time?
             </DrawerTitle>
           </DrawerHeader>
           <div className="px-4 pb-8 space-y-3">
             {teams.length === 0 ? (
               <p className="text-body-2 text-neutral-400 text-center py-6">
-                Você não está em nenhum squad.
+                Você não está em nenhum time.
               </p>
             ) : (
               teams.map((team) => (
@@ -526,7 +564,11 @@ export function PhotoStickerShareDrawer({
                   key={team.id}
                   type="button"
                   disabled={!!publishingTeamId}
-                  onClick={() => handlePublishToTeam(team.id)}
+                  onClick={() =>
+                    context.type === 'EVOLUTION'
+                      ? handleEvolutionTeamPick(team.id)
+                      : handlePublishToTeam(team.id)
+                  }
                   className="w-full flex items-center p-4 rounded-2xl bg-brand-50 border border-brand-200 hover:bg-brand-100 active:scale-[0.98] transition-all text-left disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center mr-3 flex-shrink-0">

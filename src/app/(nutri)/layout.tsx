@@ -52,7 +52,19 @@ export default async function NutriLayout({
               href="/dashboard"
               className="px-4 py-2 text-body-2 font-medium text-neutral-500 rounded-xl hover:bg-slate-100 transition-colors"
             >
-              Meus Pacientes
+              Feed
+            </Link>
+            <Link
+              href="/dashboard/insights"
+              className="px-4 py-2 text-body-2 font-medium text-neutral-500 rounded-xl hover:bg-slate-100 transition-colors"
+            >
+              Insights
+            </Link>
+            <Link
+              href="/dashboard/teams"
+              className="px-4 py-2 text-body-2 font-medium text-neutral-500 rounded-xl hover:bg-slate-100 transition-colors"
+            >
+              Consultório
             </Link>
           </nav>
 

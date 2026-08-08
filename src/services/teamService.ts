@@ -590,9 +590,9 @@ export async function getPatientRadar(nutriUserId: string): Promise<PatientRadar
 
   if (teamIds.length === 0) return { atRisk: [], doingGreat: [] };
 
-  // Get all MEMBER patients in those teams (exclude the nutri themselves)
+  // Get all members in those teams (including the nutri themselves for self-nutri mode)
   const members = await prisma.teamMember.findMany({
-    where: { teamId: { in: teamIds }, role: 'MEMBER' },
+    where: { teamId: { in: teamIds } },
     include: {
       user: { select: { id: true, name: true, image: true } },
     },
@@ -671,7 +671,7 @@ export async function getActiveTodayCount(nutriUserId: string): Promise<number> 
   if (teamIds.length === 0) return 0;
 
   const members = await prisma.teamMember.findMany({
-    where: { teamId: { in: teamIds }, role: 'MEMBER' },
+    where: { teamId: { in: teamIds } },
     select: { userId: true },
   });
 

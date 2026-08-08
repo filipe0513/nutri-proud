@@ -31,13 +31,12 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
   const [showRules, setShowRules] = useState(true);
 
   /**
-   * Preserves exact logic from EvolutionDrawer (refactored Aug 7):
    * 1. Upload composite blob to Cloudinary
    * 2. Save evolution log to DB
-   * 3. Post to first team's feed
+   * 3. If publishToTeamId provided, post to that team's feed
    */
   const handleEvolutionSave = useCallback(
-    async (blob: Blob, weight?: number, publishToTeam?: boolean) => {
+    async (blob: Blob, weight?: number, publishToTeamId?: string | null) => {
       // 1. Upload to Cloudinary
       const formData = new FormData();
       formData.append('file', blob, 'evolution-checkin.png');
@@ -62,24 +61,18 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
       });
       if (!response.ok) throw new Error('Falha ao salvar check-in de evolução');
 
-      // 3. Post to team feed (only if user opted in)
-      if (publishToTeam !== false) {
-        const resTeams = await fetch('/api/teams');
-        if (resTeams.ok) {
-          const teams = await resTeams.json();
-          if (Array.isArray(teams) && teams.length > 0) {
-            const teamFormData = new FormData();
-            teamFormData.append('file', blob, 'evolution.png');
-            teamFormData.append('content', `Check-in de Evolução: ${weight}kg 💪`);
-            await fetch('/api/teams/' + teams[0].id + '/posts', {
-              method: 'POST',
-              body: teamFormData,
-            });
-          }
-        }
+      // 3. Post to team feed (only if a specific team was chosen)
+      if (publishToTeamId) {
+        const teamFormData = new FormData();
+        teamFormData.append('file', blob, 'evolution.png');
+        teamFormData.append('content', `Check-in de Evolução: ${weight}kg 💪`);
+        await fetch('/api/teams/' + publishToTeamId + '/posts', {
+          method: 'POST',
+          body: teamFormData,
+        });
       }
 
-      toast.success('Evolução salva e postada!', {
+      toast.success('Evolução salva!', {
         className:
           'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
       });
@@ -133,7 +126,7 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
         className="w-full flex items-center justify-center gap-2 bg-gradient-to-tr from-brand-500 to-brand-400 text-white rounded-3xl p-4 text-body-1 font-bold shadow-lg shadow-brand-500/30 hover:scale-[1.02] active:scale-95 transition-all"
       >
         <Camera className="h-5 w-5" />
-        Registrar Check-in
+        Registrar Evolução
       </button>
 
       {/* Feed de Evolução */}

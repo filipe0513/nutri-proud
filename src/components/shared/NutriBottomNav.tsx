@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Bell, Users } from 'lucide-react';
+import { Activity, Rss, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function NutriBottomNav() {
@@ -12,8 +12,8 @@ export function NutriBottomNav() {
   if (pathname.includes('/settings')) return null;
 
   const items = [
-    { label: 'Pacientes', icon: Home, href: '/dashboard' },
-    { label: 'Alertas', icon: Bell, href: '/dashboard/feed' },
+    { label: 'Insights', icon: Activity, href: '/dashboard/insights' },
+    { label: 'Feed', icon: Rss, href: '/dashboard' },
     { label: 'Consultório', icon: Users, href: '/dashboard/teams' },
   ];
 

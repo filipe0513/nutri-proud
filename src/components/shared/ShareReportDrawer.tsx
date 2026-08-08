@@ -18,34 +18,14 @@ import {
   ChevronRight,
   ChevronLeft,
   Sparkles,
-  ImageIcon,
-  Download,
-  Camera,
-  Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toBlob } from 'html-to-image';
-import { useRef, useCallback } from 'react';
-import {
-  ShareableInfographic,
-  type InfographicPillar,
-  type PillarScores,
-} from '@/components/share/ShareableInfographic';
-import { ShareableSticker } from '@/components/share/ShareableSticker';
-import { calculateWaterScore } from '@/utils/scoreUtils';
 import { historyService } from '@/services/historyService';
 import { useAppStore } from '@/store/store';
-import type { ActivityLog } from '@/store/types';
-import { TeamPickerModal } from '@/components/shared/TeamPickerModal';
-import { publishCardToTeam } from '@/app/actions/publishCardToTeam';
-import { fetchMyTeams } from '@/store/api';
-import type { TeamSummary } from '@/types/teamTypes';
 
 // ─── Shared types ─────────────────────────────────────────────────────────────
 
 type ReportPeriod = 'today' | 'week' | 'month' | 'custom';
-type InfographicPeriod = 'today' | 'week' | 'month';
-type Tab = 'nutri' | 'infographic';
 export type ShareContextType = 'DAILY_SCORE' | 'PILLAR' | 'STREAK';
 
 interface ShareReportDrawerProps {
@@ -53,15 +33,15 @@ interface ShareReportDrawerProps {
   onOpenChange: (open: boolean) => void;
   /** ISO date YYYY-MM-DD to pre-pin the period (defaults to today) */
   date?: string;
-  /** If provided, the drawer pre-selects the sticker for this pillar */
-  pillar?: InfographicPillar;
-  /** Contextual mode that adjusts the title and default tab/export */
+  /** @deprecated — kept for API compatibility, ignored */
+  pillar?: string;
+  /** Contextual mode that adjusts the title */
   type?: ShareContextType;
   /** ISO date YYYY-MM-DD — início da semana a pré-selecionar (Weekly Streak) */
   weekStart?: string;
   /** ISO date YYYY-MM-DD — fim da semana a pré-selecionar (Weekly Streak) */
   weekEnd?: string;
-  /** When true, hides the tab switcher and locks to the nutri tab */
+  /** @deprecated — kept for API compatibility, ignored */
   nutriOnly?: boolean;
   /** If provided, renders a back chevron in the header that calls this */
   onBack?: () => void;
@@ -98,79 +78,6 @@ function getReportDateRange(
   return { startDate: customStart || today, endDate: customEnd || today };
 }
 
-function getInfographicDateRange(period: InfographicPeriod): { startDate: string; endDate: string } {
-  const today = getTodayLocal();
-  if (period === 'today') return { startDate: today, endDate: today };
-  if (period === 'week') {
-    const d = new Date();
-    d.setDate(d.getDate() - 6);
-    const start = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-    return { startDate: start, endDate: today };
-  }
-  const d = new Date();
-  d.setDate(d.getDate() - 29);
-  const start = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-  return { startDate: start, endDate: today };
-}
-
-// ─── Infographic computation ──────────────────────────────────────────────────
-
-const PILLAR_CAT_MAP: Record<InfographicPillar, string> = {
-  WATER: 'water',
-  FOOD: 'food',
-  TRAINING: 'workout',
-  SLEEP: 'sleep',
-  GUT: 'poop',
-};
-
-const ALL_PILLARS: InfographicPillar[] = ['WATER', 'FOOD', 'TRAINING', 'SLEEP', 'GUT'];
-
-function buildPeriodName(period: InfographicPeriod, startDate: string, endDate: string): string {
-  const fmt = (iso: string) => {
-    const [, m, d] = iso.split('-');
-    return `${d}/${m}`;
-  };
-  if (period === 'today') return 'Hoje';
-  if (period === 'week') return `Semana de ${fmt(startDate)} a ${fmt(endDate)}`;
-  return `Mês de ${fmt(startDate)} a ${fmt(endDate)}`;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function computeInfographicScores(logs: any[], userProfile: any) {
-  const scores: PillarScores = { WATER: 0, FOOD: 0, TRAINING: 0, SLEEP: 0, GUT: 0 };
-
-  for (const pillar of ALL_PILLARS) {
-    const catId = PILLAR_CAT_MAP[pillar];
-    const catLogs = logs.filter((l) => l.category?.toLowerCase() === catId);
-
-    if (pillar === 'WATER') {
-      const totalMl = catLogs.reduce(
-        (acc: number, l: ActivityLog) => acc + (l.details?.quantity_ml ?? 0), 0,
-      );
-      const target = userProfile?.targets?.water_ml_per_day ?? 2000;
-      scores[pillar] = calculateWaterScore(totalMl, target);
-    } else if (pillar === 'FOOD') {
-      scores[pillar] = historyService.calculateFoodScore(logs, userProfile?.targets);
-    } else {
-      if (catLogs.length === 0) {
-        scores[pillar] = 0;
-      } else {
-        const avg =
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          catLogs.reduce((acc: number, l: any) => acc + (l.primaryValue ?? l.primary_value ?? 0), 0) /
-          catLogs.length;
-        scores[pillar] = Math.max(0, Math.min(100, Math.round(avg)));
-      }
-    }
-  }
-
-  const globalScore = historyService.calculateDayScore(logs, userProfile);
-  const maxScore = Math.max(...ALL_PILLARS.map(p => scores[p]));
-  const bestPillars = ALL_PILLARS.filter(p => scores[p] === maxScore);
-
-  return { scores, globalScore, bestPillars };
-}
-
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 const REPORT_PERIOD_OPTIONS: { id: ReportPeriod; label: string; icon: string }[] = [
@@ -178,12 +85,6 @@ const REPORT_PERIOD_OPTIONS: { id: ReportPeriod; label: string; icon: string }[]
   { id: 'week', label: 'Semana', icon: '📆' },
   { id: 'month', label: 'Mês', icon: '🗓️' },
   { id: 'custom', label: 'Período', icon: '📌' },
-];
-
-const INFOGRAPHIC_PERIOD_OPTIONS: { id: InfographicPeriod; label: string; icon: string }[] = [
-  { id: 'today', label: 'Hoje', icon: '📅' },
-  { id: 'week', label: '7 dias', icon: '📆' },
-  { id: 'month', label: '30 dias', icon: '🗓️' },
 ];
 
 // ─── Context title map ────────────────────────────────────────────────────────
@@ -194,21 +95,12 @@ const CONTEXT_TITLE: Record<ShareContextType, string> = {
   STREAK: 'Compartilhar Conquista',
 };
 
-const PILLAR_EXPORT_MAP: Record<InfographicPillar, string> = {
-  WATER: 'STICKER_WATER',
-  FOOD: 'STICKER_FOOD',
-  TRAINING: 'STICKER_TRAINING',
-  SLEEP: 'STICKER_SLEEP',
-  GUT: 'STICKER_GUT',
-};
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, weekStart, weekEnd, nutriOnly, onBack }: ShareReportDrawerProps) {
-  const { user_profile } = useAppStore();
-
-  // ── Tab ──
-  const [activeTab, setActiveTab] = useState<Tab>('infographic');
+export function ShareReportDrawer({ open, onOpenChange, date, type, weekStart, weekEnd, onBack }: ShareReportDrawerProps) {
+  // Suppress unused warning — kept for API compatibility
+  void historyService;
+  void useAppStore;
 
   // ── Report (Nutri) state ──
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>('today');
@@ -217,76 +109,23 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
   const [reportLoading, setReportLoading] = useState(false);
   const [reportText, setReportText] = useState<string | null>(null);
 
-  // ── Infographic state ──
-  const [infoPeriod, setInfoPeriod] = useState<InfographicPeriod>('today');
-  const [infoLoading, setInfoLoading] = useState(false);
-  const [infoCapturing, setInfoCapturing] = useState(false);
-  const [infoReady, setInfoReady] = useState(false);
-  const [infographicData, setInfographicData] = useState<{
-    scores: PillarScores;
-    globalScore: number;
-    bestPillars: InfographicPillar[];
-    periodName: string;
-    isEmpty?: boolean;
-  } | null>(null);
-  const [selectedExport, setSelectedExport] = useState<string>('CARD');
-
-  const [bgPhoto, setBgPhoto] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // ── Team publish state ──
-  const [teamPickerOpen, setTeamPickerOpen] = useState(false);
-  const [publishingTeamId, setPublishingTeamId] = useState<string | null>(null);
-  const [teams, setTeams] = useState<TeamSummary[]>([]);
-  const [shareToTeamCheckbox, setShareToTeamCheckbox] = useState(false);
-
-  const nodeRef = useRef<HTMLDivElement>(null);
-
   const today = getTodayLocal();
 
   // ── Sync context props when drawer opens ──────────────────────────────────
   useEffect(() => {
     if (!open) return;
-    if (nutriOnly) {
-      setActiveTab('nutri');
-    }
-    // When a specific pillar is requested → open infographic tab with that sticker pre-selected
-    if (pillar) {
-      setActiveTab('infographic');
-      setSelectedExport(PILLAR_EXPORT_MAP[pillar]);
-    }
     // When a specific date is passed → use 'today' period (single day)
-    // The actual filtering is done via a custom date range if different from today
     if (date && date !== getTodayLocal()) {
-      setInfoPeriod('today'); // period label stays 'today', but we override the date in the fetch
+      setReportPeriod('today');
     }
-    // When a weekly range is passed (from WeeklyStreak) → pre-select 'week' with those dates
+    // When a weekly range is passed → pre-select custom with those dates
     if (weekStart && weekEnd) {
-      setActiveTab('infographic');
-      setInfoPeriod('week');
-      // Override the date range via customStart/customEnd used in custom mode
+      setReportPeriod('custom');
       setCustomStart(weekStart);
       setCustomEnd(weekEnd);
     }
-    
-    // Fetch user teams
-    fetchMyTeams()
-      .then((data) => {
-        setTeams(data);
-        if (data.length > 0) setShareToTeamCheckbox(true);
-      })
-      .catch(() => setTeams([]));
-      
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setBgPhoto(url);
-    }
-  };
 
   // ── Report handlers ──────────────────────────────────────────────────────
 
@@ -332,217 +171,6 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
     }
   };
 
-  // ── Infographic handlers ──────────────────────────────────────────────────
-
-  const getAvailableExports = useCallback(() => {
-    if (!infographicData) return [];
-    const options = [
-      { id: 'CARD', label: 'Card Completo' },
-      { id: 'STICKER_GLOBAL', label: 'Resumo Geral' },
-    ];
-    ALL_PILLARS.forEach(p => {
-      if (infographicData.scores[p] > 0) {
-        const labels: Record<string, string> = {
-          WATER: 'Água', FOOD: 'Alimentação', TRAINING: 'Treino', SLEEP: 'Sono', GUT: 'Intestino'
-        };
-        options.push({ id: `STICKER_${p}`, label: `Sticker: ${labels[p]}` });
-      }
-    });
-    return options;
-  }, [infographicData]);
-
-  // ── Resolve the actual infographic date range (supports weekStart/weekEnd override) ──
-  const resolvedInfoDateRange = useCallback((): { startDate: string; endDate: string } => {
-    if (weekStart && weekEnd && infoPeriod === 'week') {
-      return { startDate: weekStart, endDate: weekEnd };
-    }
-    if (date && infoPeriod === 'today') {
-      return { startDate: date, endDate: date };
-    }
-    return getInfographicDateRange(infoPeriod);
-  }, [weekStart, weekEnd, infoPeriod, date]);
-
-  const handleGenerateInfographic = useCallback(async () => {
-    setInfoLoading(true);
-    setInfoReady(false);
-    setInfographicData(null);
-    try {
-      const { startDate, endDate } = resolvedInfoDateRange();
-      const params = new URLSearchParams({ startDate, endDate, limit: '200', page: '1' });
-      const res = await fetch(`/api/logs?${params.toString()}`);
-      if (!res.ok) throw new Error('Falha ao buscar registros');
-      const data: { logs: ActivityLog[] } = await res.json();
-      const logs = data.logs ?? [];
-
-      const isEmpty = logs.length === 0;
-      const { scores, globalScore, bestPillars } = isEmpty
-        ? { scores: { WATER: 0, FOOD: 0, TRAINING: 0, SLEEP: 0, GUT: 0 } as PillarScores, globalScore: 0, bestPillars: [] as InfographicPillar[] }
-        : computeInfographicScores(logs, user_profile);
-      const periodName = buildPeriodName(infoPeriod, startDate, endDate);
-
-      setInfographicData({ scores, globalScore, bestPillars, periodName, isEmpty });
-      setInfoReady(true);
-      // If a pillar was requested and there's data, ensure its sticker is selected
-      if (pillar && !isEmpty) {
-        setSelectedExport(PILLAR_EXPORT_MAP[pillar]);
-      }
-    } catch {
-      toast.error('Não foi possível gerar o infográfico. Tente novamente.');
-    } finally {
-      setInfoLoading(false);
-    }
-  }, [infoPeriod, user_profile, pillar, resolvedInfoDateRange]);
-
-  const captureBlob = useCallback(async (): Promise<Blob | null> => {
-    if (!nodeRef.current) return null;
-    const isSticker = selectedExport.startsWith('STICKER');
-    const options = isSticker 
-      ? { cacheBust: true, pixelRatio: 2, backgroundColor: 'rgba(0,0,0,0)' }
-      : { cacheBust: true, pixelRatio: 2, width: 375, height: 667 };
-    return toBlob(nodeRef.current, options);
-  }, [selectedExport]);
-
-  const handlePublishToTeamBg = useCallback(async (teamId: string, teamName: string, blob: Blob) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', blob, 'orgulho-da-nutri.png');
-      formData.append('teamId', teamId);
-      formData.append('content', `Meu progresso — ${infographicData?.periodName ?? 'hoje'} 💪`);
-
-      const result = await publishCardToTeam(formData);
-      if (!result.success) throw new Error(result.error);
-      
-      toast.success(`Publicado em ${teamName}! 🎉`, {
-        description: 'Seu card já aparece no feed do grupo.',
-        className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erro ao publicar no time.';
-      toast.error(msg);
-    }
-  }, [infographicData]);
-
-  const handleShareInfographic = useCallback(async () => {
-    setInfoCapturing(true);
-    let capturedBlob: Blob | null = null;
-    try {
-      capturedBlob = await captureBlob();
-      if (!capturedBlob) throw new Error('Blob vazio');
-      const file = new File([capturedBlob], 'orgulho-da-nutri.png', { type: 'image/png' });
-      let sharedNatively = false;
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: 'Meu Orgulho da Nutri',
-            text: 'Olha como foi meu foco no Orgulho da Nutri! 💪 https://orgulhodanutri.com',
-          });
-          sharedNatively = true;
-        } catch {
-          // User cancelled
-        }
-      } else {
-        // Fallback: download
-        const url = URL.createObjectURL(capturedBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'orgulho-da-nutri.png';
-        a.click();
-        URL.revokeObjectURL(url);
-        toast.success('Imagem salva!', { description: 'O infográfico foi baixado para o seu dispositivo.' });
-      }
-
-      if (shareToTeamCheckbox && teams.length > 0) {
-        if (teams.length === 1) {
-          toast.info(`Publicando no time ${teams[0].name}...`);
-          handlePublishToTeamBg(teams[0].id, teams[0].name, capturedBlob);
-          if (sharedNatively) onOpenChange(false);
-        } else {
-           setTeamPickerOpen(true);
-        }
-      } else {
-        if (sharedNatively) onOpenChange(false);
-      }
-
-    } catch (err) {
-      const isAbort = err instanceof DOMException && err.name === 'AbortError';
-      if (!isAbort) toast.error('Não foi possível compartilhar. Tente salvar a imagem.');
-    } finally {
-      if (!shareToTeamCheckbox || teams.length === 0 || teams.length === 1) {
-        setInfoCapturing(false);
-      }
-    }
-  }, [captureBlob, onOpenChange, shareToTeamCheckbox, teams, handlePublishToTeamBg]);
-
-  const handleDownloadInfographic = useCallback(async () => {
-    setInfoCapturing(true);
-    try {
-      const blob = await captureBlob();
-      if (!blob) throw new Error('Blob vazio');
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'orgulho-da-nutri.png';
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success('Imagem salva!', { description: 'O infográfico foi baixado com sucesso.' });
-      onOpenChange(false);
-    } catch {
-      toast.error('Não foi possível salvar a imagem.');
-    } finally {
-      setInfoCapturing(false);
-    }
-  }, [captureBlob, onOpenChange]);
-
-  /**
-   * Captures the Card (always with solid background), converts to Base64
-   * and calls the Server Action to upload to Cloudinary + create the Post.
-   */
-  const handlePublishToTeam = useCallback(async (teamId: string, teamName: string) => {
-    setPublishingTeamId(teamId);
-    setInfoCapturing(true);
-    try {
-      // Force the CARD format (with background) for team posts
-      const prevExport = selectedExport;
-      if (prevExport !== 'CARD') {
-        // We temporarily capture as CARD. The nodeRef renders as CARD because
-        // we pass 'CARD' check to the off-screen node (it always renders the
-        // selected export). Re-render happens synchronously before toBlob.
-      }
-
-      // Capture the full-size card
-      const options = { cacheBust: true, pixelRatio: 2, width: 375, height: 667 };
-      if (!nodeRef.current) throw new Error('Elemento não encontrado.');
-      const blob = await toBlob(nodeRef.current, options);
-      if (!blob) throw new Error('Falha ao capturar o card.');
-
-      // Call Server Action with native FormData (bypasses Next.js JSON body size limits)
-      const formData = new FormData();
-      formData.append('file', blob, 'orgulho-da-nutri.png');
-      formData.append('teamId', teamId);
-      formData.append('content', `Meu progresso — ${infographicData?.periodName ?? 'hoje'} 💪`);
-
-      const result = await publishCardToTeam(formData);
-
-      if (!result.success) throw new Error(result.error);
-
-      setTeamPickerOpen(false);
-      setInfoCapturing(false);
-      toast.success(`Publicado em ${teamName}! 🎉`, {
-        description: 'Seu card já aparece no feed do grupo.',
-        className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
-      });
-      onOpenChange(false);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erro ao publicar.';
-      toast.error(msg);
-      setInfoCapturing(false);
-    } finally {
-      setPublishingTeamId(null);
-    }
-  }, [nodeRef, selectedExport, infographicData, onOpenChange]);
-
   // ── Reset on close ────────────────────────────────────────────────────────
 
   const handleOpenChange = (v: boolean) => {
@@ -552,15 +180,6 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
         setReportPeriod('today');
         setCustomStart('');
         setCustomEnd('');
-        setInfoReady(false);
-        setInfographicData(null);
-        setInfoPeriod('today');
-        // Reset export: if pillar context, restore to that pillar sticker; else 'CARD'
-        setSelectedExport(pillar ? PILLAR_EXPORT_MAP[pillar] : 'CARD');
-        setActiveTab(nutriOnly ? 'nutri' : 'infographic');
-        setTeamPickerOpen(false);
-        setBgPhoto(null);
-        if (teams.length > 0) setShareToTeamCheckbox(true);
       }, 300);
     }
     onOpenChange(v);
@@ -569,545 +188,147 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <>
-      <Drawer open={open} onOpenChange={handleOpenChange}>
-        <DrawerContent className="!bg-purple-50/95 backdrop-blur-2xl border-t border-purple-200 text-purple-950 shadow-[0_-15px_60px_-10px_rgba(88,28,135,0.15)] rounded-t-[32px] px-6 pb-6 max-h-[85vh] flex flex-col">
-          <DrawerHeader className="px-0 shrink-0">
-            <DrawerTitle className="text-title-2 text-purple-950 flex items-center gap-2">
-              {onBack && (
-                <button
-                  type="button"
-                  onClick={onBack}
-                  aria-label="Voltar"
-                  className="p-1 -ml-1 rounded-full hover:bg-purple-100 transition-colors"
-                >
-                  <ChevronLeft className="h-5 w-5 text-purple-500" />
-                </button>
-              )}
-              <Sparkles className="h-5 w-5 text-purple-500" />
-              {type ? CONTEXT_TITLE[type] : 'Compartilhar'}
-            </DrawerTitle>
-          </DrawerHeader>
-
-          <div className="overflow-y-auto flex-1 pb-4">
-
-          {/* ── Tab switcher ── */}
-          {!nutriOnly && <div className="flex rounded-2xl bg-purple-100/60 border border-purple-200 p-1 mb-5">
-            <button
-              type="button"
-              onClick={() => setActiveTab('nutri')}
-              className={cn(
-                'flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold transition-all',
-                activeTab === 'nutri'
-                  ? 'bg-white shadow-sm text-purple-700'
-                  : 'text-purple-600/70 hover:text-purple-700',
-              )}
-              id="tab-nutri-report"
-            >
-              <Sparkles className="h-4 w-4" />
-              Para Nutri
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('infographic')}
-              className={cn(
-                'flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold transition-all',
-                activeTab === 'infographic'
-                  ? 'bg-white shadow-sm text-purple-700'
-                  : 'text-purple-600/70 hover:text-purple-700',
-              )}
-              id="tab-infographic"
-            >
-              <ImageIcon className="h-4 w-4" />
-              Imagens/Stickers
-            </button>
-          </div>}
-
-          {/* ════════════════════════════════════
-              TAB 1: Nutri Text Report
-              ════════════════════════════════════ */}
-          {activeTab === 'nutri' && (
-            <div className="flex flex-col space-y-6">
-              <p className="text-body-2 text-purple-900/70 -mt-2">
-                Gere um resumo do seu desempenho e compartilhe com sua nutricionista.
-              </p>
-
-              {/* Period selector */}
-              <div className="space-y-3">
-                <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide">
-                  Selecionar período
-                </p>
-                <div className="grid grid-cols-4 gap-2">
-                  {REPORT_PERIOD_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => {
-                        setReportPeriod(opt.id);
-                        setReportText(null);
-                      }}
-                      className={cn(
-                        'flex flex-col items-center justify-center h-16 rounded-2xl border text-sm font-medium transition-all',
-                        reportPeriod === opt.id
-                          ? 'bg-purple-500 border-purple-500 text-white shadow-md scale-[1.02]'
-                          : 'bg-white/60 border-purple-200 text-purple-800 hover:bg-purple-100/60',
-                      )}
-                    >
-                      <span className="text-lg">{opt.icon}</span>
-                      <span className="text-caption-2 mt-0.5">{opt.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Custom date range */}
-              {reportPeriod === 'custom' && (
-                <div className="space-y-3">
-                  <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide flex items-center gap-1.5">
-                    <CalendarRange className="h-3.5 w-3.5" />
-                    Intervalo de datas
-                  </p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex flex-col space-y-1.5">
-                      <label className="text-caption-2 text-purple-700 font-medium">De</label>
-                      <input
-                        type="date"
-                        max={today}
-                        value={customStart}
-                        onChange={(e) => { setCustomStart(e.target.value); setReportText(null); }}
-                        className="h-11 rounded-xl border border-purple-200 bg-white/60 px-3 text-input-1 text-purple-950 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                      />
-                    </div>
-                    <div className="flex flex-col space-y-1.5">
-                      <label className="text-caption-2 text-purple-700 font-medium">Até</label>
-                      <input
-                        type="date"
-                        min={customStart || undefined}
-                        max={today}
-                        value={customEnd}
-                        onChange={(e) => { setCustomEnd(e.target.value); setReportText(null); }}
-                        className="h-11 rounded-xl border border-purple-200 bg-white/60 px-3 text-input-1 text-purple-950 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Generate button */}
-              {!reportText && (
-                <Button
-                  onClick={handleGenerateReport}
-                  disabled={reportLoading || (reportPeriod === 'custom' && (!customStart || !customEnd))}
-                  className="h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white text-button-1 shadow-md flex items-center justify-center gap-2 w-full"
-                  id="btn-generate-report"
-                >
-                  {reportLoading ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" />Gerando...</>
-                  ) : (
-                    <><ChevronRight className="h-4 w-4" />Gerar Relatório</>
-                  )}
-                </Button>
-              )}
-
-              {/* Report output */}
-              {reportText && (
-                <div className="space-y-4">
-                  <div className="bg-white/70 border border-purple-200 rounded-2xl p-4 max-h-56 overflow-y-auto no-scrollbar">
-                    <pre className="text-caption-1 text-purple-900 whitespace-pre-wrap font-sans leading-relaxed">
-                      {reportText}
-                    </pre>
-                  </div>
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      onClick={handleCopy}
-                      className="flex-1 h-12 rounded-2xl border border-purple-300 bg-white/60 text-purple-800 hover:bg-purple-100 text-button-1 flex items-center justify-center gap-2"
-                      id="btn-copy-report"
-                    >
-                      <Copy className="h-4 w-4" />
-                      Copiar
-                    </Button>
-                    <Button
-                      onClick={handleNativeShareText}
-                      className="flex-1 h-12 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white text-button-1 flex items-center justify-center gap-2 shadow-md"
-                      id="btn-share-report"
-                    >
-                      <Share2 className="h-4 w-4" />
-                      Compartilhar
-                    </Button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setReportText(null)}
-                    className="w-full text-caption-1 text-purple-500 hover:text-purple-700 underline underline-offset-2 transition-colors"
-                  >
-                    Gerar novamente
-                  </button>
-                </div>
-              )}
-
-              {/* In nutriOnly mode, offer a shortcut to the infographic tab */}
-              {nutriOnly && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('infographic')}
-                  className="w-full flex items-center justify-center gap-1.5 text-caption-1 text-purple-500 hover:text-purple-700 transition-colors py-1"
-                >
-                  <ImageIcon className="h-3.5 w-3.5" />
-                  Gerar Infográfico
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* ════════════════════════════════════
-              TAB 2: Infographic
-              ════════════════════════════════════ */}
-          {activeTab === 'infographic' && (
-            <div className="flex flex-col space-y-5">
-              {nutriOnly && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('nutri')}
-                  className="flex items-center gap-1 text-caption-1 text-purple-500 hover:text-purple-700 transition-colors -mt-1 self-start"
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                  Para Nutri
-                </button>
-              )}
-              <p className="text-body-2 text-purple-900/70 -mt-2">
-                Gere um card no estilo Stories para compartilhar seu progresso.
-              </p>
-
-              {/* Period selector */}
-              <div className="space-y-2">
-                <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide">
-                  Período
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {INFOGRAPHIC_PERIOD_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => {
-                        setInfoPeriod(opt.id);
-                        setInfoReady(false);
-                        setInfographicData(null);
-                      }}
-                      className={cn(
-                        'flex flex-col items-center justify-center h-16 rounded-2xl border text-sm font-medium transition-all',
-                        infoPeriod === opt.id
-                          ? 'bg-purple-500 border-purple-500 text-white shadow-md scale-[1.02]'
-                          : 'bg-white/60 border-purple-200 text-purple-800 hover:bg-purple-100/60',
-                      )}
-                    >
-                      <span className="text-lg">{opt.icon}</span>
-                      <span className="text-caption-2 mt-0.5">{opt.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Empty state when no logs exist for the period */}
-              {infoReady && infographicData?.isEmpty && (
-                <div className="flex flex-col items-center justify-center py-10 space-y-3 text-center">
-                  <span className="text-5xl">🌱</span>
-                  <p className="text-body-1 font-semibold text-purple-800">Sem registros neste período</p>
-                  <p className="text-body-2 text-purple-600/70">
-                    Não encontramos logs para gerar o infográfico. Comece a registrar sua rotina!
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => { setInfoReady(false); setInfographicData(null); }}
-                    className="text-caption-1 text-purple-500 hover:text-purple-700 underline underline-offset-2 transition-colors"
-                  >
-                    Tentar outro período
-                  </button>
-                </div>
-              )}
-
-              {/* Preview */}
-              {infoReady && infographicData && !infographicData.isEmpty && (
-                <div className="flex flex-col gap-4">
-                  <div className="space-y-2">
-                    <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide">
-                      Formato de Exportação
-                    </p>
-                    <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                      {getAvailableExports().map(opt => (
-                        <button
-                          key={opt.id}
-                          onClick={() => setSelectedExport(opt.id)}
-                          className={cn(
-                            'shrink-0 px-4 py-2 rounded-xl border text-sm font-medium transition-all whitespace-nowrap',
-                            selectedExport === opt.id
-                              ? 'bg-purple-600 border-purple-600 text-white shadow-md'
-                              : 'bg-white/60 border-purple-200 text-purple-800 hover:bg-purple-100'
-                          )}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {selectedExport === 'CARD' && (
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      className="hidden"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                    />
-                  )}
-                  <div className="flex flex-col items-center gap-3 mt-2">
-                    <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide self-start">
-                      Pré-visualização
-                    </p>
-                    <div
-                      style={{
-                        width: selectedExport === 'CARD' ? '200px' : 'auto',
-                        height: selectedExport === 'CARD' ? '355px' : 'auto',
-                        borderRadius: '16px',
-                        overflow: 'hidden',
-                        boxShadow: '0 20px 60px rgba(88,28,135,0.25)',
-                        border: '2px solid rgba(139,92,246,0.3)',
-                        background: selectedExport === 'CARD' ? 'transparent' : 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
-                        padding: selectedExport === 'CARD' ? '0' : '20px',
-                        display: selectedExport === 'CARD' ? 'block' : 'flex',
-                        alignItems: selectedExport === 'CARD' ? 'stretch' : 'center',
-                        justifyContent: selectedExport === 'CARD' ? 'flex-start' : 'center',
-                      }}
-                    >
-                      {selectedExport === 'CARD' ? (
-                        <div style={{ transform: 'scale(0.533)', transformOrigin: 'top left', width: '375px', height: '667px' }}>
-                          {bgPhoto ? (
-                            <div
-                              style={{
-                                width: '375px',
-                                height: '667px',
-                                position: 'relative',
-                                overflow: 'hidden',
-                                backgroundColor: '#000',
-                              }}
-                            >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={bgPhoto}
-                                alt="Background"
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'cover',
-                                  position: 'absolute',
-                                  inset: 0,
-                                  zIndex: 1,
-                                }}
-                              />
-                              <div style={{ position: 'absolute', bottom: '16px', right: '16px', zIndex: 10, filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))' }}>
-                                <ShareableSticker
-                                  type="GLOBAL"
-                                  score={infographicData.globalScore}
-                                  metadata={infographicData.periodName}
-                                  pillarScores={infographicData.scores}
-                                />
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="w-[375px] h-[667px] bg-purple-50 flex flex-col items-center justify-center">
-                              <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="w-[280px] h-[280px] rounded-[40px] border-4 border-dashed border-purple-300 bg-purple-100/50 hover:bg-purple-100 flex flex-col items-center justify-center gap-4 transition-colors active:scale-[0.98] shadow-sm"
-                              >
-                                <Camera className="h-16 w-16 text-purple-400" />
-                                <span className="text-title-3 font-bold text-purple-600">
-                                  Tirar Foto
-                                </span>
-                                <span className="text-body-2 text-purple-500 font-medium px-4 text-center">
-                                  O seu progresso será adicionado em cima da foto.
-                                </span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div style={{ transform: 'scale(0.8)', transformOrigin: 'center' }}>
-                          <ShareableSticker
-                            type={selectedExport === 'STICKER_GLOBAL' ? 'GLOBAL' : (selectedExport.replace('STICKER_', '') as InfographicPillar)}
-                            score={selectedExport === 'STICKER_GLOBAL' ? infographicData.globalScore : infographicData.scores[selectedExport.replace('STICKER_', '') as InfographicPillar]}
-                            metadata={selectedExport === 'STICKER_GLOBAL' ? infographicData.periodName : ''}
-                            pillarScores={selectedExport === 'STICKER_GLOBAL' ? infographicData.scores : undefined}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Generate button */}
-              {!infoReady && (
-                <Button
-                  onClick={handleGenerateInfographic}
-                  disabled={infoLoading}
-                  className="h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white text-button-1 shadow-md flex items-center justify-center gap-2 w-full"
-                  id="btn-generate-infographic"
-                >
-                  {infoLoading ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" />Calculando...</>
-                  ) : (
-                    <><ImageIcon className="h-4 w-4" />Gerar Imagens e Stickers</>
-                  )}
-                </Button>
-              )}
-
-              {/* Share / Download actions */}
-              {infoReady && infographicData && !infographicData.isEmpty && (
-                <div className="flex flex-col gap-3 mt-4">
-                  {(selectedExport !== 'CARD' || bgPhoto) && (
-                    <div className="flex gap-3">
-                      <Button
-                        variant="outline"
-                        onClick={handleDownloadInfographic}
-                        disabled={infoCapturing}
-                        className="flex-1 h-12 rounded-2xl border border-purple-300 bg-white/60 text-purple-800 hover:bg-purple-100 text-button-1 flex items-center justify-center gap-2"
-                        id="btn-download-infographic"
-                      >
-                        {infoCapturing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                        Salvar Apenas
-                      </Button>
-                      <Button
-                        onClick={handleShareInfographic}
-                        disabled={infoCapturing}
-                        className="flex-1 h-12 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white text-button-1 flex items-center justify-center gap-2 shadow-md"
-                        id="btn-share-infographic"
-                      >
-                        {infoCapturing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
-                        Compartilhar
-                      </Button>
-                    </div>
-                  )}
-
-                  {selectedExport === 'CARD' && bgPhoto && (
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        setBgPhoto(null);
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                      }}
-                      disabled={infoCapturing}
-                      className="w-full h-12 rounded-2xl text-red-500 hover:bg-red-50 hover:text-red-600 font-semibold"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Remover foto
-                    </Button>
-                  )}
-                  
-                  {teams.length > 0 && (
-                    <label className="flex items-center gap-2 mt-2 px-1 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={shareToTeamCheckbox} 
-                        onChange={(e) => setShareToTeamCheckbox(e.target.checked)}
-                        className="w-5 h-5 rounded text-purple-600 focus:ring-purple-500 bg-white border-purple-300"
-                      />
-                      <span className="text-body-2 text-purple-800">
-                        Compartilhar também no feed do meu time
-                      </span>
-                    </label>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => { setInfoReady(false); setInfographicData(null); }}
-                    className="w-full text-caption-1 text-purple-500 hover:text-purple-700 underline underline-offset-2 transition-colors"
-                  >
-                    Alterar período
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-          </div>
-        </DrawerContent>
-      </Drawer>
-
-      {/* ─── Off-screen infographic/sticker node (captured by html-to-image) ─── */}
-      {infographicData && (
-        <div
-          style={{
-            position: 'fixed',
-            left: '-9999px',
-            top: 0,
-            pointerEvents: 'none',
-            zIndex: -1,
-          }}
-        >
-          {selectedExport === 'CARD' ? (
-            bgPhoto ? (
-              <div
-                ref={nodeRef}
-                style={{
-                  width: '375px',
-                  height: '667px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  backgroundColor: '#000',
-                }}
+    <Drawer open={open} onOpenChange={handleOpenChange}>
+      <DrawerContent className="!bg-purple-50/95 backdrop-blur-2xl border-t border-purple-200 text-purple-950 shadow-[0_-15px_60px_-10px_rgba(88,28,135,0.15)] rounded-t-[32px] px-6 pt-2 pb-6 max-h-[85vh] flex flex-col">
+        <DrawerHeader className="px-0 shrink-0">
+          <DrawerTitle className="text-title-2 text-purple-950 flex items-center gap-2">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                aria-label="Voltar"
+                className="p-1 -ml-1 rounded-full hover:bg-purple-100 transition-colors"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={bgPhoto}
-                  alt="Background"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    position: 'absolute',
-                    inset: 0,
-                    zIndex: 1,
-                  }}
-                />
-                <div style={{ position: 'absolute', bottom: '16px', right: '16px', zIndex: 10, filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))' }}>
-                  <ShareableSticker
-                    type="GLOBAL"
-                    score={infographicData.globalScore}
-                    metadata={infographicData.periodName}
-                    pillarScores={infographicData.scores}
-                  />
+                <ChevronLeft className="h-5 w-5 text-purple-500" />
+              </button>
+            )}
+            <Sparkles className="h-5 w-5 text-purple-500" />
+            {type ? CONTEXT_TITLE[type] : 'Compartilhar'}
+          </DrawerTitle>
+        </DrawerHeader>
+
+        <div className="overflow-y-auto flex-1 pb-4">
+          <div className="flex flex-col space-y-6">
+            <p className="text-body-2 text-purple-900/70 -mt-2">
+              Gere um resumo do seu desempenho e compartilhe com sua nutricionista.
+            </p>
+
+            {/* Period selector */}
+            <div className="space-y-3">
+              <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide">
+                Selecionar período
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {REPORT_PERIOD_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => {
+                      setReportPeriod(opt.id);
+                      setReportText(null);
+                    }}
+                    className={cn(
+                      'flex flex-col items-center justify-center h-16 rounded-2xl border text-sm font-medium transition-all',
+                      reportPeriod === opt.id
+                        ? 'bg-purple-500 border-purple-500 text-white shadow-md scale-[1.02]'
+                        : 'bg-white/60 border-purple-200 text-purple-800 hover:bg-purple-100/60',
+                    )}
+                  >
+                    <span className="text-lg">{opt.icon}</span>
+                    <span className="text-caption-2 mt-0.5">{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom date range */}
+            {reportPeriod === 'custom' && (
+              <div className="space-y-3">
+                <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide flex items-center gap-1.5">
+                  <CalendarRange className="h-3.5 w-3.5" />
+                  Intervalo de datas
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-caption-2 text-purple-700 font-medium">De</label>
+                    <input
+                      type="date"
+                      max={today}
+                      value={customStart}
+                      onChange={(e) => { setCustomStart(e.target.value); setReportText(null); }}
+                      className="h-11 rounded-xl border border-purple-200 bg-white/60 px-3 text-input-1 text-purple-950 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    />
+                  </div>
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-caption-2 text-purple-700 font-medium">Até</label>
+                    <input
+                      type="date"
+                      min={customStart || undefined}
+                      max={today}
+                      value={customEnd}
+                      onChange={(e) => { setCustomEnd(e.target.value); setReportText(null); }}
+                      className="h-11 rounded-xl border border-purple-200 bg-white/60 px-3 text-input-1 text-purple-950 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    />
+                  </div>
                 </div>
               </div>
-            ) : (
-              <ShareableInfographic
-                ref={nodeRef}
-                periodName={infographicData.periodName}
-                scores={infographicData.scores}
-                globalScore={infographicData.globalScore}
-                bestPillars={infographicData.bestPillars}
-              />
-            )
-          ) : (
-            <ShareableSticker
-              ref={nodeRef}
-              type={selectedExport === 'STICKER_GLOBAL' ? 'GLOBAL' : (selectedExport.replace('STICKER_', '') as InfographicPillar)}
-              score={selectedExport === 'STICKER_GLOBAL' ? infographicData.globalScore : infographicData.scores[selectedExport.replace('STICKER_', '') as InfographicPillar]}
-              metadata={selectedExport === 'STICKER_GLOBAL' ? infographicData.periodName : ''}
-              pillarScores={selectedExport === 'STICKER_GLOBAL' ? infographicData.scores : undefined}
-            />
-          )}
-        </div>
-      )}
+            )}
 
-      {/* ─── Team Picker Modal ──────────────────────────────────────────── */}
-      <TeamPickerModal
-        open={teamPickerOpen}
-        onOpenChange={setTeamPickerOpen}
-        onSelectTeam={handlePublishToTeam}
-        isPublishing={infoCapturing}
-        publishingTeamId={publishingTeamId}
-      />
-    </>
+            {/* Generate button */}
+            {!reportText && (
+              <Button
+                onClick={handleGenerateReport}
+                disabled={reportLoading || (reportPeriod === 'custom' && (!customStart || !customEnd))}
+                className="h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white text-button-1 shadow-md flex items-center justify-center gap-2 w-full"
+                id="btn-generate-report"
+              >
+                {reportLoading ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" />Gerando...</>
+                ) : (
+                  <><ChevronRight className="h-4 w-4" />Gerar Relatório</>
+                )}
+              </Button>
+            )}
+
+            {/* Report output */}
+            {reportText && (
+              <div className="space-y-4">
+                <div className="bg-white/70 border border-purple-200 rounded-2xl p-4 max-h-56 overflow-y-auto no-scrollbar">
+                  <pre className="text-caption-1 text-purple-900 whitespace-pre-wrap font-sans leading-relaxed">
+                    {reportText}
+                  </pre>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleCopy}
+                    className="flex-1 h-12 rounded-2xl border border-purple-300 bg-white/60 text-purple-800 hover:bg-purple-100 text-button-1 flex items-center justify-center gap-2"
+                    id="btn-copy-report"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copiar
+                  </Button>
+                  <Button
+                    onClick={handleNativeShareText}
+                    className="flex-1 h-12 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white text-button-1 flex items-center justify-center gap-2 shadow-md"
+                    id="btn-share-report"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Compartilhar
+                  </Button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setReportText(null)}
+                  className="w-full text-caption-1 text-purple-500 hover:text-purple-700 underline underline-offset-2 transition-colors"
+                >
+                  Gerar novamente
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }

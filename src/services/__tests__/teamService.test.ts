@@ -162,7 +162,7 @@ describe('teamService', () => {
         { teamId: 't1', team: { name: 'Team A' } },
       ] as any);
 
-      // Second call: members in those teams
+      // Second call: all members in those teams (no role filter)
       prismaMock.teamMember.findMany.mockResolvedValueOnce([
         { user: { id: 'patient1', name: 'At Risk', image: null }, teamId: 't1' },
         { user: { id: 'patient2', name: 'Star', image: null }, teamId: 't1' },

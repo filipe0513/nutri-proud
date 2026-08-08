@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { NutriDashboard } from '@/components/shared/NutriDashboard';
 import { auth } from '@/auth';
-import { getDashboardTeams, getPatientRadar, getActiveTodayCount } from '@/services/teamService';
 import { redirect } from 'next/navigation';
+import { getNutriFeed } from '@/services/teamService';
+import { NutriFeedClient } from '@/components/shared/NutriFeedClient';
 
 export const metadata: Metadata = {
-  title: 'Painel da Nutricionista',
-  description: 'Gerencie seus pacientes, times e acompanhe a adesao aos habitos de saude.',
+  title: 'Feed — Dashboard Nutri',
+  description: 'Acompanhe as publicacoes e conquistas dos seus pacientes.',
 };
 
 export default async function NutriDashboardPage() {
@@ -15,11 +15,18 @@ export default async function NutriDashboardPage() {
     redirect('/welcome');
   }
 
-  const [teams, radar, activeToday] = await Promise.all([
-    getDashboardTeams(session.user.id, session.user.role),
-    getPatientRadar(session.user.id),
-    getActiveTodayCount(session.user.id),
-  ]);
+  const items = await getNutriFeed(session.user.id);
 
-  return <NutriDashboard teams={teams} radar={radar} activeToday={activeToday} />;
+  return (
+    <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-6">
+      <div>
+        <h1 className="text-title-2 font-bold text-neutral-600">Feed</h1>
+        <p className="text-body-2 text-neutral-400 mt-1">
+          Acompanhe as publicacoes e conquistas dos seus pacientes.
+        </p>
+      </div>
+
+      <NutriFeedClient items={items} currentUserId={session.user.id} />
+    </div>
+  );
 }
