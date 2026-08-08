@@ -1,6 +1,16 @@
 import { prisma } from '@/lib/prisma';
+import { FeedPostType } from '@prisma/client';
 import { UserRole } from '@/types/roles';
-import type { PostWithAuthor, ReactionCount, TeamSummary } from '@/types/teamTypes';
+import type {
+  PostWithAuthor,
+  ReactionCount,
+  TeamSummary,
+  CommentWithAuthor,
+  UnifiedFeedItem,
+  PatientRadarData,
+  PatientRadarItem,
+} from '@/types/teamTypes';
+import { dispatchNotification } from './notificationService';
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
 
@@ -367,4 +377,317 @@ export async function togglePostReaction(
   } else {
     await prisma.reaction.create({ data: { postId, userId, emoji } });
   }
+}
+
+// ─── Comments ─────────────────────────────────────────────────────────────────
+
+export async function getPostComments(
+  postId: string,
+  currentUserId: string,
+): Promise<CommentWithAuthor[]> {
+  // Verify user is a member of the team the post belongs to
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { teamId: true },
+  });
+  if (!post) throw new Error('Post nao encontrado.');
+
+  const membership = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId: post.teamId, userId: currentUserId } },
+  });
+  if (!membership) throw new Error('Acesso negado.');
+
+  const comments = await prisma.comment.findMany({
+    where: { postId },
+    orderBy: { createdAt: 'asc' },
+    include: {
+      user: { select: { id: true, name: true, image: true } },
+    },
+  });
+
+  return comments.map((c) => ({
+    id: c.id,
+    text: c.text,
+    author: { id: c.user.id, name: c.user.name, image: c.user.image },
+    createdAt: c.createdAt.toISOString(),
+  }));
+}
+
+export async function createComment(
+  postId: string,
+  userId: string,
+  text: string,
+): Promise<CommentWithAuthor> {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { teamId: true, authorId: true },
+  });
+  if (!post) throw new Error('Post nao encontrado.');
+
+  const membership = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId: post.teamId, userId } },
+  });
+  if (!membership) throw new Error('Acesso negado.');
+
+  const comment = await prisma.comment.create({
+    data: { postId, userId, text },
+    include: {
+      user: { select: { id: true, name: true, image: true } },
+    },
+  });
+
+  // Notify the post author if the commenter is a NUTRITIONIST/ADMIN and not the post author
+  if (
+    userId !== post.authorId &&
+    (membership.role === 'ADMIN')
+  ) {
+    const commenterName = comment.user.name ?? 'Sua nutri';
+    dispatchNotification(
+      post.authorId,
+      'SYSTEM',
+      `${commenterName} comentou no seu post`,
+      text,
+      { actionType: 'OPEN_TEAM_POST' },
+    ).catch(() => {/* silent */});
+  }
+
+  return {
+    id: comment.id,
+    text: comment.text,
+    author: { id: comment.user.id, name: comment.user.name, image: comment.user.image },
+    createdAt: comment.createdAt.toISOString(),
+  };
+}
+
+export async function deleteComment(commentId: string, userId: string): Promise<void> {
+  const comment = await prisma.comment.findUnique({ where: { id: commentId } });
+  if (!comment) throw new Error('Comentario nao encontrado.');
+  if (comment.userId !== userId) throw new Error('Acesso negado: apenas o autor pode apagar.');
+  await prisma.comment.delete({ where: { id: commentId } });
+}
+
+// ─── Unified Feed (Nutri Dashboard) ──────────────────────────────────────────
+
+/**
+ * Aggregates `Post` (social) + `TeamFeedPost` (system) into a unified feed
+ * for the nutritionist dashboard.
+ */
+export async function getNutriFeed(
+  nutriUserId: string,
+  filters?: { types?: string[] },
+): Promise<UnifiedFeedItem[]> {
+  // 1. Get teams where the nutri is ADMIN
+  const adminMemberships = await prisma.teamMember.findMany({
+    where: { userId: nutriUserId, role: 'ADMIN' },
+    select: { teamId: true, team: { select: { name: true } } },
+  });
+  const teamIds = adminMemberships.map((m) => m.teamId);
+  const teamNameMap = new Map(adminMemberships.map((m) => [m.teamId, m.team.name]));
+
+  if (teamIds.length === 0) return [];
+
+  const wantSocial = !filters?.types || filters.types.includes('social');
+  const systemTypes = (filters?.types?.filter((t) => t !== 'social') ?? []) as FeedPostType[];
+  const wantSystem = !filters?.types || systemTypes.length > 0;
+
+  const items: UnifiedFeedItem[] = [];
+
+  // 2. Social posts
+  if (wantSocial) {
+    const posts = await prisma.post.findMany({
+      where: { teamId: { in: teamIds } },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: {
+        author: { select: { id: true, name: true, image: true } },
+        reactions: true,
+        _count: { select: { comments: true } },
+      },
+    });
+
+    for (const post of posts) {
+      const emojiMap = new Map<string, { count: number; reacted: boolean }>();
+      for (const r of post.reactions) {
+        const existing = emojiMap.get(r.emoji) ?? { count: 0, reacted: false };
+        emojiMap.set(r.emoji, {
+          count: existing.count + 1,
+          reacted: existing.reacted || r.userId === nutriUserId,
+        });
+      }
+      const reactions: ReactionCount[] = Array.from(emojiMap.entries()).map(
+        ([emoji, { count, reacted }]) => ({ emoji, count, reacted }),
+      );
+
+      items.push({
+        kind: 'social',
+        teamName: teamNameMap.get(post.teamId) ?? '',
+        post: {
+          id: post.id,
+          content: post.content,
+          imageUrl: post.imageUrl,
+          type: post.type,
+          teamId: post.teamId,
+          author: { id: post.author.id, name: post.author.name, image: post.author.image },
+          reactions,
+          commentCount: post._count.comments,
+          createdAt: post.createdAt.toISOString(),
+        },
+      });
+    }
+  }
+
+  // 3. System feed posts
+  if (wantSystem) {
+    const whereSystem = systemTypes.length > 0
+      ? { teamId: { in: teamIds }, type: { in: systemTypes } }
+      : { teamId: { in: teamIds } };
+
+    const feedPosts = await prisma.teamFeedPost.findMany({
+      where: whereSystem,
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: {
+        patient: { select: { id: true, name: true, image: true } },
+      },
+    });
+
+    for (const fp of feedPosts) {
+      items.push({
+        kind: 'system',
+        feedPost: {
+          id: fp.id,
+          type: fp.type,
+          content: fp.content,
+          createdAt: fp.createdAt.toISOString(),
+          patient: { id: fp.patient.id, name: fp.patient.name, image: fp.patient.image },
+          teamName: teamNameMap.get(fp.teamId) ?? '',
+          metadata: fp.metadata,
+        },
+      });
+    }
+  }
+
+  // 4. Sort by createdAt desc, take 50
+  items.sort((a, b) => {
+    const dateA = a.kind === 'social' ? a.post.createdAt : a.feedPost.createdAt;
+    const dateB = b.kind === 'social' ? b.post.createdAt : b.feedPost.createdAt;
+    return new Date(dateB).getTime() - new Date(dateA).getTime();
+  });
+
+  return items.slice(0, 50);
+}
+
+// ─── Patient Radar ───────────────────────────────────────────────────────────
+
+export async function getPatientRadar(nutriUserId: string): Promise<PatientRadarData> {
+  // Get teams where the nutri is ADMIN
+  const adminMemberships = await prisma.teamMember.findMany({
+    where: { userId: nutriUserId, role: 'ADMIN' },
+    select: { teamId: true, team: { select: { name: true } } },
+  });
+  const teamIds = adminMemberships.map((m) => m.teamId);
+  const teamNameMap = new Map(adminMemberships.map((m) => [m.teamId, m.team.name]));
+
+  if (teamIds.length === 0) return { atRisk: [], doingGreat: [] };
+
+  // Get all MEMBER patients in those teams (exclude the nutri themselves)
+  const members = await prisma.teamMember.findMany({
+    where: { teamId: { in: teamIds }, role: 'MEMBER' },
+    include: {
+      user: { select: { id: true, name: true, image: true } },
+    },
+  });
+
+  // Deduplicate patients across teams
+  const seen = new Set<string>();
+  const patients: { user: { id: string; name: string | null; image: string | null }; teamId: string }[] = [];
+  for (const m of members) {
+    if (!seen.has(m.user.id)) {
+      seen.add(m.user.id);
+      patients.push({ user: m.user, teamId: m.teamId });
+    }
+  }
+
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const atRisk: PatientRadarItem[] = [];
+  const doingGreat: PatientRadarItem[] = [];
+
+  for (const p of patients) {
+    // Last log
+    const lastLog = await prisma.dailyLog.findFirst({
+      where: { userId: p.user.id },
+      orderBy: { eventTime: 'desc' },
+      take: 1,
+    });
+
+    const daysSinceLastLog = lastLog
+      ? Math.floor((Date.now() - new Date(lastLog.eventTime).getTime()) / 86_400_000)
+      : null;
+
+    // Average primaryValue in last 7 days
+    const recentLogs = await prisma.dailyLog.findMany({
+      where: { userId: p.user.id, eventTime: { gte: sevenDaysAgo } },
+      select: { primaryValue: true },
+    });
+
+    const recentAvgScore =
+      recentLogs.length > 0
+        ? Math.round(recentLogs.reduce((sum, l) => sum + l.primaryValue, 0) / recentLogs.length)
+        : null;
+
+    const item: PatientRadarItem = {
+      patient: { id: p.user.id, name: p.user.name, image: p.user.image },
+      teamName: teamNameMap.get(p.teamId) ?? '',
+      lastLogAt: lastLog ? lastLog.eventTime.toISOString() : null,
+      daysSinceLastLog,
+      recentAvgScore,
+      status: 'normal',
+    };
+
+    if (daysSinceLastLog === null || daysSinceLastLog >= 2 || (recentAvgScore !== null && recentAvgScore < 40)) {
+      item.status = 'at_risk';
+      atRisk.push(item);
+    } else if (recentAvgScore !== null && recentAvgScore >= 80) {
+      item.status = 'doing_great';
+      doingGreat.push(item);
+    }
+  }
+
+  return { atRisk, doingGreat };
+}
+
+// ─── Active Today Count ──────────────────────────────────────────────────────
+
+/**
+ * Counts how many patients (MEMBER role) in the nutri's teams have logged at least
+ * one entry today.
+ */
+export async function getActiveTodayCount(nutriUserId: string): Promise<number> {
+  const adminMemberships = await prisma.teamMember.findMany({
+    where: { userId: nutriUserId, role: 'ADMIN' },
+    select: { teamId: true },
+  });
+  const teamIds = adminMemberships.map((m) => m.teamId);
+  if (teamIds.length === 0) return 0;
+
+  const members = await prisma.teamMember.findMany({
+    where: { teamId: { in: teamIds }, role: 'MEMBER' },
+    select: { userId: true },
+  });
+
+  const uniquePatientIds = [...new Set(members.map((m) => m.userId))];
+  if (uniquePatientIds.length === 0) return 0;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const activePatients = await prisma.dailyLog.groupBy({
+    by: ['userId'],
+    where: {
+      userId: { in: uniquePatientIds },
+      eventTime: { gte: today },
+    },
+  });
+
+  return activePatients.length;
 }

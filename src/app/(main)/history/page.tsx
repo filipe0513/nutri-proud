@@ -12,6 +12,7 @@ import { useAppStore } from "@/store/store";
 import { ChevronDown, ChevronUp, Share2 } from "lucide-react";
 import { TopHeader } from "@/components/shared/TopHeader";
 import { ShareReportDrawer } from "@/components/shared/ShareReportDrawer";
+import { PhotoStickerShareDrawer } from "@/components/shared/PhotoStickerShareDrawer";
 import { BottomSheet_Water } from "@/components/shared/BottomSheet_Water";
 import { BottomSheet_Sleep } from "@/components/shared/BottomSheet_Sleep";
 import { BottomSheet_Poop } from "@/components/shared/BottomSheet_Poop";
@@ -82,6 +83,8 @@ export default function HistoryPage() {
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
   const [shareOpen, setShareOpen] = useState(false);
   const [shareDate, setShareDate] = useState<string>('');
+  const [shareScore, setShareScore] = useState(0);
+  const [infographicOpen, setInfographicOpen] = useState(false);
 
   const toggleDay = (date: string) => {
     setExpandedDays(prev => ({ ...prev, [date]: prev[date] === false ? true : false }));
@@ -167,6 +170,7 @@ export default function HistoryPage() {
                       onClick={(e) => {
                         e.stopPropagation();
                         setShareDate(date);
+                        setShareScore(dayScore);
                         setShareOpen(true);
                       }}
                       className="p-2 rounded-full hover:bg-neutral-200/50 text-neutral-400 transition-colors"
@@ -268,9 +272,15 @@ export default function HistoryPage() {
         }
         customTrigger={<div className="hidden" />}
       />
-      <ShareReportDrawer
+      <PhotoStickerShareDrawer
         open={shareOpen}
         onOpenChange={setShareOpen}
+        context={{ type: 'DAILY_SCORE', score: shareScore }}
+        onOpenInfographic={() => { setShareOpen(false); setInfographicOpen(true); }}
+      />
+      <ShareReportDrawer
+        open={infographicOpen}
+        onOpenChange={setInfographicOpen}
         type="DAILY_SCORE"
         date={shareDate || undefined}
       />

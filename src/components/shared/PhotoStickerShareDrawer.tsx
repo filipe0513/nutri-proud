@@ -133,7 +133,13 @@ export function PhotoStickerShareDrawer({
   const getBlob = useCallback(async (): Promise<Blob> => {
     if (blobRef.current) return blobRef.current;
     if (!compositeRef.current) throw new Error('Falha ao capturar imagem.');
-    const blob = await toBlob(compositeRef.current, { pixelRatio: 2, cacheBust: true });
+    const img = compositeRef.current.querySelector('img');
+    if (img && !img.complete) {
+      await new Promise<void>((resolve) => {
+        img.addEventListener('load', () => resolve(), { once: true });
+      });
+    }
+    const blob = await toBlob(compositeRef.current, { pixelRatio: 2 });
     if (!blob) throw new Error('Falha ao capturar imagem.');
     blobRef.current = blob;
     return blob;

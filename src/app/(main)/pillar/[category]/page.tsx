@@ -11,6 +11,7 @@ import { ActivityLog } from '@/store/types';
 import { getLocalStartOfDay } from '@/utils/dateUtils';
 import { TopHeader } from '@/components/shared/TopHeader';
 import { ShareReportDrawer } from '@/components/shared/ShareReportDrawer';
+import { PhotoStickerShareDrawer } from '@/components/shared/PhotoStickerShareDrawer';
 import type { InfographicPillar } from '@/components/share/ShareableInfographic';
 
 // Aqui eu importo os drawers existentes, mas vou precisar controla-los de fora ou replicar a chamada.
@@ -139,6 +140,7 @@ export default function PillarInsightsPage() {
   const { user_profile, activity_logs } = useAppStore();
   const [editingLog, setEditingLog] = useState<ActivityLog | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [infographicOpen, setInfographicOpen] = useState(false);
 
   const targetText = useMemo(() => {
     if (!user_profile) return '';
@@ -384,9 +386,15 @@ export default function PillarInsightsPage() {
       />
 
       {/* Share Drawer */}
-      <ShareReportDrawer
+      <PhotoStickerShareDrawer
         open={shareOpen}
         onOpenChange={setShareOpen}
+        context={{ type: 'PILLAR', pillar: data.infoPillar, score: Math.round(progressPercentage) }}
+        onOpenInfographic={() => { setShareOpen(false); setInfographicOpen(true); }}
+      />
+      <ShareReportDrawer
+        open={infographicOpen}
+        onOpenChange={setInfographicOpen}
         type="PILLAR"
         pillar={data.infoPillar}
       />
