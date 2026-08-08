@@ -16,6 +16,7 @@ import {
   Share2,
   Loader2,
   ChevronRight,
+  ChevronLeft,
   Sparkles,
   ImageIcon,
   Download,
@@ -60,6 +61,10 @@ interface ShareReportDrawerProps {
   weekStart?: string;
   /** ISO date YYYY-MM-DD — fim da semana a pré-selecionar (Weekly Streak) */
   weekEnd?: string;
+  /** When true, hides the tab switcher and locks to the nutri tab */
+  nutriOnly?: boolean;
+  /** If provided, renders a back chevron in the header that calls this */
+  onBack?: () => void;
 }
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
@@ -199,7 +204,7 @@ const PILLAR_EXPORT_MAP: Record<InfographicPillar, string> = {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, weekStart, weekEnd }: ShareReportDrawerProps) {
+export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, weekStart, weekEnd, nutriOnly, onBack }: ShareReportDrawerProps) {
   const { user_profile } = useAppStore();
 
   // ── Tab ──
@@ -242,6 +247,9 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
   // ── Sync context props when drawer opens ──────────────────────────────────
   useEffect(() => {
     if (!open) return;
+    if (nutriOnly) {
+      setActiveTab('nutri');
+    }
     // When a specific pillar is requested → open infographic tab with that sticker pre-selected
     if (pillar) {
       setActiveTab('infographic');
@@ -549,7 +557,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
         setInfoPeriod('today');
         // Reset export: if pillar context, restore to that pillar sticker; else 'CARD'
         setSelectedExport(pillar ? PILLAR_EXPORT_MAP[pillar] : 'CARD');
-        setActiveTab('infographic');
+        setActiveTab(nutriOnly ? 'nutri' : 'infographic');
         setTeamPickerOpen(false);
         setBgPhoto(null);
         if (teams.length > 0) setShareToTeamCheckbox(true);
@@ -566,6 +574,16 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
         <DrawerContent className="!bg-purple-50/95 backdrop-blur-2xl border-t border-purple-200 text-purple-950 shadow-[0_-15px_60px_-10px_rgba(88,28,135,0.15)] rounded-t-[32px] px-6 pb-6 max-h-[85vh] flex flex-col">
           <DrawerHeader className="px-0 shrink-0">
             <DrawerTitle className="text-title-2 text-purple-950 flex items-center gap-2">
+              {onBack && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  aria-label="Voltar"
+                  className="p-1 -ml-1 rounded-full hover:bg-purple-100 transition-colors"
+                >
+                  <ChevronLeft className="h-5 w-5 text-purple-500" />
+                </button>
+              )}
               <Sparkles className="h-5 w-5 text-purple-500" />
               {type ? CONTEXT_TITLE[type] : 'Compartilhar'}
             </DrawerTitle>
@@ -574,7 +592,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
           <div className="overflow-y-auto flex-1 pb-4">
 
           {/* ── Tab switcher ── */}
-          <div className="flex rounded-2xl bg-purple-100/60 border border-purple-200 p-1 mb-5">
+          {!nutriOnly && <div className="flex rounded-2xl bg-purple-100/60 border border-purple-200 p-1 mb-5">
             <button
               type="button"
               onClick={() => setActiveTab('nutri')}
@@ -603,7 +621,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
               <ImageIcon className="h-4 w-4" />
               Imagens/Stickers
             </button>
-          </div>
+          </div>}
 
           {/* ════════════════════════════════════
               TAB 1: Nutri Text Report

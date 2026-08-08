@@ -283,6 +283,8 @@ export default function HistoryPage() {
         onOpenChange={setInfographicOpen}
         type="DAILY_SCORE"
         date={shareDate || undefined}
+        nutriOnly
+        onBack={() => { setInfographicOpen(false); setShareOpen(true); }}
       />
       <JacadaDrawer
         open={editingLog?.category === "jacada"}
