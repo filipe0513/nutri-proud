@@ -39,8 +39,8 @@ interface PhotoStickerShareDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   context: StickerContext;
-  /** Called for EVOLUTION context after compositing: saves to DB + posts to squad */
-  onComposed?: (blob: Blob, weight?: number) => Promise<void>;
+  /** Called for EVOLUTION context after compositing: saves to DB + optionally posts to squad */
+  onComposed?: (blob: Blob, weight?: number, publishToTeam?: boolean) => Promise<void>;
   /** Opens the legacy infographic drawer as a secondary option */
   onOpenInfographic?: () => void;
   /** Pre-fills the weight input for EVOLUTION context */
@@ -102,6 +102,7 @@ export function PhotoStickerShareDrawer({
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<StickerTheme>('dark');
   const [weight, setWeight] = useState(initialWeight);
+  const [publishToTeam, setPublishToTeam] = useState(true);
   const [isActing, setIsActing] = useState(false);
   const [teamPickerOpen, setTeamPickerOpen] = useState(false);
   const [teams, setTeams] = useState<TeamSummary[]>([]);
@@ -151,9 +152,9 @@ export function PhotoStickerShareDrawer({
     async (blob: Blob) => {
       if (composedRef.current || !onComposed) return;
       composedRef.current = true;
-      await onComposed(blob, context.type === 'EVOLUTION' ? weight : undefined);
+      await onComposed(blob, context.type === 'EVOLUTION' ? weight : undefined, publishToTeam);
     },
-    [onComposed, context, weight]
+    [onComposed, context, weight, publishToTeam]
   );
 
   // ── Actions ──────────────────────────────────────────────────────────────────
@@ -287,7 +288,7 @@ export function PhotoStickerShareDrawer({
             </DrawerTitle>
           </DrawerHeader>
 
-          <div className="px-4 pb-8 space-y-4">
+          <div className="px-4 pb-8 space-y-4 overflow-y-auto max-h-[70vh]">
             {/* ── Step 1: Source picker ───────────────────────────────────── */}
             {step === 'source' && (
               <div className="space-y-3">
@@ -324,6 +325,20 @@ export function PhotoStickerShareDrawer({
                   <ImageIcon className="h-8 w-8 text-neutral-500" />
                   <span className="text-body-2 font-semibold text-neutral-600">Escolher da Galeria</span>
                 </button>
+
+                {onOpenInfographic && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleOpenChange(false);
+                      onOpenInfographic();
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 text-caption-1 font-medium text-brand-500 hover:text-brand-600 transition-colors py-1"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Gerar Infográfico
+                  </button>
+                )}
               </div>
             )}
 
@@ -381,27 +396,38 @@ export function PhotoStickerShareDrawer({
                   ))}
                 </div>
 
-                {/* Weight input — EVOLUTION context only */}
+                {/* Weight input + team checkbox — EVOLUTION context only */}
                 {context.type === 'EVOLUTION' && (
-                  <div className="space-y-1.5">
-                    <label
-                      htmlFor="sticker-weight"
-                      className="text-body-2 font-semibold text-neutral-600 px-1"
-                    >
-                      Peso Atual (kg)
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <label
+                        htmlFor="sticker-weight"
+                        className="text-body-2 font-semibold text-neutral-600 px-1"
+                      >
+                        Peso Atual (kg)
+                      </label>
+                      <input
+                        id="sticker-weight"
+                        type="number"
+                        step="0.1"
+                        value={weight}
+                        onChange={(e) => {
+                          setWeight(parseFloat(e.target.value) || 0);
+                          blobRef.current = null;
+                        }}
+                        className="w-full rounded-2xl border border-white/40 bg-glass-light-1 backdrop-blur-sm px-4 py-3 text-title-3 font-semibold text-neutral-600 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-400 transition-all shadow-inner"
+                        placeholder="Ex: 75.5"
+                      />
+                    </div>
+                    <label className="flex items-center gap-3 px-1 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={publishToTeam}
+                        onChange={(e) => setPublishToTeam(e.target.checked)}
+                        className="w-4 h-4 accent-brand-500 rounded"
+                      />
+                      <span className="text-body-2 text-neutral-600">Publicar também no squad</span>
                     </label>
-                    <input
-                      id="sticker-weight"
-                      type="number"
-                      step="0.1"
-                      value={weight}
-                      onChange={(e) => {
-                        setWeight(parseFloat(e.target.value) || 0);
-                        blobRef.current = null;
-                      }}
-                      className="w-full rounded-2xl border border-white/40 bg-glass-light-1 backdrop-blur-sm px-4 py-3 text-title-3 font-semibold text-neutral-600 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-400 transition-all shadow-inner"
-                      placeholder="Ex: 75.5"
-                    />
                   </div>
                 )}
 

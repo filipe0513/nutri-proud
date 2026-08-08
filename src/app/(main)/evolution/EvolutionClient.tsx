@@ -37,7 +37,7 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
    * 3. Post to first team's feed
    */
   const handleEvolutionSave = useCallback(
-    async (blob: Blob, weight?: number) => {
+    async (blob: Blob, weight?: number, publishToTeam?: boolean) => {
       // 1. Upload to Cloudinary
       const formData = new FormData();
       formData.append('file', blob, 'evolution-checkin.png');
@@ -62,18 +62,20 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
       });
       if (!response.ok) throw new Error('Falha ao salvar check-in de evolução');
 
-      // 3. Post to team feed
-      const resTeams = await fetch('/api/teams');
-      if (resTeams.ok) {
-        const teams = await resTeams.json();
-        if (Array.isArray(teams) && teams.length > 0) {
-          const teamFormData = new FormData();
-          teamFormData.append('file', blob, 'evolution.png');
-          teamFormData.append('content', `Check-in de Evolução: ${weight}kg 💪`);
-          await fetch('/api/teams/' + teams[0].id + '/posts', {
-            method: 'POST',
-            body: teamFormData,
-          });
+      // 3. Post to team feed (only if user opted in)
+      if (publishToTeam !== false) {
+        const resTeams = await fetch('/api/teams');
+        if (resTeams.ok) {
+          const teams = await resTeams.json();
+          if (Array.isArray(teams) && teams.length > 0) {
+            const teamFormData = new FormData();
+            teamFormData.append('file', blob, 'evolution.png');
+            teamFormData.append('content', `Check-in de Evolução: ${weight}kg 💪`);
+            await fetch('/api/teams/' + teams[0].id + '/posts', {
+              method: 'POST',
+              body: teamFormData,
+            });
+          }
         }
       }
 
