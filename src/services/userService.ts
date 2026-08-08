@@ -72,6 +72,23 @@ export const userService = {
     return typeof profile.main_goal === 'string' && profile.main_goal.length > 0;
   },
 
+  async getProfile(userId: string) {
+    return prisma.user.findUnique({ where: { id: userId } });
+  },
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async updateProfile(userId: string, data: { name?: string; profile: any; targets: any; notification_preferences?: Prisma.InputJsonValue }) {
+    return prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(data.name ? { name: data.name } : {}),
+        profile: data.profile,
+        targets: data.targets,
+        ...(data.notification_preferences ? { notification_preferences: data.notification_preferences } : {}),
+      },
+    });
+  },
+
   async createAnonymousUser() {
     return await prisma.user.create({
       data: {

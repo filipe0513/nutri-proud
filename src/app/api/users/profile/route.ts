@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { getUserId } from '@/lib/apiAuth';
+import { userService } from '@/services/userService';
 import { z } from 'zod';
 
 const userProfilePayloadSchema = z.object({
@@ -47,17 +47,7 @@ export async function POST(request: Request) {
 
     const data = parsed.data;
 
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...(data.name ? { name: data.name } : {}),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        profile: data.profile as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        targets: data.targets as any,
-        ...(data.notification_preferences ? { notification_preferences: data.notification_preferences } : {}),
-      }
-    });
+    const user = await userService.updateProfile(userId, data);
     
     return NextResponse.json({ message: "Perfil salvo com sucesso!", user }, { status: 200 });
   } catch (error) {
@@ -72,15 +62,8 @@ export async function GET() {
       return NextResponse.json({ profile: null }, { status: 200 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
-    if (!user) {
-      return NextResponse.json({ profile: null }, { status: 200 });
-    }
-
-    return NextResponse.json({ profile: user }, { status: 200 });
+    const user = await userService.getProfile(userId);
+    return NextResponse.json({ profile: user ?? null }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Falha ao buscar perfil", details: error }, { status: 400 });
   }

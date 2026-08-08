@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { z } from 'zod';
-import { Prisma } from '@prisma/client';
 import { rateLimit, getClientIp } from '@/lib/rateLimit';
+import { trackEvent } from '@/services/eventService';
 
 const eventSchema = z.object({
   eventName: z.string().min(1).max(100),
@@ -36,14 +35,7 @@ export async function POST(req: Request) {
     }
 
     const { eventName, metadata } = parsed.data;
-
-    const event = await prisma.systemEvent.create({
-      data: {
-        eventName,
-        metadata: metadata ? (metadata as Prisma.InputJsonValue) : Prisma.JsonNull,
-        userId,
-      },
-    });
+    const event = await trackEvent(eventName, metadata, userId);
 
     return NextResponse.json({ success: true, event }, { status: 201 });
   } catch (error) {
