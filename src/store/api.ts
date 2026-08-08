@@ -9,6 +9,15 @@ export class ApiError extends Error {
   }
 }
 
+async function fetchApiOrThrow(url: string, options: RequestInit, errorMsg: string): Promise<Response> {
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new ApiError(res.status, body?.error ?? errorMsg);
+  }
+  return res;
+}
+
 export const fetchUserProfile = async (): Promise<UserProfile | null> => {
   try {
     const res = await fetch('/api/users/profile');
@@ -80,15 +89,11 @@ export const fetchActivityLogs = async (): Promise<ActivityLog[]> => {
 export const saveActivityLog = async (fullLog: ActivityLog): Promise<void> => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, created_at, ...log } = fullLog;
-  const res = await fetch('/api/logs', {
+  await fetchApiOrThrow('/api/logs', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(log),
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new ApiError(res.status, body?.error ?? 'Erro ao salvar log');
-  }
+  }, 'Erro ao salvar log');
 };
 
 /**
@@ -97,28 +102,18 @@ export const saveActivityLog = async (fullLog: ActivityLog): Promise<void> => {
 export const updateActivityLog = async (id: string, fullLog: ActivityLog): Promise<void> => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id: _id, created_at, ...log } = fullLog;
-  const res = await fetch(`/api/logs/${id}`, {
+  await fetchApiOrThrow(`/api/logs/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(log),
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new ApiError(res.status, body?.error ?? 'Erro ao atualizar log');
-  }
+  }, 'Erro ao atualizar log');
 };
 
 /**
  * Remove um registro de atividade no servidor
  */
 export const deleteActivityLog = async (id: string): Promise<void> => {
-  const res = await fetch(`/api/logs/${id}`, {
-    method: 'DELETE',
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new ApiError(res.status, body?.error ?? 'Erro ao apagar log');
-  }
+  await fetchApiOrThrow(`/api/logs/${id}`, { method: 'DELETE' }, 'Erro ao apagar log');
 };
 
 // ── Teams API (UI Mocks for now) ──────────────────────────
@@ -134,15 +129,11 @@ export const fetchMyTeams = async (): Promise<TeamSummary[]> => {
 };
 
 export const createTeam = async (data: { name: string; description?: string }): Promise<TeamSummary> => {
-  const res = await fetch('/api/teams', {
+  const res = await fetchApiOrThrow('/api/teams', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new ApiError(res.status, body?.error ?? 'Erro ao criar team');
-  }
+  }, 'Erro ao criar team');
   return res.json();
 };
 
@@ -157,39 +148,25 @@ export const fetchTeamDetails = async (teamId: string): Promise<TeamSummary | nu
 };
 
 export const updateTeamDetails = async (teamId: string, data: { name?: string; description?: string }): Promise<TeamSummary> => {
-  const res = await fetch(`/api/teams/${teamId}`, {
+  const res = await fetchApiOrThrow(`/api/teams/${teamId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new ApiError(res.status, body?.error ?? 'Erro ao atualizar team');
-  }
+  }, 'Erro ao atualizar team');
   const responseData = await res.json();
   return responseData.team;
 };
 
 export const deleteTeamAction = async (teamId: string): Promise<void> => {
-  const res = await fetch(`/api/teams/${teamId}`, {
-    method: 'DELETE',
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new ApiError(res.status, body?.error ?? 'Erro ao apagar team');
-  }
+  await fetchApiOrThrow(`/api/teams/${teamId}`, { method: 'DELETE' }, 'Erro ao apagar team');
 };
 
 export const joinTeamByCode = async (inviteCode: string): Promise<TeamSummary> => {
-  const res = await fetch('/api/teams/join', {
+  const res = await fetchApiOrThrow('/api/teams/join', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ inviteCode }),
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new ApiError(res.status, body?.error ?? 'Código inválido ou expirado');
-  }
+  }, 'Código inválido ou expirado');
   return res.json();
 };
 
@@ -204,26 +181,18 @@ export const fetchTeamFeed = async (teamId: string): Promise<PostWithAuthor[]> =
 };
 
 export const createPost = async (teamId: string, data: { content?: string; imageUrl?: string }): Promise<PostWithAuthor> => {
-  const res = await fetch(`/api/teams/${teamId}/posts`, {
+  const res = await fetchApiOrThrow(`/api/teams/${teamId}/posts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new ApiError(res.status, body?.error ?? 'Erro ao publicar');
-  }
+  }, 'Erro ao publicar');
   return res.json();
 };
 
 export const toggleReaction = async (postId: string, emoji: string): Promise<void> => {
-  const res = await fetch(`/api/posts/${postId}/reactions`, {
+  await fetchApiOrThrow(`/api/posts/${postId}/reactions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ emoji }),
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new ApiError(res.status, body?.error ?? 'Erro ao reagir');
-  }
+  }, 'Erro ao reagir');
 };
