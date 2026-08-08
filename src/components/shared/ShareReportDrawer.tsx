@@ -745,6 +745,18 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
                   </button>
                 </div>
               )}
+
+              {/* In nutriOnly mode, offer a shortcut to the infographic tab */}
+              {nutriOnly && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('infographic')}
+                  className="w-full flex items-center justify-center gap-1.5 text-caption-1 text-purple-500 hover:text-purple-700 transition-colors py-1"
+                >
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  Gerar Infográfico
+                </button>
+              )}
             </div>
           )}
 
@@ -753,6 +765,16 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
               ════════════════════════════════════ */}
           {activeTab === 'infographic' && (
             <div className="flex flex-col space-y-5">
+              {nutriOnly && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('nutri')}
+                  className="flex items-center gap-1 text-caption-1 text-purple-500 hover:text-purple-700 transition-colors -mt-1 self-start"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  Para Nutri
+                </button>
+              )}
               <p className="text-body-2 text-purple-900/70 -mt-2">
                 Gere um card no estilo Stories para compartilhar seu progresso.
               </p>
