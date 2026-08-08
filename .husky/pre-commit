@@ -15,7 +15,7 @@ DANGEROUS_PATTERN="migrate reset"
 # wrapper de segurança e o histórico de migrations (que pode
 # ter referências ao comando como comentário)
 STAGED_FILES=$(git diff --cached --name-only \
-  | grep -v -E '\.md$|prisma-safe\.sh|prisma/migrations/|\.husky/')
+  | grep -v -E '\.md$|prisma-safe\.sh|prisma/migrations/|\.husky/' || true)
 
 if [ -n "$STAGED_FILES" ]; then
   MATCHES=$(echo "$STAGED_FILES" | xargs grep -l "$DANGEROUS_PATTERN" 2>/dev/null || true)
