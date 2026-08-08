@@ -68,6 +68,10 @@ export async function GET(request: Request) {
 
     if (categoriesParam) {
       where.category = { in: categoriesParam.split(',') };
+    } else {
+      // Evolution logs are shown only on the /evolution page (via Prisma directly).
+      // Exclude them from the general history feed.
+      where.category = { not: 'evolution' };
     }
 
     if (startDateParam || endDateParam) {
