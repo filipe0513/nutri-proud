@@ -812,43 +812,15 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
                   </div>
 
                   {selectedExport === 'CARD' && (
-                    <div className="space-y-2 mt-2">
-                      <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide">
-                        Foto de Fundo (Opcional)
-                      </p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        className="hidden"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex-1 h-12 rounded-2xl border border-purple-300 bg-white/60 text-purple-800 hover:bg-purple-100 flex items-center justify-center gap-2 text-button-1"
-                        >
-                          <Camera className="h-4 w-4" />
-                          {bgPhoto ? 'Trocar Foto' : 'Adicionar Foto de Fundo'}
-                        </Button>
-                        {bgPhoto && (
-                          <Button
-                            variant="ghost"
-                            onClick={() => {
-                              setBgPhoto(null);
-                              if (fileInputRef.current) fileInputRef.current.value = '';
-                            }}
-                            className="h-12 w-12 shrink-0 rounded-2xl text-red-500 hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-200"
-                          >
-                            <Trash2 className="h-5 w-5" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                    />
                   )}
-
                   <div className="flex flex-col items-center gap-3 mt-2">
                     <p className="text-caption-1 font-semibold text-purple-700 uppercase tracking-wide self-start">
                       Pré-visualização
@@ -903,12 +875,21 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
                               </div>
                             </div>
                           ) : (
-                            <ShareableInfographic
-                              periodName={infographicData.periodName}
-                              scores={infographicData.scores}
-                              globalScore={infographicData.globalScore}
-                              bestPillars={infographicData.bestPillars}
-                            />
+                            <div className="w-[375px] h-[667px] bg-purple-50 flex flex-col items-center justify-center">
+                              <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="w-[280px] h-[280px] rounded-[40px] border-4 border-dashed border-purple-300 bg-purple-100/50 hover:bg-purple-100 flex flex-col items-center justify-center gap-4 transition-colors active:scale-[0.98] shadow-sm"
+                              >
+                                <Camera className="h-16 w-16 text-purple-400" />
+                                <span className="text-title-3 font-bold text-purple-600">
+                                  Tirar Foto
+                                </span>
+                                <span className="text-body-2 text-purple-500 font-medium px-4 text-center">
+                                  O seu progresso será adicionado em cima da foto.
+                                </span>
+                              </button>
+                            </div>
                           )}
                         </div>
                       ) : (
@@ -944,28 +925,45 @@ export function ShareReportDrawer({ open, onOpenChange, date, pillar, type, week
 
               {/* Share / Download actions */}
               {infoReady && infographicData && !infographicData.isEmpty && (
-                <div className="flex flex-col gap-3">
-                  <div className="flex gap-3 mt-4">
+                <div className="flex flex-col gap-3 mt-4">
+                  {(selectedExport !== 'CARD' || bgPhoto) && (
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={handleDownloadInfographic}
+                        disabled={infoCapturing}
+                        className="flex-1 h-12 rounded-2xl border border-purple-300 bg-white/60 text-purple-800 hover:bg-purple-100 text-button-1 flex items-center justify-center gap-2"
+                        id="btn-download-infographic"
+                      >
+                        {infoCapturing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                        Salvar Apenas
+                      </Button>
+                      <Button
+                        onClick={handleShareInfographic}
+                        disabled={infoCapturing}
+                        className="flex-1 h-12 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white text-button-1 flex items-center justify-center gap-2 shadow-md"
+                        id="btn-share-infographic"
+                      >
+                        {infoCapturing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+                        Compartilhar
+                      </Button>
+                    </div>
+                  )}
+
+                  {selectedExport === 'CARD' && bgPhoto && (
                     <Button
-                      variant="outline"
-                      onClick={handleDownloadInfographic}
+                      variant="ghost"
+                      onClick={() => {
+                        setBgPhoto(null);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
                       disabled={infoCapturing}
-                      className="flex-1 h-12 rounded-2xl border border-purple-300 bg-white/60 text-purple-800 hover:bg-purple-100 text-button-1 flex items-center justify-center gap-2"
-                      id="btn-download-infographic"
+                      className="w-full h-12 rounded-2xl text-red-500 hover:bg-red-50 hover:text-red-600 font-semibold"
                     >
-                      {infoCapturing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                      Salvar Apenas
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remover foto
                     </Button>
-                    <Button
-                      onClick={handleShareInfographic}
-                      disabled={infoCapturing}
-                      className="flex-1 h-12 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white text-button-1 flex items-center justify-center gap-2 shadow-md"
-                      id="btn-share-infographic"
-                    >
-                      {infoCapturing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
-                      Compartilhar
-                    </Button>
-                  </div>
+                  )}
                   
                   {teams.length > 0 && (
                     <label className="flex items-center gap-2 mt-2 px-1 cursor-pointer">

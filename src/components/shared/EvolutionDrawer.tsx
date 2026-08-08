@@ -32,44 +32,62 @@ export function EvolutionDrawer({ open, onOpenChange, initialWeight }: Evolution
     }
   };
 
-  const captureAndUpload = async (): Promise<string | null> => {
-    if (!nodeRef.current) return null;
-    
-    // Configs otimizadas para mobile e canvas
-    const options = { cacheBust: true, pixelRatio: 2 };
-    const blob = await toBlob(nodeRef.current, options);
-    
-    if (!blob) throw new Error('Falha ao capturar imagem.');
-    
-    const formData = new FormData();
-    formData.append('file', blob, 'evolution-checkin.png');
-    formData.append('folder', 'evolution');
-    
-    const result = await uploadImage(formData);
-    if (!result.success || !result.imageUrl) {
-      throw new Error(result.error || 'Falha no upload da imagem.');
-    }
-    
-    return result.imageUrl;
-  };
 
   const handleSubmit = async () => {
     if (!photoUrl) {
       toast.error('Por favor, tire ou envie uma foto.');
       return;
     }
+
     if (!weight || weight < 20 || weight > 300) {
       toast.error('Por favor, insira um peso válido.');
       return;
     }
 
     setIsSubmitting(true);
-    try {
-      // 1. Gera imagem com overlay (Canvas) e sobe pro Cloudinary
-      const finalImageUrl = await captureAndUpload();
-      if (!finalImageUrl) throw new Error('Falha ao gerar imagem.');
+    let capturedBlob: Blob | null = null;
 
-      // 2. Salva o Log de Evolução
+    try {
+      // 1. Capture Blob
+      if (!nodeRef.current) throw new Error('Falha ao capturar imagem.');
+      const options = { cacheBust: true, pixelRatio: 2 };
+      capturedBlob = await toBlob(nodeRef.current, options);
+      if (!capturedBlob) throw new Error('Falha ao capturar imagem.');
+
+      // 2. Share via Web Share API immediately (requires user gesture)
+      const file = new File([capturedBlob], 'evolucao.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'Minha Evolução',
+            text: 'Mais um check-in de evolução no Orgulho da Nutri! 💪',
+          });
+        } catch {
+          // User cancelled share
+        }
+      } else {
+        // Fallback: download
+        const url = URL.createObjectURL(capturedBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'evolucao.png';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // Close drawer if user shared or downloaded
+      onOpenChange(false);
+      setPhotoUrl(null);
+      toast.success('Processando check-in no fundo...', { description: 'Sua evolução está sendo salva.' });
+
+      // 3. Upload and Save Log
+      const formData = new FormData();
+      formData.append('file', capturedBlob, 'evolution-checkin.png');
+      formData.append('folder', 'evolution');
+      const uploadResult = await uploadImage(formData);
+      if (!uploadResult.success || !uploadResult.imageUrl) throw new Error('Falha no upload.');
+
       const response = await fetch('/api/logs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,21 +95,32 @@ export function EvolutionDrawer({ open, onOpenChange, initialWeight }: Evolution
           category: 'evolution',
           primary_value: 100,
           details: {
-            photo_url: finalImageUrl,
+            photo_url: uploadResult.imageUrl,
             weight_kg: weight,
           },
         }),
       });
+      if (!response.ok) throw new Error('Falha ao salvar check-in de evolução');
 
-      if (!response.ok) {
-        throw new Error('Falha ao salvar check-in de evolução');
+      // 4. Post to Team
+      const resTeams = await fetch('/api/teams');
+      if (resTeams.ok) {
+        const teams = await resTeams.json();
+        if (teams && teams.length > 0) {
+          const teamFormData = new FormData();
+          teamFormData.append('file', capturedBlob, 'evolution.png');
+          teamFormData.append('teamId', teams[0].id);
+          teamFormData.append('content', `Check-in de Evolução: ${weight}kg 💪`);
+          await fetch('/api/teams/' + teams[0].id + '/posts', {
+            method: 'POST',
+            body: teamFormData
+          });
+        }
       }
 
-      toast.success('Check-in salvo com sucesso!', {
+      toast.success('Evolução salva e postada!', {
         className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
       });
-      onOpenChange(false);
-      setPhotoUrl(null);
       router.refresh(); 
     } catch (error) {
       console.error(error);
@@ -221,7 +250,7 @@ export function EvolutionDrawer({ open, onOpenChange, initialWeight }: Evolution
                 Processando...
               </>
             ) : (
-              'Salvar Check-in'
+              'Compartilhar e Salvar'
             )}
           </Button>
           <DrawerClose asChild>
