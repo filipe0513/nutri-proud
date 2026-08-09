@@ -14,6 +14,7 @@ import { TopHeader } from '@/components/shared/TopHeader';
 export default function TeamsHubPage() {
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [optionsDrawerOpen, setOptionsDrawerOpen] = useState(false);
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [joinDrawerOpen, setJoinDrawerOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -92,8 +93,8 @@ export default function TeamsHubPage() {
         title="Seus times" 
         rightElement={
           <button 
-            onClick={() => setCreateDrawerOpen(true)}
-            aria-label="Criar Novo Time"
+            onClick={() => setOptionsDrawerOpen(true)}
+            aria-label="Opções de Time"
             className="flex items-center justify-center bg-glass-light-1 backdrop-blur-md border border-white/40 shadow-sm rounded-full w-10 h-10 hover:bg-glass-light-2 transition-all text-neutral-500 hover:text-brand-500 active:scale-95"
           >
             <Plus className="w-5 h-5" />
@@ -158,6 +159,36 @@ export default function TeamsHubPage() {
           </div>
         </div>
       )}
+
+      {/* Options Drawer */}
+      <Drawer open={optionsDrawerOpen} onOpenChange={setOptionsDrawerOpen}>
+        <DrawerContent className="!bg-white/95 backdrop-blur-2xl px-6 pb-10">
+          <DrawerHeader className="px-0 pb-4">
+            <DrawerTitle className="text-title-3 text-neutral-500">Novo Time</DrawerTitle>
+          </DrawerHeader>
+          <div className="flex flex-col gap-3">
+            <Button
+              onClick={() => {
+                setOptionsDrawerOpen(false);
+                setTimeout(() => setCreateDrawerOpen(true), 300);
+              }}
+              className="w-full h-14 text-button-1 rounded-2xl bg-brand-500 hover:bg-brand-600 shadow-md shadow-brand-500/20 flex items-center justify-center gap-2"
+            >
+              <Plus className="w-5 h-5" /> Criar Time
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setOptionsDrawerOpen(false);
+                setTimeout(() => setJoinDrawerOpen(true), 300);
+              }}
+              className="w-full h-14 text-button-1 rounded-2xl border-2 border-neutral-200 text-neutral-500 hover:bg-neutral-50 flex items-center justify-center gap-2"
+            >
+              <KeyRound className="w-5 h-5" /> Entrar com Código
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {/* Create Drawer */}
       <Drawer open={createDrawerOpen} onOpenChange={setCreateDrawerOpen}>
