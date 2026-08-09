@@ -190,7 +190,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, type, weekStart, w
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent className="!bg-purple-50/95 backdrop-blur-2xl border-t border-purple-200 text-purple-950 shadow-[0_-15px_60px_-10px_rgba(88,28,135,0.15)] rounded-t-[32px] px-6 pb-6 max-h-[85vh] flex flex-col">
-        <DrawerHeader className="px-0 pt-6 pb-2 shrink-0">
+        <DrawerHeader className="px-0 shrink-0">
           <DrawerTitle className="text-title-2 text-purple-950 flex items-center gap-2">
             {onBack && (
               <button
@@ -209,7 +209,7 @@ export function ShareReportDrawer({ open, onOpenChange, date, type, weekStart, w
 
         <div className="overflow-y-auto flex-1 pb-4">
           <div className="flex flex-col space-y-6">
-            <p className="text-body-2 text-purple-900/70 -mt-2">
+            <p className="text-body-2 text-purple-900/70">
               Gere um resumo do seu desempenho e compartilhe com sua nutricionista.
             </p>
 

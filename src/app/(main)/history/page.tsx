@@ -276,7 +276,7 @@ export default function HistoryPage() {
         open={shareOpen}
         onOpenChange={setShareOpen}
         context={{ type: 'DAILY_SCORE', score: shareScore }}
-        onOpenInfographic={() => { setShareOpen(false); setTimeout(() => setInfographicOpen(true), 300); }}
+        onOpenInfographic={() => { setShareOpen(false); setInfographicOpen(true); }}
       />
       <ShareReportDrawer
         open={infographicOpen}

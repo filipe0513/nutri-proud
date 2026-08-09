@@ -1,8 +1,12 @@
 # 📱 Orgulho da Nutri — Agent Instructions (CLAUDE.md)
 
-> Read `AGENTS.md` first, then this file. Rules here complement and extend it.
+> This is the single source of truth for all agent behavior on this project.
 
-@AGENTS.md
+<!-- BEGIN:nextjs-agent-rules -->
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+<!-- END:nextjs-agent-rules -->
 
 ---
 
@@ -264,6 +268,29 @@ REVOKE ALL ON TABLE "NewTableName" FROM authenticated;
 ```
 
 > ⚠️ Forgetting this will trigger a critical security alert from Supabase (`rls_disabled_in_public`).
+
+**History:** In July 2026, tables `Notification`, `AiInsight`, and `SystemEvent` were created without RLS and required a corrective migration (`20260716165500_enable_rls_new_tables`).
+
+### 🚨 FORBIDDEN COMMAND: `prisma migrate reset`
+
+> **ABSOLUTE PROHIBITION — No Exceptions, No Discussion**
+
+The command `prisma migrate reset` is **strictly forbidden** on this project, in any situation, on any branch, in any environment.
+
+**NEVER run:**
+```bash
+prisma migrate reset        # FORBIDDEN
+npx prisma migrate reset    # FORBIDDEN
+```
+
+**Why it is so dangerous:** `prisma.config.ts` reads `DIRECT_URL` from `.env`, which points to the **production Supabase database**. This command executes `DROP SCHEMA public CASCADE` on that target — meaning it **irreversibly destroys all production data**.
+
+**Real incident:** On 03/08/2026 at ~09:42 BRT, the command was run during a migration consolidation. The result was total loss of all users, logs, and production data (Supabase Free tier, no automatic backup).
+
+**Safe alternatives:**
+- Create a new migration: `npx prisma migrate dev --name <name>` (reads `.env.local` → local DB)
+- Apply migrations in prod: `npx prisma migrate deploy` (only applies pending, never destroys)
+- Reset ONLY the local DB: `psql postgresql://postgres:pg123456@localhost:5432/nutriproud -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"` followed by `npx prisma migrate deploy`
 
 ---
 

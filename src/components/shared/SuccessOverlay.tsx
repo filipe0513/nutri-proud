@@ -181,7 +181,7 @@ export function SuccessOverlay() {
         }}
         onOpenInfographic={() => {
           setShareOpen(false);
-          setTimeout(() => setInfographicOpen(true), 300);
+          setInfographicOpen(true);
         }}
       />
 
