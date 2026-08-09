@@ -390,7 +390,7 @@ export default function PillarInsightsPage() {
         open={shareOpen}
         onOpenChange={setShareOpen}
         context={{ type: 'PILLAR', pillar: data.infoPillar, score: Math.round(progressPercentage) }}
-        onOpenInfographic={() => { setShareOpen(false); setTimeout(() => setInfographicOpen(true), 300); }}
+        onOpenInfographic={() => { setShareOpen(false); setInfographicOpen(true); }}
       />
       <ShareReportDrawer
         open={infographicOpen}
