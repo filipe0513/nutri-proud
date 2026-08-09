@@ -111,7 +111,7 @@ export function ScoreCard() {
         open={photoShareOpen}
         onOpenChange={setPhotoShareOpen}
         context={{ type: 'DAILY_SCORE', score: todayScore, pillarScores }}
-        onOpenInfographic={() => setInfographicOpen(true)}
+        onOpenInfographic={() => { setPhotoShareOpen(false); setTimeout(() => setInfographicOpen(true), 300); }}
       />
 
       {/* Secondary: legacy infographic */}
