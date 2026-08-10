@@ -66,8 +66,18 @@ export default function TeamFeedPage() {
     try {
       await createPost(teamId, { content: `Meu Score do Dia: ${score}/100! 🔥` });
       toast.success('Publicado com sucesso!', { id: loadingToast });
-      // In a real app we'd fetch the new post and append it, or invalidate the cache
-      // Here we just refresh the mock
+      fetchTeamFeed(teamId).then(setPosts);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao publicar', { id: loadingToast });
+    }
+  };
+
+  const handleShareLog = async (content: string) => {
+    const loadingToast = toast.loading('Publicando registro...');
+    try {
+      await createPost(teamId, { content });
+      toast.success('Registro compartilhado!', { id: loadingToast });
       fetchTeamFeed(teamId).then(setPosts);
     } catch (err) {
       console.error(err);
@@ -164,6 +174,7 @@ export default function TeamFeedPage() {
         open={shareDrawerOpen}
         onOpenChange={setShareDrawerOpen}
         onShareScore={handleShareScore}
+        onShareLog={handleShareLog}
       />
 
       <CommentsDrawer
