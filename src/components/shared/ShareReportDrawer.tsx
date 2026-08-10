@@ -20,8 +20,6 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { historyService } from '@/services/historyService';
-import { useAppStore } from '@/store/store';
 
 // ─── Shared types ─────────────────────────────────────────────────────────────
 
@@ -33,16 +31,12 @@ interface ShareReportDrawerProps {
   onOpenChange: (open: boolean) => void;
   /** ISO date YYYY-MM-DD to pre-pin the period (defaults to today) */
   date?: string;
-  /** @deprecated — kept for API compatibility, ignored */
-  pillar?: string;
   /** Contextual mode that adjusts the title */
   type?: ShareContextType;
   /** ISO date YYYY-MM-DD — início da semana a pré-selecionar (Weekly Streak) */
   weekStart?: string;
   /** ISO date YYYY-MM-DD — fim da semana a pré-selecionar (Weekly Streak) */
   weekEnd?: string;
-  /** @deprecated — kept for API compatibility, ignored */
-  nutriOnly?: boolean;
   /** If provided, renders a back chevron in the header that calls this */
   onBack?: () => void;
 }
@@ -98,10 +92,6 @@ const CONTEXT_TITLE: Record<ShareContextType, string> = {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function ShareReportDrawer({ open, onOpenChange, date, type, weekStart, weekEnd, onBack }: ShareReportDrawerProps) {
-  // Suppress unused warning — kept for API compatibility
-  void historyService;
-  void useAppStore;
-
   // ── Report (Nutri) state ──
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>('today');
   const [customStart, setCustomStart] = useState('');

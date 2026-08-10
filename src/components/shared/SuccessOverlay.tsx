@@ -190,7 +190,6 @@ export function SuccessOverlay() {
         open={infographicOpen}
         onOpenChange={setInfographicOpen}
         type="PILLAR"
-        pillar={sharePillar || undefined}
       />
     </>
   );

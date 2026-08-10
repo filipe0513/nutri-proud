@@ -196,7 +196,6 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
         )}
       </section>
 
-      {/* @deprecated EvolutionDrawer replaced by PhotoStickerShareDrawer */}
       <PhotoStickerShareDrawer
         open={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}

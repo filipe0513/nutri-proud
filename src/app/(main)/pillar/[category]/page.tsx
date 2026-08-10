@@ -396,8 +396,6 @@ export default function PillarInsightsPage() {
         open={infographicOpen}
         onOpenChange={setInfographicOpen}
         type="PILLAR"
-        pillar={data.infoPillar}
-        nutriOnly
         onBack={() => { setInfographicOpen(false); setShareOpen(true); }}
       />
     </div>
