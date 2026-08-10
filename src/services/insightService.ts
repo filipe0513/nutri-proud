@@ -262,11 +262,14 @@ Responda SOMENTE com um JSON válido neste formato exato (sem markdown, sem expl
       parsed = { message: rawText.slice(0, 300), cta: null };
     }
 
+    const VALID_CTAS = ['WORKOUT', 'SLEEP', 'WATER', 'FOOD', 'POOP'];
+    const sanitizedCta = parsed.cta && VALID_CTAS.includes(parsed.cta) ? parsed.cta : null;
+
     const insight = await prisma.aiInsight.create({
       data: {
         userId,
         message: parsed.message,
-        cta: parsed.cta ?? null,
+        cta: sanitizedCta,
         isViewed: false,
       },
     });

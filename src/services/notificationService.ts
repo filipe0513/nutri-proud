@@ -69,7 +69,7 @@ export async function dispatchNotification(
   // 3. Push (OneSignal)
   if (catPrefs.push !== false && user.oneSignalId) {
     const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
-    const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+    const apiKey = process.env.NEXT_PUBLIC_ONESIGNAL_REST_API_KEY;
 
     if (appId && apiKey) {
       try {

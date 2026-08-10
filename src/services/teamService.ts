@@ -5,6 +5,7 @@ import type {
   PostWithAuthor,
   ReactionCount,
   TeamSummary,
+  TeamWithMembers,
   CommentWithAuthor,
   UnifiedFeedItem,
   PatientRadarData,
@@ -234,6 +235,90 @@ export async function deleteTeam(
   }
 
   await prisma.team.delete({ where: { id: teamId } });
+}
+
+/**
+ * Returns a team with its full members list. Only accessible by the team ADMIN.
+ */
+export async function getTeamWithMembers(
+  teamId: string,
+  adminUserId: string,
+): Promise<TeamWithMembers> {
+  const membership = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId, userId: adminUserId } },
+  });
+
+  if (!membership || membership.role !== 'ADMIN') {
+    throw new Error('Acesso negado: apenas o administrador pode ver os membros deste Time.');
+  }
+
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    include: {
+      _count: { select: { members: true } },
+      members: {
+        include: {
+          user: { select: { name: true, image: true } },
+        },
+        orderBy: { joinedAt: 'asc' },
+      },
+    },
+  });
+
+  if (!team) throw new Error('Time não encontrado.');
+
+  return {
+    id: team.id,
+    name: team.name,
+    description: team.description,
+    inviteCode: team.inviteCode,
+    memberCount: team._count.members,
+    currentUserRole: 'ADMIN',
+    createdAt: team.createdAt.toISOString(),
+    members: team.members.map((m) => ({
+      id: m.id,
+      userId: m.userId,
+      role: m.role as 'ADMIN' | 'MEMBER',
+      joinedAt: m.joinedAt.toISOString(),
+      user: {
+        name: m.user.name,
+        image: m.user.image,
+      },
+    })),
+  };
+}
+
+/**
+ * Removes a member from a team. Only the ADMIN can call this; self-removal is forbidden.
+ */
+export async function removeTeamMember(
+  teamId: string,
+  adminUserId: string,
+  memberUserId: string,
+): Promise<void> {
+  const adminMembership = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId, userId: adminUserId } },
+  });
+
+  if (!adminMembership || adminMembership.role !== 'ADMIN') {
+    throw new Error('Acesso negado: apenas o administrador pode remover membros.');
+  }
+
+  if (adminUserId === memberUserId) {
+    throw new Error('Você não pode remover a si mesmo do Time.');
+  }
+
+  const targetMember = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId, userId: memberUserId } },
+  });
+
+  if (!targetMember) {
+    throw new Error('Membro não encontrado neste Time.');
+  }
+
+  await prisma.teamMember.delete({
+    where: { teamId_userId: { teamId, userId: memberUserId } },
+  });
 }
 
 // ─── Posts ────────────────────────────────────────────────────────────────────

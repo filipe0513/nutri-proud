@@ -77,3 +77,20 @@ export interface PatientRadarData {
   atRisk: PatientRadarItem[];
   doingGreat: PatientRadarItem[];
 }
+
+// ── Team Management (Nutri) ─────────────────────────────────
+
+export interface TeamMemberInfo {
+  id: string;
+  userId: string;
+  role: 'ADMIN' | 'MEMBER';
+  joinedAt: string; // ISO
+  user: {
+    name: string | null;
+    image: string | null;
+  };
+}
+
+export interface TeamWithMembers extends TeamSummary {
+  members: TeamMemberInfo[];
+}
