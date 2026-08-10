@@ -24,8 +24,8 @@ export async function signAndUploadToCloudinary(file: File, folder: string): Pro
   }
 
   const timestamp = Math.round(Date.now() / 1000);
-  // signature_algorithm=sha256 must be included in the params string (alphabetical order)
-  const paramsToSign = `folder=${folder}&signature_algorithm=sha256&timestamp=${timestamp}`;
+  // signature_algorithm is a meta-parameter — excluded from the signed string per Cloudinary API spec
+  const paramsToSign = `folder=${folder}&timestamp=${timestamp}`;
 
   const crypto = await import('crypto');
   const signature = crypto
