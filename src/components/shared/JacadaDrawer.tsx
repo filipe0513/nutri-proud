@@ -86,6 +86,13 @@ export function JacadaDrawer({
     }
   };
 
+  const FALLBACK_REACTIONS = [
+    'Não consegui analisar agora, mas anota aí: jacada registrada = consciência ativa. Não banaliza. 😬',
+    'Sistema offline, mas a jacada não some do histórico. A gente vai conversar sobre isso. 🙅‍♀️',
+    'Sem análise agora, mas o registro já diz tudo. Amanhã a gente começa melhor. 😤',
+  ];
+  const getFallbackReaction = () => FALLBACK_REACTIONS[Date.now() % FALLBACK_REACTIONS.length];
+
   const fetchAIReaction = async (s: number, f: number, a: number, logId: string) => {
     setReactionLoading(true);
     setReactionOpen(true);
@@ -100,10 +107,10 @@ export function JacadaDrawer({
         const aiData = await aiRes.json();
         setReactionMessage(aiData.message);
       } else {
-        setReactionMessage('A Nutri não conseguiu analisar agora. Mas a jacada foi registrada!');
+        setReactionMessage(getFallbackReaction());
       }
     } catch {
-      setReactionMessage('A Nutri não conseguiu analisar agora. Mas a jacada foi registrada!');
+      setReactionMessage(getFallbackReaction());
     } finally {
       setReactionLoading(false);
     }
