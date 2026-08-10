@@ -4,12 +4,34 @@ import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/store';
 import { Bell, X } from 'lucide-react';
 
+const LS_KEY = 'push_prompt_dismissed_until';
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+function isDismissedInStorage(): boolean {
+  try {
+    const val = localStorage.getItem(LS_KEY);
+    if (!val) return false;
+    return Date.now() < parseInt(val, 10);
+  } catch {
+    return false;
+  }
+}
+
+function saveDismissedInStorage() {
+  try {
+    localStorage.setItem(LS_KEY, String(Date.now() + SEVEN_DAYS_MS));
+  } catch {
+    // localStorage indisponível (modo privado antigo, etc.)
+  }
+}
+
 /**
  * PushPermissionModal — Soft Prompt para notificações push.
  *
  * Regras:
+ * - Só renderiza para usuários reais (não anônimos).
  * - Só renderiza se Notification.permission === 'default' (nunca perguntado).
- * - Se usuário clicar "Agora não", salva flag no Zustand (UI state da sessão).
+ * - Se usuário clicar "Agora não", salva flag por 7 dias em localStorage.
  * - Se aceitar, chama OneSignal.Notifications.requestPermission(), captura o Player ID
  *   e salva via PATCH /api/users/me/push-token.
  * - Graceful degradation total: não quebra em ambientes sem suporte a Notification/OneSignal.
@@ -19,24 +41,30 @@ export function PushPermissionModal() {
   const [isLoading, setIsLoading] = useState(false);
   const pushPromptDismissed = useAppStore((s) => s.pushPromptDismissed);
   const setPushPromptDismissed = useAppStore((s) => s.setPushPromptDismissed);
+  const isAnonymous = useAppStore((s) => s.user_profile?.is_anonymous);
 
   useEffect(() => {
     // Graceful degradation: ambientes sem Notification API (iOS safari antigo, SSR, etc.)
     if (typeof window === 'undefined' || !('Notification' in window)) return;
 
-    // Se já foi respondido (granted/denied) ou dispensado na sessão, não mostra
+    // Não mostrar para usuários anônimos
+    if (isAnonymous) return;
+
+    // Se já foi respondido (granted/denied), dispensado na sessão ou no localStorage, não mostra
     if (
       window.Notification.permission !== 'default' ||
-      pushPromptDismissed
+      pushPromptDismissed ||
+      isDismissedInStorage()
     ) return;
 
     // Pequeno delay para não assustar o usuário assim que abre o app
     const timer = setTimeout(() => setVisible(true), 3000);
     return () => clearTimeout(timer);
-  }, [pushPromptDismissed]);
+  }, [pushPromptDismissed, isAnonymous]);
 
   const handleDismiss = () => {
     setPushPromptDismissed(true);
+    saveDismissedInStorage();
     setVisible(false);
   };
 

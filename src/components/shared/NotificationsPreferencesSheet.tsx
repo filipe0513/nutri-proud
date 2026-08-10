@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAppStore } from "@/store/store";
 import { toast } from "sonner";
 import { usePathname } from "next/navigation";
+import { Bell, BellOff, BellRing } from "lucide-react";
 
 interface NotificationsPreferencesSheetProps {
   open: boolean;
@@ -26,13 +27,50 @@ export function NotificationsPreferencesSheet({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [prefs, setPrefs] = useState<Record<string, any>>({});
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | null>(null);
+  const [pushLoading, setPushLoading] = useState(false);
 
   useEffect(() => {
     if (open && user_profile) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPrefs(user_profile.notification_preferences || {});
     }
+    if (open && typeof window !== 'undefined' && 'Notification' in window) {
+      setPushPermission(window.Notification.permission);
+    }
   }, [open, user_profile]);
+
+  const handleEnablePush = async () => {
+    setPushLoading(true);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const OneSignal = (window as any).OneSignal;
+      if (OneSignal?.Notifications?.requestPermission) {
+        await OneSignal.Notifications.requestPermission();
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const playerId: string | undefined = OneSignal?.User?.PushSubscription?.id;
+        if (playerId) {
+          await fetch('/api/users/me/push-token', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ onesignal_id: playerId }),
+          });
+        }
+      } else {
+        await Notification.requestPermission();
+      }
+      setPushPermission(window.Notification.permission);
+      if (window.Notification.permission === 'granted') {
+        toast.success('Notificações push ativadas!', {
+          className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
+        });
+      }
+    } catch (error) {
+      console.error('[NotificationsPreferencesSheet] Erro ao solicitar permissão push:', error);
+    } finally {
+      setPushLoading(false);
+    }
+  };
 
   const handleToggle = (category: string, channel: string, value: boolean) => {
     setPrefs((prev) => ({
@@ -93,6 +131,50 @@ export function NotificationsPreferencesSheet({
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto p-6">
+          {/* Push permission status */}
+          {pushPermission !== null && (
+            <div className="mb-6 p-4 rounded-2xl border border-white/40 bg-white/40 space-y-2">
+              <div className="flex items-center gap-2 mb-1">
+                {pushPermission === 'granted' ? (
+                  <BellRing className="h-4 w-4 text-notify-success" />
+                ) : pushPermission === 'denied' ? (
+                  <BellOff className="h-4 w-4 text-notify-error" />
+                ) : (
+                  <Bell className="h-4 w-4 text-neutral-400" />
+                )}
+                <h4 className="text-body-1 font-bold text-neutral-600">Push no Celular</h4>
+              </div>
+
+              {pushPermission === 'granted' && (
+                <p className="text-caption-1 text-notify-success">
+                  Notificações push ativas.
+                </p>
+              )}
+
+              {pushPermission === 'denied' && (
+                <p className="text-caption-1 text-notify-error">
+                  Notificações bloqueadas pelo navegador. Para ativar, vá em Configurações do navegador e permita notificações para este site.
+                </p>
+              )}
+
+              {pushPermission === 'default' && (
+                <>
+                  <p className="text-caption-1 text-neutral-400">
+                    Ative para receber lembretes e mensagens da sua nutri.
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={handleEnablePush}
+                    disabled={pushLoading}
+                    className="w-full h-11 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white text-button-1 shadow-md mt-1"
+                  >
+                    {pushLoading ? 'Aguardando...' : 'Ativar notificações'}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {categories.map((cat) => {
               const catPrefs = prefs[cat.id] || { push: true, email: true, in_app: true };
