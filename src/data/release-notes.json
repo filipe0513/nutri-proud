@@ -1,5 +1,15 @@
 [
   {
+    "version": "2.4.0",
+    "date": "2026-08-10",
+    "highlights": [
+      "📄 Página individual de posts: cada publicação do grupo agora tem sua própria tela com todos os detalhes e comentários!",
+      "💬 Comentários mais fluidos: contador atualizado na hora e sincronização automática após comentar nos posts.",
+      "📋 Detalhes do registro: toque em qualquer item do histórico para ver todos os detalhes e editar direto de lá.",
+      "🔔 Controle de notificações Push: novo botão nas Configurações para ativar ou desativar notificações push com facilidade."
+    ]
+  },
+  {
     "version": "2.3.1",
     "date": "2026-08-10",
     "highlights": [

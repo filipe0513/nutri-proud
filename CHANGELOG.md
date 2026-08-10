@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.4.0] — 2026-08-10
+
+### Added
+- Dedicated post page at `/teams/[id]/posts/[postId]` for viewing individual team posts
+- LogDetailsDrawer for read-only log details with edit flow in History
+- CommentsDrawer wired to post comment buttons in team feed and profile pages
+- Push notification toggle with 7-day localStorage dismiss in Settings
+- Optimistic comment count update when a comment is added
+- `postHref` prop on PostCard for direct post navigation
+
+### Changed
+- Comments refresh from server after submit for consistency (teams)
+- Removed deprecated EvolutionDrawer and unused props from ShareReportDrawer
+
 ## [2.3.1] — 2026-08-10
 
 ### Fixed
