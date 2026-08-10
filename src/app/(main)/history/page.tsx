@@ -20,6 +20,7 @@ import { MealEqualizerDrawer } from "@/components/shared/MealEqualizerDrawer";
 import { WorkoutEqualizerDrawer } from "@/components/shared/WorkoutEqualizerDrawer";
 import { JacadaDrawer } from "@/components/shared/JacadaDrawer";
 import { historyService } from "@/services/historyService";
+import { LogDetailsDrawer } from "@/components/shared/LogDetailsDrawer";
 
 const CATEGORY_ICONS: Record<string, string> = {
   water: "💧",
@@ -79,6 +80,7 @@ export default function HistoryPage() {
   const { user_profile, initializeData } = useAppStore();
   const { ref, inView } = useInView();
 
+  const [viewingLog, setViewingLog] = useState<ActivityLog | null>(null);
   const [editingLog, setEditingLog] = useState<ActivityLog | null>(null);
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
   const [shareOpen, setShareOpen] = useState(false);
@@ -88,10 +90,6 @@ export default function HistoryPage() {
 
   const toggleDay = (date: string) => {
     setExpandedDays(prev => ({ ...prev, [date]: prev[date] === false ? true : false }));
-  };
-
-  const handleEdit = (log: ActivityLog) => {
-    setEditingLog(log);
   };
 
   const handleClose = () => {
@@ -189,7 +187,7 @@ export default function HistoryPage() {
                       <Card
                         key={log.id}
                         className="bg-glass-light-1 backdrop-blur-sm border border-white/40 shadow-sm rounded-2xl cursor-pointer hover:bg-glass-light-2 transition-colors active:scale-[0.98]"
-                        onClick={() => handleEdit(log as ActivityLog)}
+                        onClick={() => setViewingLog(log as ActivityLog)}
                       >
                         <CardContent className="p-4 flex items-center justify-between">
                           <div className="flex items-center space-x-4">
@@ -238,6 +236,19 @@ export default function HistoryPage() {
           </p>
         )}
       </div>
+
+      {/* View Details Drawer */}
+      <LogDetailsDrawer
+        kind="activity"
+        log={viewingLog}
+        open={!!viewingLog}
+        onOpenChange={(open) => !open && setViewingLog(null)}
+        onEdit={() => {
+          const log = viewingLog;
+          setViewingLog(null);
+          setTimeout(() => setEditingLog(log), 150);
+        }}
+      />
 
       {/* Modals for editing */}
       <BottomSheet_Water

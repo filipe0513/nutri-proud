@@ -7,7 +7,8 @@ import { toggleReaction } from '@/store/api';
 import { Bell, Trophy, AlertTriangle, Activity } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getRelativeTime } from '@/utils/timeUtils';
-import type { UnifiedFeedItem } from '@/types/teamTypes';
+import type { UnifiedFeedItem, TeamFeedPostWithPatient, EvolutionMetadata } from '@/types/teamTypes';
+import { LogDetailsDrawer } from '@/components/shared/LogDetailsDrawer';
 
 interface NutriFeedClientProps {
   items: UnifiedFeedItem[];
@@ -40,6 +41,7 @@ function getSystemIconConfig(type: string) {
 export function NutriFeedClient({ items, currentUserId }: NutriFeedClientProps) {
   const [filter, setFilter] = useState<FilterType>('all');
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
+  const [detailPost, setDetailPost] = useState<TeamFeedPostWithPatient | null>(null);
 
   const filtered = items.filter((item) => {
     if (filter === 'all') return true;
@@ -102,7 +104,8 @@ export function NutriFeedClient({ items, currentUserId }: NutriFeedClientProps) 
             return (
               <div
                 key={`system-${fp.id}`}
-                className="bg-white rounded-2xl p-4 border border-neutral-100 shadow-sm flex items-start gap-4"
+                className="bg-white rounded-2xl p-4 border border-neutral-100 shadow-sm flex items-start gap-4 cursor-pointer hover:bg-neutral-50 active:scale-[0.98] transition-all"
+                onClick={() => setDetailPost(fp)}
               >
                 <div className={`h-10 w-10 shrink-0 rounded-full flex items-center justify-center ${bg}`}>
                   <Icon className={`h-5 w-5 ${color}`} />
@@ -123,6 +126,11 @@ export function NutriFeedClient({ items, currentUserId }: NutriFeedClientProps) 
                     </span>
                   </div>
                   <p className="text-body-1 text-neutral-500">{fp.content}</p>
+                  {fp.type === 'EVOLUTION' && (fp.metadata as EvolutionMetadata)?.caption && (
+                    <p className="text-caption-1 text-neutral-400 mt-1 line-clamp-2">
+                      {(fp.metadata as EvolutionMetadata).caption}
+                    </p>
+                  )}
                   <span className="text-caption-2 text-neutral-400 mt-1 inline-block">
                     {fp.teamName}
                   </span>
@@ -137,6 +145,13 @@ export function NutriFeedClient({ items, currentUserId }: NutriFeedClientProps) 
         postId={commentPostId}
         open={!!commentPostId}
         onOpenChange={(open) => !open && setCommentPostId(null)}
+      />
+
+      <LogDetailsDrawer
+        kind="system"
+        feedPost={detailPost}
+        open={!!detailPost}
+        onOpenChange={(open) => !open && setDetailPost(null)}
       />
     </>
   );

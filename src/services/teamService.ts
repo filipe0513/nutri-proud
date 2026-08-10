@@ -682,7 +682,7 @@ export async function getNutriFeed(
           createdAt: fp.createdAt.toISOString(),
           patient: { id: fp.patient.id, name: fp.patient.name, image: fp.patient.image },
           teamName: teamNameMap.get(fp.teamId) ?? '',
-          metadata: fp.metadata,
+          metadata: fp.metadata as import('@/types/teamTypes').EvolutionMetadata | import('@/types/teamTypes').MilestoneMetadata | null,
         },
       });
     }

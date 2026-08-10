@@ -17,6 +17,7 @@ interface EvolutionLog {
   details: {
     photo_url: string;
     weight_kg: number;
+    caption?: string;
   };
 }
 
@@ -36,7 +37,7 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
    * 3. If publishToTeamId provided, post to that team's feed
    */
   const handleEvolutionSave = useCallback(
-    async (blob: Blob, weight?: number, publishToTeamId?: string | null) => {
+    async (blob: Blob, weight?: number, publishToTeamId?: string | null, caption?: string) => {
       // 1. Upload to Cloudinary
       const formData = new FormData();
       formData.append('file', blob, 'evolution-checkin.png');
@@ -56,6 +57,7 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
           details: {
             photo_url: uploadResult.imageUrl,
             weight_kg: weight,
+            ...(caption ? { caption } : {}),
           },
         }),
       });
@@ -175,11 +177,18 @@ export function EvolutionClient({ initialWeight, historyLogs }: EvolutionClientP
                   </div>
                 </div>
 
-                <div className="p-3 bg-white/50 flex items-center gap-1.5 text-neutral-500">
-                  <Calendar className="h-3.5 w-3.5 opacity-70" />
-                  <span className="text-caption-2 font-medium">
-                    {format(new Date(log.event_time), 'd MMM, yyyy', { locale: ptBR })}
-                  </span>
+                <div className="p-3 bg-white/50 space-y-1">
+                  <div className="flex items-center gap-1.5 text-neutral-500">
+                    <Calendar className="h-3.5 w-3.5 opacity-70" />
+                    <span className="text-caption-2 font-medium">
+                      {format(new Date(log.event_time), 'd MMM, yyyy', { locale: ptBR })}
+                    </span>
+                  </div>
+                  {log.details?.caption && (
+                    <p className="text-caption-2 text-neutral-400 line-clamp-2">
+                      {log.details.caption}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}

@@ -40,7 +40,7 @@ interface PhotoStickerShareDrawerProps {
   onOpenChange: (open: boolean) => void;
   context: StickerContext;
   /** Called for EVOLUTION context after compositing: saves to DB + optionally posts to team */
-  onComposed?: (blob: Blob, weight?: number, publishToTeamId?: string | null) => Promise<void>;
+  onComposed?: (blob: Blob, weight?: number, publishToTeamId?: string | null, caption?: string) => Promise<void>;
   /** Opens the legacy infographic drawer as a secondary option */
   onOpenInfographic?: () => void;
   /** Pre-fills the weight input for EVOLUTION context */
@@ -102,6 +102,7 @@ export function PhotoStickerShareDrawer({
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<StickerTheme>('dark');
   const [weight, setWeight] = useState(initialWeight);
+  const [caption, setCaption] = useState('');
   const [publishToTeam, setPublishToTeam] = useState(true);
   const [isActing, setIsActing] = useState(false);
   const [teamPickerOpen, setTeamPickerOpen] = useState(false);
@@ -152,9 +153,9 @@ export function PhotoStickerShareDrawer({
     async (blob: Blob, teamId: string | null) => {
       if (composedRef.current || !onComposed) return;
       composedRef.current = true;
-      await onComposed(blob, context.type === 'EVOLUTION' ? weight : undefined, teamId);
+      await onComposed(blob, context.type === 'EVOLUTION' ? weight : undefined, teamId, context.type === 'EVOLUTION' ? caption || undefined : undefined);
     },
-    [onComposed, context, weight]
+    [onComposed, context, weight, caption]
   );
 
   // ── Actions ──────────────────────────────────────────────────────────────────
@@ -303,6 +304,7 @@ export function PhotoStickerShareDrawer({
         if (photoUrl) URL.revokeObjectURL(photoUrl);
         setPhotoUrl(null);
         blobRef.current = null;
+        setCaption('');
       }, 300);
     }
     onOpenChange(v);
@@ -455,6 +457,22 @@ export function PhotoStickerShareDrawer({
                         }}
                         className="w-full rounded-2xl border border-white/40 bg-glass-light-1 backdrop-blur-sm px-4 py-3 text-title-3 font-semibold text-neutral-600 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-400 transition-all shadow-inner"
                         placeholder="Ex: 75.5"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label
+                        htmlFor="sticker-caption"
+                        className="text-body-2 font-semibold text-neutral-600 px-1"
+                      >
+                        Legenda (opcional)
+                      </label>
+                      <textarea
+                        id="sticker-caption"
+                        placeholder="Legenda opcional... (máx. 300 caracteres)"
+                        maxLength={300}
+                        value={caption}
+                        onChange={(e) => setCaption(e.target.value)}
+                        className="w-full rounded-2xl border border-white/40 bg-glass-light-2 px-4 py-3 text-input-1 text-neutral-500 resize-none min-h-[72px] focus:outline-none focus:ring-2 focus:ring-brand-500/50"
                       />
                     </div>
                     <label className="flex items-center gap-3 px-1 cursor-pointer select-none">

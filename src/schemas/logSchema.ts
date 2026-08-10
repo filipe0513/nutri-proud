@@ -23,6 +23,7 @@ export const sleepDetailsSchema = z.object({
 export const evolutionDetailsSchema = z.object({
   photo_url: z.string().url('A foto é obrigatória.'),
   weight_kg: z.number().min(20, 'Peso inválido').max(300, 'Peso inválido'),
+  caption: z.string().max(300).optional(),
 }).strict();
 
 // Schema Principal do Log

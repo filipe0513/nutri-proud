@@ -50,6 +50,16 @@ export interface CommentWithAuthor {
 
 // ── Nutri Dashboard types ──────────────────────────────────
 
+export interface EvolutionMetadata {
+  photo_url: string | null;
+  weight_kg: number | null;
+  caption: string | null;
+}
+
+export interface MilestoneMetadata {
+  dailyScore: number;
+}
+
 export interface TeamFeedPostWithPatient {
   id: string;
   type: 'MILESTONE' | 'ALERT' | 'EVOLUTION' | 'SYSTEM';
@@ -57,7 +67,7 @@ export interface TeamFeedPostWithPatient {
   createdAt: string; // ISO
   patient: PostAuthor;
   teamName: string;
-  metadata: unknown;
+  metadata: EvolutionMetadata | MilestoneMetadata | null;
 }
 
 export type UnifiedFeedItem =

@@ -58,12 +58,18 @@ export const triggerService = {
       // 2. Check Evolução
       if (latestLog.category === 'evolution') {
         const content = 'Novo Check-in registrado.';
+        const evolutionDetails = latestLog.details as { photo_url?: string; weight_kg?: number; caption?: string } | null;
         await prisma.teamFeedPost.create({
           data: {
             teamId,
             patientId,
             type: FeedPostType.EVOLUTION,
             content,
+            metadata: {
+              photo_url: evolutionDetails?.photo_url ?? null,
+              weight_kg: evolutionDetails?.weight_kg ?? null,
+              caption: evolutionDetails?.caption ?? null,
+            },
           },
         });
         notifyTeamAdmins(teamId, patientId, 'TEAM_ALERT', `Alerta: ${patientName}`, content, { actionType: 'OPEN_DASHBOARD_FEED' }).catch(() => {});
