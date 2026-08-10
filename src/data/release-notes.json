@@ -1,5 +1,12 @@
 [
   {
+    "version": "2.3.1",
+    "date": "2026-08-10",
+    "highlights": [
+      "🛠️ Correção no envio de fotos: upload de imagens funcionando corretamente novamente após ajuste interno no sistema de segurança do Cloudinary."
+    ]
+  },
+  {
     "version": "2.3.0",
     "date": "2026-08-10",
     "highlights": [
