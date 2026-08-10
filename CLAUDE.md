@@ -74,10 +74,10 @@ src/
 │   └── layout.tsx / globals.css / manifest.ts / sitemap.ts
 ├── components/
 │   ├── ui/                           # Shadcn-generated primitives (Button, Card, Drawer…)
-│   ├── shared/                       # App components (~45 files)
+│   ├── shared/                       # App components (~55 files)
 │   └── share/                        # Shareable canvas components (Infographic, Sticker)
 ├── schemas/                          # Zod schemas (shared front ↔ back)
-├── services/                         # Business logic layer (~12 services + __tests__/)
+├── services/                         # Business logic layer (~17 services + __tests__/)
 ├── store/
 │   ├── store.ts                      # Main Zustand store (session + UI cache)
 │   ├── historyStore.ts               # History-specific state
@@ -86,6 +86,8 @@ src/
 ├── lib/
 │   ├── prisma.ts                     # Prisma client singleton
 │   ├── rateLimit.ts                  # Rate limiting utility
+│   ├── apiAuth.ts                    # API authentication helper
+│   ├── cloudinary.ts                 # Cloudinary upload config
 │   └── utils.ts                      # Helpers (cn, date utils)
 ├── providers/
 │   └── PostHogProvider.tsx           # Analytics provider
@@ -172,6 +174,10 @@ src/
 | `POST`   | `/api/ai/lifesaver`                | AI lifesaver nudge                          |
 | `POST`   | `/api/ai/poop-analysis`            | AI poop analysis                            |
 | `POST`   | `/api/cron/triggers`               | Cron-triggered notifications/insights       |
+| `GET`    | `/api/dashboard/feed`              | Nutri patient activity feed                 |
+| `GET`    | `/api/dashboard/radar`             | Patient radar/analytics                     |
+| `POST`   | `/api/dashboard/message`           | Send message to patients                    |
+| `POST`   | `/api/dashboard/message/suggest`   | AI message suggestions                      |
 
 ---
 
@@ -183,7 +189,7 @@ src/
 interface DailyLog {
   id: string;           // UUID
   userId: string;
-  category: string;     // "water" | "food" | "sleep" | "workout" | "poop" | "note" (lowercase)
+  category: string;     // "water" | "food" | "sleep" | "workout" | "poop" | "note" | "jacada" | "evolution" (lowercase)
   primaryValue: number; // Main numeric value (e.g., ml, hours, score)
   details: Json;        // JSONB — validated by Zod schema in src/schemas/
   eventTime: DateTime;  // When the event actually happened
