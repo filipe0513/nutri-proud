@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.3.0] — 2026-08-10
+
+### Added
+- Nutri team management page with already-a-member join guard
+- SEO metadata: metadataBase, OG image, Twitter card, sitemap expansion
+- Push/in-app notifications for nutritionists
+- Teams options drawer on "+" button with create and join choices
+- Redirect stub for legacy `/dashboard/feed` route
+
+### Changed
+- Removed tab switcher and infographic flow from ShareReportDrawer (simplified to single compose mode)
+
+### Fixed
+- Disabled Gemini thinking phase on jacada and poop AI routes
+- Share drawer clipping (`-mt-2`) on overflow container and Vaul height inheritance between stacked drawers
+- Evolution logs excluded from patient history feed
+
 ## [0.9.0] — 2026-08-09
 
 ### Added

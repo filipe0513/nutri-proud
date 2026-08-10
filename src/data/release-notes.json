@@ -1,5 +1,16 @@
 [
   {
+    "version": "2.3.0",
+    "date": "2026-08-10",
+    "highlights": [
+      "👩‍⚕️ Gestao de Equipes para Nutris: Agora nutricionistas podem gerenciar seus times diretamente pelo app, com convite e controle de membros!",
+      "🔔 Notificacoes para Nutricionistas: Push e avisos no app para nutris ficarem por dentro de tudo que acontece com seus pacientes.",
+      "🔗 SEO e Compartilhamento: Links compartilhados agora exibem imagem e descricao bonitas no WhatsApp, Instagram e redes sociais.",
+      "🛠️ Correcoes Importantes: IA mais rapida nas reacoes, drawer de compartilhamento sem cortes e historico de pacientes mais preciso.",
+      "➕ Novo menu de opcoes nos times: criar ou entrar em um grupo ficou ainda mais facil com o novo drawer de acoes."
+    ]
+  },
+  {
     "version": "2.2.0",
     "date": "2026-08-07",
     "highlights": [
