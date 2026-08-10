@@ -9,6 +9,7 @@ vi.mock('@/lib/prisma', async () => {
 
 vi.mock('@/services/notificationService', () => ({
   dispatchNotification: vi.fn().mockResolvedValue({ success: true }),
+  notifyTeamAdmins: vi.fn().mockResolvedValue(undefined),
 }));
 
 import {

@@ -11,6 +11,9 @@ vi.mock('@/lib/prisma', async () => {
 describe('notificationService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID = 'test-app-id';
+    process.env.ONESIGNAL_REST_API_KEY = 'test-api-key';
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
   });
 
   it('should fetch user notifications', async () => {

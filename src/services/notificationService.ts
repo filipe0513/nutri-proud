@@ -66,14 +66,70 @@ export async function dispatchNotification(
     results.email = true;
   }
 
-  // 3. Push (OneSignal stub)
+  // 3. Push (OneSignal)
   if (catPrefs.push !== false && user.oneSignalId) {
-    // Stub call for OneSignal API
-    console.log(`[NotificationService] Sending Push to ${user.oneSignalId}: ${title} - ${body}`);
-    results.push = true;
+    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
+    const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+
+    if (appId && apiKey) {
+      try {
+        const res = await fetch('https://api.onesignal.com/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Basic ${apiKey}`,
+          },
+          body: JSON.stringify({
+            app_id: appId,
+            include_player_ids: [user.oneSignalId],
+            headings: { en: title },
+            contents: { en: body },
+            data: dataPayload ?? {},
+          }),
+        });
+        if (res.ok) {
+          results.push = true;
+        } else {
+          console.error(`[NotificationService] OneSignal push failed: ${res.status}`);
+        }
+      } catch (err) {
+        console.error('[NotificationService] OneSignal push error:', err);
+      }
+    } else {
+      console.log(`[NotificationService] OneSignal keys missing, skipping push for ${user.oneSignalId}`);
+    }
   }
 
   return { success: true, dispatched: results };
+}
+
+/**
+ * Notifies all ADMIN members of a team, respecting mute preferences.
+ * Used for patient activity events (posts, reactions, comments, system alerts).
+ */
+export async function notifyTeamAdmins(
+  teamId: string,
+  excludeUserId: string,
+  category: string,
+  title: string,
+  body: string,
+  dataPayload?: Record<string, unknown>,
+): Promise<void> {
+  const admins = await prisma.teamMember.findMany({
+    where: {
+      teamId,
+      role: 'ADMIN',
+      muteNotifications: { not: true },
+      userId: { not: excludeUserId },
+    },
+    select: { userId: true },
+  });
+
+  await Promise.allSettled(
+    admins.map((admin) =>
+      dispatchNotification(admin.userId, category, title, body, dataPayload),
+    ),
+  );
 }
 
 /**

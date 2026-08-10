@@ -2,10 +2,17 @@ import { prisma } from '@/lib/prisma';
 import { DailyLog, FeedPostType } from '@prisma/client';
 import { getLocalDayInterval } from './logService';
 import { calculateWaterScore, calculateFoodScore } from '@/utils/scoreUtils';
+import { notifyTeamAdmins } from './notificationService';
 
 export const triggerService = {
   async evaluatePatientTriggers(patientId: string, teamId: string, latestLog: DailyLog) {
     try {
+      const patient = await prisma.user.findUnique({
+        where: { id: patientId },
+        select: { name: true },
+      });
+      const patientName = patient?.name ?? 'Paciente';
+
       // 1. Check Ressurreição (Resurrection)
       const previousLog = await prisma.dailyLog.findFirst({
         where: {
@@ -34,28 +41,32 @@ export const triggerService = {
           });
 
           if (!existingResurrection) {
+            const content = `Retomou os registros após ${diffDays} dias inativo.`;
             await prisma.teamFeedPost.create({
               data: {
                 teamId,
                 patientId,
                 type: FeedPostType.MILESTONE,
-                content: `Retomou os registros após ${diffDays} dias inativo.`,
+                content,
               },
             });
+            notifyTeamAdmins(teamId, patientId, 'TEAM_ALERT', `Alerta: ${patientName}`, content, { actionType: 'OPEN_DASHBOARD_FEED' }).catch(() => {});
           }
         }
       }
 
       // 2. Check Evolução
       if (latestLog.category === 'evolution') {
+        const content = 'Novo Check-in registrado.';
         await prisma.teamFeedPost.create({
           data: {
             teamId,
             patientId,
             type: FeedPostType.EVOLUTION,
-            content: 'Novo Check-in registrado.',
+            content,
           },
         });
+        notifyTeamAdmins(teamId, patientId, 'TEAM_ALERT', `Alerta: ${patientName}`, content, { actionType: 'OPEN_DASHBOARD_FEED' }).catch(() => {});
       }
 
       // 3. Check Red Flag (POOP)
@@ -82,14 +93,16 @@ export const triggerService = {
           });
 
           if (!existingAlert) {
+            const content = 'Atenção: Indicativo de constipação (últimos 3 dias com intestino ruim).';
             await prisma.teamFeedPost.create({
               data: {
                 teamId,
                 patientId,
                 type: FeedPostType.ALERT,
-                content: 'Atenção: Indicativo de constipação (últimos 3 dias com intestino ruim).',
+                content,
               },
             });
+            notifyTeamAdmins(teamId, patientId, 'TEAM_ALERT', `Alerta: ${patientName}`, content, { actionType: 'OPEN_DASHBOARD_FEED' }).catch(() => {});
           }
         }
       }
@@ -152,15 +165,17 @@ export const triggerService = {
         });
 
         if (!existingPerfectDay) {
+          const content = 'Atingiu excelência total hoje! 🎉';
           await prisma.teamFeedPost.create({
             data: {
               teamId,
               patientId,
               type: FeedPostType.MILESTONE,
-              content: 'Atingiu excelência total hoje! 🎉',
+              content,
               metadata: { dailyScore: Math.round(dailyScore) },
             },
           });
+          notifyTeamAdmins(teamId, patientId, 'TEAM_ALERT', `Alerta: ${patientName}`, content, { actionType: 'OPEN_DASHBOARD_FEED' }).catch(() => {});
         }
       }
     } catch (error) {

@@ -10,7 +10,7 @@ import type {
   PatientRadarData,
   PatientRadarItem,
 } from '@/types/teamTypes';
-import { dispatchNotification } from './notificationService';
+import { dispatchNotification, notifyTeamAdmins } from './notificationService';
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
 
@@ -323,6 +323,16 @@ export async function createTeamPost(
     },
   });
 
+  // Notify team admins about new patient post (fire-and-forget)
+  notifyTeamAdmins(
+    teamId,
+    authorId,
+    'TEAM_POST',
+    `${post.author.name ?? 'Paciente'} publicou no time`,
+    data.content ?? 'Nova publicação no time.',
+    { actionType: 'OPEN_DASHBOARD_FEED' },
+  ).catch(() => {});
+
   return {
     id: post.id,
     content: post.content,
@@ -376,6 +386,20 @@ export async function togglePostReaction(
     await prisma.reaction.delete({ where: { id: existing.id } });
   } else {
     await prisma.reaction.create({ data: { postId, userId, emoji } });
+
+    // Notify team admins on new reaction (fire-and-forget)
+    const post = await prisma.post.findUnique({ where: { id: postId }, select: { teamId: true } });
+    if (post) {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { name: true } });
+      notifyTeamAdmins(
+        post.teamId,
+        userId,
+        'TEAM_REACTION',
+        `${user?.name ?? 'Paciente'} reagiu ${emoji}`,
+        'Nova reação em um post do time.',
+        { actionType: 'OPEN_DASHBOARD_FEED' },
+      ).catch(() => {});
+    }
   }
 }
 
@@ -449,6 +473,18 @@ export async function createComment(
       text,
       { actionType: 'OPEN_TEAM_POST' },
     ).catch(() => {/* silent */});
+  }
+
+  // Notify team admins when a patient comments (fire-and-forget)
+  if (membership.role !== 'ADMIN') {
+    notifyTeamAdmins(
+      post.teamId,
+      userId,
+      'TEAM_COMMENT',
+      `${comment.user.name ?? 'Paciente'} comentou`,
+      text,
+      { actionType: 'OPEN_DASHBOARD_FEED' },
+    ).catch(() => {});
   }
 
   return {
