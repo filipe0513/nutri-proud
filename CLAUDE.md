@@ -408,11 +408,57 @@ Border color is based on the sum of `score` values for the day:
 
 ---
 
+## 🌿 Worktree Workflow (MANDATORY — Parallel Agent Safety)
+
+Multiple agents may run simultaneously on this repo. To prevent conflicts, **every task MUST be executed inside a Git worktree**. Never work directly in the main repo directory.
+
+### Step 1 — Detect if already in a worktree
+
+```bash
+git rev-parse --git-dir
+# Returns ".git" → you are in the main repo → MUST create a worktree
+# Returns an absolute path (e.g. /.../.git/worktrees/...) → already in a worktree → proceed
+```
+
+### Step 2 — Create the worktree (if not already in one)
+
+Derive a short kebab-case slug from the task (e.g. `fix-water-log`, `feat-team-feed`).
+
+```bash
+# From the main repo root:
+git worktree add ../nutri-proud-<slug> dev
+cd ../nutri-proud-<slug>
+```
+
+> The worktree is checked out from `dev` and lives at `../nutri-proud-<slug>` (sibling of the main repo).
+
+### Step 3 — Do all work inside the worktree
+
+All file edits, installs, and commands run from `../nutri-proud-<slug>`. Never touch the main repo directory during the task.
+
+### Step 4 — Validate, commit, and remove the worktree
+
+After all changes are made and green (see Definition of Done below):
+
+```bash
+# Inside the worktree:
+git add .
+git commit -m '<type>(<scope>): <description>'
+
+# Back in the main repo to clean up:
+cd /Users/filipemagalhaes/Workspace/personal/nutri-proud
+git worktree remove ../nutri-proud-<slug>
+```
+
+> `git worktree remove` fails if there are uncommitted changes — this is intentional. Commit first.
+
+---
+
 ## ✅ Definition of Done (MANDATORY before reporting task complete)
 
 > **Goal:** Simulate the Vercel build environment locally so deploys never break.
 
-After **every** file change, run the following two commands **in order**:
+After **every** file change, run the following two commands **in order** (from inside the worktree):
 
 ```bash
 # 1. Always regenerate Prisma typings first
@@ -423,20 +469,21 @@ npm run validate
 ```
 
 > **Restrição de Branch (Git Flow):**
-> O agente está terminantemente proibido de realizar commits ou fazer push na branch `main`. Todo o desenvolvimento de novas features, correções de bugs e automações feitas pelo agente devem ocorrer **exclusivamente na branch `dev`**. O comando padrão de versionamento automático deve garantir isso (ex: `git checkout dev` antes de realizar add e commit). A branch `dev` é usada para fazer o deploy de preview na Vercel, e `main` é para produção.
+> O agente está terminantemente proibido de realizar commits ou fazer push na branch `main`. Todo o desenvolvimento de novas features, correções de bugs e automações feitas pelo agente devem ocorrer **exclusivamente na branch `dev`**. Worktrees são sempre criados a partir de `dev`. A branch `dev` é usada para fazer o deploy de preview na Vercel, e `main` é para produção.
 
 1. Run `npm run validate`.
 2. Read the terminal and autonomously resolve any error (TypeScript, Lint, etc) until it is Green.
-3. If the validation passes without errors, execute Git versioning before marking the task as completed.
+3. If the validation passes without errors, execute Git versioning and close the worktree.
 
 > `npm run validate` runs sequentially: `typecheck && lint && test && build`. The `build` step is what Vercel executes — if it fails here it will fail in production.
 
-- 🟢 **All pass** → Task is done. Code is tested, compiled, and deploy-ready.
+- 🟢 **All pass** → Commit, then remove the worktree. Task is done.
 - 🔴 **Any step fails** → Do NOT report completion. Read the error, fix autonomously, re-run both commands. Repeat until green.
 
-When the validation is successful, you MUST execute the versioning commands in the project terminal:
+When the validation is successful, you MUST execute the versioning commands in the worktree terminal:
 1. `git add .`
 2. `git commit -m '<type>(<scope>): <description of task and changes>'`
+3. `cd /Users/filipemagalhaes/Workspace/personal/nutri-proud && git worktree remove ../nutri-proud-<slug>`
 
 **Valid commit types:**
 - **feat:** New feature or page.
