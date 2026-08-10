@@ -436,6 +436,54 @@ export async function createTeamPost(
 }
 
 /**
+ * Returns a single post by ID. The requesting user must be a member of the post's team.
+ */
+export async function getPostById(
+  postId: string,
+  currentUserId: string,
+): Promise<PostWithAuthor> {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    include: {
+      author: { select: { id: true, name: true, image: true } },
+      reactions: true,
+      _count: { select: { comments: true } },
+    },
+  });
+
+  if (!post) throw new Error('Post não encontrado.');
+
+  const membership = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId: post.teamId, userId: currentUserId } },
+  });
+  if (!membership) throw new Error('Acesso negado.');
+
+  const emojiMap = new Map<string, { count: number; reacted: boolean }>();
+  for (const r of post.reactions) {
+    const existing = emojiMap.get(r.emoji) ?? { count: 0, reacted: false };
+    emojiMap.set(r.emoji, {
+      count: existing.count + 1,
+      reacted: existing.reacted || r.userId === currentUserId,
+    });
+  }
+  const reactions: ReactionCount[] = Array.from(emojiMap.entries()).map(
+    ([emoji, { count, reacted }]) => ({ emoji, count, reacted }),
+  );
+
+  return {
+    id: post.id,
+    content: post.content,
+    imageUrl: post.imageUrl,
+    type: post.type,
+    teamId: post.teamId,
+    author: { id: post.author.id, name: post.author.name, image: post.author.image },
+    reactions,
+    commentCount: post._count.comments,
+    createdAt: post.createdAt.toISOString(),
+  };
+}
+
+/**
  * Deletes a post. Only the author can delete their own post.
  * Throws an error if the post does not exist or the user is not the author.
  */

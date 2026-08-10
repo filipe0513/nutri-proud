@@ -214,6 +214,13 @@ export const fetchPatientRadar = async (): Promise<PatientRadarData> => {
   return data.radar || { atRisk: [], doingGreat: [] };
 };
 
+export const fetchPost = async (postId: string): Promise<PostWithAuthor | null> => {
+  const res = await fetch(`/api/posts/${postId}`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.post || null;
+};
+
 export const fetchPostComments = async (postId: string): Promise<CommentWithAuthor[]> => {
   const res = await fetch(`/api/posts/${postId}/comments`);
   if (!res.ok) return [];

@@ -1,6 +1,25 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { deletePost } from '@/services/teamService';
+import { getPostById, deletePost } from '@/services/teamService';
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
+    }
+    const { id: postId } = await params;
+    const post = await getPostById(postId, session.user.id);
+    return NextResponse.json({ post });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Erro ao buscar post.';
+    const status = message.includes('Acesso negado') ? 403 : message.includes('não encontrado') ? 404 : 500;
+    return NextResponse.json({ error: message }, { status });
+  }
+}
 
 export async function DELETE(
   _request: Request,
