@@ -155,6 +155,7 @@ export default function TeamFeedPage() {
                 onToggleReaction={handleToggleReaction}
                 onCommentClick={handleCommentClick}
                 onDeletePost={handleDeletePost}
+                postHref={`/teams/${teamId}/posts/${post.id}`}
               />
             ))}
           </div>
