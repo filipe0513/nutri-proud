@@ -116,7 +116,13 @@ export async function POST(request: Request) {
         ? 'Este é o 2º dia seguido com jacada. Mencione que está começando a virar hábito.'
         : '';
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      generationConfig: {
+        // @ts-expect-error thinkingConfig is supported by the API but not yet typed in the SDK
+        thinkingConfig: { thinkingBudget: 0 },
+      },
+    });
 
     const prompt = `Você é a Nutri, nutricionista direta e honesta que se importa de verdade com o usuário.
 Seu papel NÃO é ser condescendente nem passar pano. Sua missão é dar uma bronca carinhosa, mas real.
@@ -166,7 +172,8 @@ REGRAS OBRIGATÓRIAS:
 
     return NextResponse.json({ message: text });
   } catch (error) {
-    console.error('[Gemini API Error - Jacada]:', error);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error('[Gemini API Error - Jacada]:', errMsg);
     return NextResponse.json(
       { error: 'Erro interno ao gerar reação.' },
       { status: 500 }

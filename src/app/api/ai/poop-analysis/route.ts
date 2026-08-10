@@ -249,7 +249,11 @@ REGRAS OBRIGATÓRIAS:
 
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
-      generationConfig: { responseMimeType: 'application/json' },
+      generationConfig: {
+        responseMimeType: 'application/json',
+        // @ts-expect-error thinkingConfig is supported by the API but not yet typed in the SDK
+        thinkingConfig: { thinkingBudget: 0 },
+      },
     });
 
     const result = await model.generateContent(prompt);

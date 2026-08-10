@@ -9,6 +9,7 @@ import { PostHogProvider } from "@/providers/PostHogProvider";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://orgulhodanutri.com"),
   title: {
     template: "%s | Orgulho da Nutri",
     default: "Orgulho da Nutri - Gamifique seus Hábitos e Conecte-se com sua Nutricionista",
@@ -33,6 +34,14 @@ export const metadata: Metadata = {
     siteName: "Orgulho da Nutri",
     locale: "pt_BR",
     type: "website",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Orgulho da Nutri" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Orgulho da Nutri - Gamifique seus Hábitos Saudáveis",
+    description:
+      "Diário de saúde gamificado para pacientes e plataforma inteligente para nutricionistas.",
+    images: ["/og-image.png"],
   },
   icons: {
     icon: "/icon-192.webp",
