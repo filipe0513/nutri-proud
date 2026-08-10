@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react';
 import { TeamFeedHeader } from '@/components/shared/TeamFeedHeader';
 import { PostCard } from '@/components/shared/PostCard';
 import { ShareToTeamDrawer } from '@/components/shared/ShareToTeamDrawer';
+import { CommentsDrawer } from '@/components/shared/CommentsDrawer';
 import { fetchTeamFeed, toggleReaction, createPost, fetchTeamDetails, updateTeamDetails, deleteTeamAction } from '@/store/api';
 import type { PostWithAuthor, TeamSummary } from '@/types/teamTypes';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ export default function TeamFeedPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
+  const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -48,9 +50,8 @@ export default function TeamFeedPage() {
     }
   };
 
-  const handleCommentClick = () => {
-    // Navigates to a specific post page (not implemented in this task)
-    toast.info('Comentários em breve!');
+  const handleCommentClick = (postId: string) => {
+    setCommentsPostId(postId);
   };
 
   const handleDeletePost = (postId: string) => {
@@ -163,6 +164,12 @@ export default function TeamFeedPage() {
         open={shareDrawerOpen}
         onOpenChange={setShareDrawerOpen}
         onShareScore={handleShareScore}
+      />
+
+      <CommentsDrawer
+        postId={commentsPostId}
+        open={commentsPostId !== null}
+        onOpenChange={(open) => { if (!open) setCommentsPostId(null); }}
       />
 
       {/* Settings Drawer */}

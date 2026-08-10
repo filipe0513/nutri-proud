@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { TopHeader } from '@/components/shared/TopHeader';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProfileCalendar } from '@/components/shared/ProfileCalendar';
 import { PostCard } from '@/components/shared/PostCard';
+import { CommentsDrawer } from '@/components/shared/CommentsDrawer';
 import { toggleReaction } from '@/store/api';
 import type { PostWithAuthor } from '@/types/teamTypes';
 import { toast } from 'sonner';
@@ -34,6 +36,7 @@ function getInitials(name: string | null): string {
 
 export function ProfileClient({ user, scoresByDate, initialPosts, evolutionLogs, isMe }: ProfileClientProps) {
   const posts = initialPosts;
+  const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
 
   const handleToggleReaction = async (postId: string, emoji: string) => {
     try {
@@ -44,8 +47,8 @@ export function ProfileClient({ user, scoresByDate, initialPosts, evolutionLogs,
     }
   };
 
-  const handleCommentClick = () => {
-    toast.info('Comentários em breve!');
+  const handleCommentClick = (postId: string) => {
+    setCommentsPostId(postId);
   };
 
   return (
@@ -158,6 +161,12 @@ export function ProfileClient({ user, scoresByDate, initialPosts, evolutionLogs,
         </section>
       </main>
       
+      <CommentsDrawer
+        postId={commentsPostId}
+        open={commentsPostId !== null}
+        onOpenChange={(open) => { if (!open) setCommentsPostId(null); }}
+      />
+
       {/* Hide bottom navigation via global css or styling if necessary.
           The requirement says "A página de perfil não deve exibir a Bottom Nav". 
           We can solve this globally if BottomNav checks the path or we use a layout. 
