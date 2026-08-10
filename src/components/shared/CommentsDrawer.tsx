@@ -13,10 +13,9 @@ interface CommentsDrawerProps {
   postId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCommentAdded?: () => void;
 }
 
-export function CommentsDrawer({ postId, open, onOpenChange, onCommentAdded }: CommentsDrawerProps) {
+export function CommentsDrawer({ postId, open, onOpenChange }: CommentsDrawerProps) {
   const [comments, setComments] = useState<CommentWithAuthor[]>([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,11 +43,10 @@ export function CommentsDrawer({ postId, open, onOpenChange, onCommentAdded }: C
     if (!text.trim() || !postId || sending) return;
     setSending(true);
     try {
-      const newComment = await createPostComment(postId, text.trim());
-      setComments((prev) => [...prev, newComment]);
-      onCommentAdded?.();
+      await createPostComment(postId, text.trim());
       setText('');
-      // Scroll to bottom
+      const refreshed = await fetchPostComments(postId);
+      setComments(refreshed);
       requestAnimationFrame(() => {
         listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
       });

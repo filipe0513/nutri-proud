@@ -35,7 +35,7 @@ function getInitials(name: string | null): string {
 }
 
 export function ProfileClient({ user, scoresByDate, initialPosts, evolutionLogs, isMe }: ProfileClientProps) {
-  const [posts, setPosts] = useState(initialPosts);
+  const posts = initialPosts;
   const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
 
   const handleToggleReaction = async (postId: string, emoji: string) => {
@@ -165,12 +165,6 @@ export function ProfileClient({ user, scoresByDate, initialPosts, evolutionLogs,
         postId={commentsPostId}
         open={commentsPostId !== null}
         onOpenChange={(open) => { if (!open) setCommentsPostId(null); }}
-        onCommentAdded={() => {
-          if (!commentsPostId) return;
-          setPosts((prev) => prev.map((p) =>
-            p.id === commentsPostId ? { ...p, commentCount: p.commentCount + 1 } : p
-          ));
-        }}
       />
 
       {/* Hide bottom navigation via global css or styling if necessary.

@@ -170,12 +170,6 @@ export default function TeamFeedPage() {
         postId={commentsPostId}
         open={commentsPostId !== null}
         onOpenChange={(open) => { if (!open) setCommentsPostId(null); }}
-        onCommentAdded={() => {
-          if (!commentsPostId) return;
-          setPosts((prev) => prev.map((p) =>
-            p.id === commentsPostId ? { ...p, commentCount: p.commentCount + 1 } : p
-          ));
-        }}
       />
 
       {/* Settings Drawer */}
