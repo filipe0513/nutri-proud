@@ -13,9 +13,10 @@ interface CommentsDrawerProps {
   postId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCommentAdded?: () => void;
 }
 
-export function CommentsDrawer({ postId, open, onOpenChange }: CommentsDrawerProps) {
+export function CommentsDrawer({ postId, open, onOpenChange, onCommentAdded }: CommentsDrawerProps) {
   const [comments, setComments] = useState<CommentWithAuthor[]>([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,6 +46,7 @@ export function CommentsDrawer({ postId, open, onOpenChange }: CommentsDrawerPro
     try {
       const newComment = await createPostComment(postId, text.trim());
       setComments((prev) => [...prev, newComment]);
+      onCommentAdded?.();
       setText('');
       // Scroll to bottom
       requestAnimationFrame(() => {
