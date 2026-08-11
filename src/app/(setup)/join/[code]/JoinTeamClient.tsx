@@ -9,9 +9,10 @@ interface JoinTeamClientProps {
   inviteCode: string;
   isMember?: boolean;
   teamId?: string;
+  isExpired?: boolean;
 }
 
-export function JoinTeamClient({ inviteCode, isMember, teamId }: JoinTeamClientProps) {
+export function JoinTeamClient({ inviteCode, isMember, teamId, isExpired }: JoinTeamClientProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -24,6 +25,23 @@ export function JoinTeamClient({ inviteCode, isMember, teamId }: JoinTeamClientP
       >
         Ver Grupo
       </button>
+    );
+  }
+
+  if (isExpired) {
+    return (
+      <div className="space-y-3 text-center">
+        <button
+          type="button"
+          disabled
+          className="w-full h-14 rounded-2xl bg-neutral-200 text-neutral-400 font-bold text-button-1 flex items-center justify-center cursor-not-allowed"
+        >
+          Desafio Encerrado
+        </button>
+        <p className="text-caption-1 text-neutral-400">
+          O período de inscrição para este desafio já foi encerrado.
+        </p>
+      </div>
     );
   }
 

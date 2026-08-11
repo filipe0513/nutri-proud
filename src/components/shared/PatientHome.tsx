@@ -28,7 +28,7 @@ import { NutriMessageCard } from '@/components/shared/NutriMessageCard';
 import { toLocalISOString } from '@/lib/utils';
 import { calculateWaterScore, calculateFoodScore } from '@/utils/scoreUtils';
 import { getLocalStartOfDay } from '@/utils/dateUtils';
-import { LifeBuoy } from 'lucide-react';
+import { LifeBuoy, TrendingUp } from 'lucide-react';
 
 /** Modelo local do AiInsight retornado pela API */
 interface AiInsight {
@@ -65,7 +65,7 @@ const ACTION_LIST = [
   { id: 'note', label: 'Adicionar nota', icon: StickyNote, color: 'var(--color-highlight-300)', bg: 'bg-yellow-50' },
 ];
 
-function PatientHomeContent({ userRole }: { userRole?: string }) {
+function PatientHomeContent({ userRole, showEvolutionReminder }: { userRole?: string; showEvolutionReminder?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addLog, user_profile, activity_logs, initializeData } = useAppStore();
@@ -284,6 +284,23 @@ function PatientHomeContent({ userRole }: { userRole?: string }) {
         />
       ))}
 
+      {/* 0b. Evolution Reminder Card (challenge — pure, no dismiss) */}
+      {showEvolutionReminder && (
+        <div className="bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-2xl p-4 flex items-start gap-3">
+          <div className="h-9 w-9 rounded-full bg-brand-500/10 flex items-center justify-center shrink-0">
+            <TrendingUp className="h-4 w-4 text-brand-500" />
+          </div>
+          <div>
+            <p className="text-body-2 font-semibold text-neutral-500">
+              Hora da foto de evolução!
+            </p>
+            <p className="text-caption-1 text-neutral-400 mt-0.5">
+              Já faz mais de 7 dias sem registrar. Tire sua foto e mostre o progresso.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* 1. Greeting + Streak Badge */}
       <StoryHeader />
 
@@ -451,10 +468,10 @@ function PatientHomeContent({ userRole }: { userRole?: string }) {
   );
 }
 
-export function PatientHome({ userRole }: { userRole?: string }) {
+export function PatientHome({ userRole, showEvolutionReminder }: { userRole?: string; showEvolutionReminder?: boolean }) {
   return (
     <Suspense fallback={<div className="pb-24 pt-8 px-6" />}>
-      <PatientHomeContent userRole={userRole} />
+      <PatientHomeContent userRole={userRole} showEvolutionReminder={showEvolutionReminder} />
     </Suspense>
   );
 }

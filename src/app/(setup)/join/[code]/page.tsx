@@ -14,6 +14,7 @@ export default async function JoinTeamPage({ params }: JoinTeamPageProps) {
 
   const team = await prisma.team.findUnique({
     where: { inviteCode: code },
+    include: { challenge: { select: { endDate: true } } },
   });
 
   if (!team) {
@@ -26,6 +27,9 @@ export default async function JoinTeamPage({ params }: JoinTeamPageProps) {
       </div>
     );
   }
+
+  const isChallengeExpired =
+    team.challenge !== null && new Date() > team.challenge.endDate;
 
   // Check if the current user is already a member
   const session = await auth();
@@ -73,6 +77,7 @@ export default async function JoinTeamPage({ params }: JoinTeamPageProps) {
           inviteCode={code}
           isMember={isMember}
           teamId={team.id}
+          isExpired={isChallengeExpired}
         />
       </div>
     </div>

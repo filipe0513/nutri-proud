@@ -3,6 +3,9 @@ import { auth } from '@/auth';
 import { cookies } from 'next/headers';
 import { UserRole } from '@/types/roles';
 import { PatientHome } from '@/components/shared/PatientHome';
+import { getActiveForUser } from '@/services/challengeService';
+import { prisma } from '@/lib/prisma';
+import { shouldShowEvolutionReminder } from '@/utils/scoreUtils';
 
 /**
  * Home page (/) — Controlador de tráfego baseado em role.
@@ -31,7 +34,23 @@ export default async function RootHomePage() {
     redirect('/dashboard');
   }
 
+  // Compute evolution reminder — server-side, pure function, no client state needed
+  let showEvolutionReminder = false;
+  const userId = session?.user?.id;
+  if (userId && !isAnon) {
+    const [activeChallenges, lastEvolutionLog] = await Promise.all([
+      getActiveForUser(userId),
+      prisma.dailyLog.findFirst({
+        where: { userId, category: 'evolution' },
+        orderBy: { eventTime: 'desc' },
+        select: { eventTime: true },
+      }),
+    ]);
+    const weeklyChallenge = activeChallenges.find((c) => c.weeklyEvolution);
+    showEvolutionReminder = shouldShowEvolutionReminder(weeklyChallenge, lastEvolutionLog);
+  }
+
   // Pacientes, ADMINs e usuários anônimos vêem o painel gamificado
   // ADMINs recebem a role para exibir o View Switcher no header
-  return <PatientHome userRole={role} />;
+  return <PatientHome userRole={role} showEvolutionReminder={showEvolutionReminder} />;
 }
