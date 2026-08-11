@@ -7,6 +7,7 @@ const createPostSchema = z.object({
   content: z.string().max(500).optional(),
   imageUrl: z.string().url().optional(),
   type: z.enum(['USER_GENERATED', 'SYSTEM_MILESTONE']).optional(),
+  metadata: z.record(z.string(), z.number()).optional(),
 });
 
 export async function GET(
@@ -50,7 +51,12 @@ export async function POST(
       return NextResponse.json({ error: 'O post precisa ter conteúdo ou imagem.' }, { status: 400 });
     }
 
-    const post = await createTeamPost(teamId, session.user.id, parsed.data);
+    const post = await createTeamPost(teamId, session.user.id, {
+      content: parsed.data.content,
+      imageUrl: parsed.data.imageUrl,
+      type: parsed.data.type,
+      metadata: parsed.data.metadata,
+    });
     return NextResponse.json(post, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erro ao criar post.';

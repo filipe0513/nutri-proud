@@ -61,10 +61,10 @@ export default function TeamFeedPage() {
     });
   };
 
-  const handleShareScore = async (score: number) => {
+  const handleShareScore = async (score: number, pillarScores: Record<string, number>) => {
     const loadingToast = toast.loading('Publicando score...');
     try {
-      await createPost(teamId, { content: `Meu Score do Dia: ${score}/100! 🔥` });
+      await createPost(teamId, { content: `Meu Score do Dia: ${score}/100! 🔥`, metadata: pillarScores });
       toast.success('Publicado com sucesso!', { id: loadingToast });
       fetchTeamFeed(teamId).then(setPosts);
     } catch (err) {

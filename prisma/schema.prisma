@@ -24,6 +24,7 @@ enum FeedPostType {
   ALERT
   EVOLUTION
   SYSTEM
+  CHALLENGE_SUMMARY
 }
 
 enum Plan {
@@ -155,9 +156,10 @@ model Team {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  members TeamMember[]
-  posts   Post[]
+  members   TeamMember[]
+  posts     Post[]
   feedPosts TeamFeedPost[]
+  challenge Challenge?
 }
 
 model TeamMember {
@@ -183,6 +185,7 @@ model Post {
   type      PostType @default(USER_GENERATED)
   teamId    String   @map("team_id")
   authorId  String   @map("author_id")
+  metadata  Json?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -219,14 +222,36 @@ model Comment {
 // ── B2B Dashboard Feed ────────────────────────────────────
 
 model TeamFeedPost {
-  id        String       @id @default(uuid())
-  teamId    String       @map("team_id")
-  patientId String       @map("patient_id")
-  type      FeedPostType
-  content   String       @db.Text
-  metadata  Json?        // JSONB field for flexible data like weight, score, etc.
-  createdAt DateTime     @default(now()) @map("created_at")
+  id          String       @id @default(uuid())
+  teamId      String       @map("team_id")
+  patientId   String       @map("patient_id")
+  type        FeedPostType
+  content     String       @db.Text
+  metadata    Json?        // JSONB field for flexible data like weight, score, etc.
+  challengeId String?      @map("challenge_id")
+  summaryDate DateTime?    @map("summary_date")
+  createdAt   DateTime     @default(now()) @map("created_at")
 
   team      Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
   patient   User @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, patientId, summaryDate])
+}
+
+// ── Challenges ────────────────────────────────────────────
+
+model Challenge {
+  id              String   @id @default(uuid())
+  teamId          String   @unique @map("team_id")
+  team            Team     @relation(fields: [teamId], references: [id])
+  goalDescription String   @map("goal_description")
+  coverImageUrl   String?  @map("cover_image_url")
+  startDate       DateTime @map("start_date")
+  endDate         DateTime @map("end_date")
+  shareWorkouts   Boolean  @default(false) @map("share_workouts")
+  shareMeals      Boolean  @default(false) @map("share_meals")
+  shareWater      Boolean  @default(false) @map("share_water")
+  weeklyEvolution Boolean  @default(false) @map("weekly_evolution")
+  dailySummary    Boolean  @default(false) @map("daily_summary")
+  createdAt       DateTime @default(now()) @map("created_at")
 }

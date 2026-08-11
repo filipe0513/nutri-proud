@@ -37,6 +37,7 @@ export interface PostWithAuthor {
   reactions: ReactionCount[];
   commentCount: number;
   createdAt: string; // ISO
+  metadata?: { pillarScores?: Record<string, number> } | null;
 }
 
 // ── Comment types ──────────────────────────────────────────
@@ -62,7 +63,7 @@ export interface MilestoneMetadata {
 
 export interface TeamFeedPostWithPatient {
   id: string;
-  type: 'MILESTONE' | 'ALERT' | 'EVOLUTION' | 'SYSTEM';
+  type: 'MILESTONE' | 'ALERT' | 'EVOLUTION' | 'SYSTEM' | 'CHALLENGE_SUMMARY';
   content: string;
   createdAt: string; // ISO
   patient: PostAuthor;

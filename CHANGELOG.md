@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.5.0] — 2026-08-11
+
+### Added
+- Challenge system: model, services, API routes, daily summary, and cron integration
+- Challenge UI: creation flow, join block, weekly evolution reminder, and feed rendering
+- Pillar score circles in Score do Dia team posts — rings now show real per-pillar progress (water, food, workout, sleep, gut)
+- Customizable invite code for teams and challenges
+- 'Usar Fundo' option in PhotoStickerShareDrawer
+
 ## [2.4.0] — 2026-08-10
 
 ### Added

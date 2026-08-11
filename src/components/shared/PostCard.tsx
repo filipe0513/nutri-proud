@@ -9,6 +9,15 @@ import { getRelativeTime } from '@/utils/timeUtils';
 import type { PostWithAuthor } from '@/types/teamTypes';
 import { cn } from '@/lib/utils';
 import { Droplets, Utensils, Dumbbell, Moon, Smile } from 'lucide-react';
+import { StoryCircle } from '@/components/shared/StoryCircle';
+
+const PILLAR_CIRCLES = [
+  { id: 'water', label: 'Água', icon: Droplets, color: 'var(--color-cat-water)' },
+  { id: 'food', label: 'Comida', icon: Utensils, color: 'var(--color-cat-food)' },
+  { id: 'workout', label: 'Treino', icon: Dumbbell, color: 'var(--color-cat-workout)' },
+  { id: 'sleep', label: 'Sono', icon: Moon, color: 'var(--color-cat-sleep)' },
+  { id: 'poop', label: 'Intestino', icon: Smile, color: 'var(--color-cat-poop)' },
+] as const;
 
 interface PostCardProps {
   post: PostWithAuthor;
@@ -157,23 +166,19 @@ export function PostCard({ post, currentUserId, onToggleReaction, onCommentClick
             )}
           </div>
         )}
-        {/* Render a fake score visualization if it's a score post (heuristic) */}
+        {/* Score visualization with real pillar data when available */}
         {post.content?.includes('Score do Dia') && (
-            <div className="mt-4 flex justify-between px-2 py-3 bg-white/40 rounded-2xl border border-white/50">
-               {[
-                  { icon: Droplets, color: 'var(--color-cat-water)' },
-                  { icon: Utensils, color: 'var(--color-cat-food)' },
-                  { icon: Dumbbell, color: 'var(--color-cat-workout)' },
-                  { icon: Moon, color: 'var(--color-cat-sleep)' },
-                  { icon: Smile, color: 'var(--color-cat-poop)' },
-                ].map((item, i) => (
-                  <div key={i} className="flex flex-col items-center">
-                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
-                        <item.icon className="w-5 h-5" style={{ color: item.color }} />
-                    </div>
-                  </div>
-                ))}
-            </div>
+          <div className="mt-4 flex justify-between px-2 py-3 bg-white/40 rounded-2xl border border-white/50">
+            {PILLAR_CIRCLES.map((item) => (
+              <StoryCircle
+                key={item.id}
+                label={item.label}
+                icon={item.icon}
+                value={post.metadata?.pillarScores?.[item.id] ?? 0}
+                color={item.color}
+              />
+            ))}
+          </div>
         )}
       </div>
 

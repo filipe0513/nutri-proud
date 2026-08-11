@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { PostCard } from '@/components/shared/PostCard';
 import { CommentsDrawer } from '@/components/shared/CommentsDrawer';
 import { toggleReaction } from '@/store/api';
-import { Bell, Trophy, AlertTriangle, Activity } from 'lucide-react';
+import { Bell, Trophy, AlertTriangle, Activity, BarChart2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getRelativeTime } from '@/utils/timeUtils';
 import type { UnifiedFeedItem, TeamFeedPostWithPatient, EvolutionMetadata } from '@/types/teamTypes';
@@ -15,7 +15,7 @@ interface NutriFeedClientProps {
   currentUserId: string;
 }
 
-type FilterType = 'all' | 'social' | 'ALERT' | 'MILESTONE' | 'EVOLUTION';
+type FilterType = 'all' | 'social' | 'ALERT' | 'MILESTONE' | 'EVOLUTION' | 'CHALLENGE_SUMMARY';
 
 const FILTERS: { value: FilterType; label: string }[] = [
   { value: 'all', label: 'Todos' },
@@ -23,6 +23,7 @@ const FILTERS: { value: FilterType; label: string }[] = [
   { value: 'MILESTONE', label: 'Conquistas' },
   { value: 'social', label: 'Posts' },
   { value: 'EVOLUTION', label: 'Evolucao' },
+  { value: 'CHALLENGE_SUMMARY', label: 'Desafio' },
 ];
 
 function getSystemIconConfig(type: string) {
@@ -33,6 +34,8 @@ function getSystemIconConfig(type: string) {
       return { icon: AlertTriangle, bg: 'bg-red-100', color: 'text-red-600' };
     case 'EVOLUTION':
       return { icon: Activity, bg: 'bg-blue-100', color: 'text-blue-600' };
+    case 'CHALLENGE_SUMMARY':
+      return { icon: BarChart2, bg: 'bg-orange-100', color: 'text-notify-warning' };
     default:
       return { icon: Bell, bg: 'bg-gray-100', color: 'text-gray-600' };
   }

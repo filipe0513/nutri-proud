@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { z } from 'zod';
 import { getMyTeams, createTeam } from '@/services/teamService';
-
-const createTeamSchema = z.object({
-  name: z.string().min(1, 'O nome é obrigatório').max(50),
-  description: z.string().max(200).optional(),
-});
+import { createTeamSchema } from '@/schemas/teamSchema';
 
 export async function GET() {
   try {
@@ -39,7 +34,9 @@ export async function POST(request: Request) {
     const team = await createTeam(session.user.id, parsed.data);
     return NextResponse.json(team, { status: 201 });
   } catch (err) {
+    const message = err instanceof Error ? err.message : 'Erro ao criar team.';
+    const isUserError = message === 'Código já em uso. Escolha outro.';
     console.error('[POST /api/teams]', err);
-    return NextResponse.json({ error: 'Erro ao criar team.' }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: isUserError ? 409 : 500 });
   }
 }

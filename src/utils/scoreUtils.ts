@@ -201,3 +201,25 @@ export function getScoreColors(score: number): { from: string; to: string } {
   if (score <= 90) return { from: '#2563eb', to: '#60a5fa' };
   return { from: '#16a34a', to: '#4ade80' };
 }
+
+// ---------------------------------------------------------------------------
+// 📸 EVOLUTION REMINDER (Challenge)
+// ---------------------------------------------------------------------------
+
+/** Returns the number of whole days since the given date. */
+export function daysSince(date: Date | string): number {
+  return Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Pure function — no state, no DB.
+ * Returns true when the user should be prompted to log their weekly evolution photo.
+ */
+export function shouldShowEvolutionReminder(
+  activeChallenge: { weeklyEvolution: boolean } | null | undefined,
+  lastEvolutionLog: { eventTime: Date | string } | null | undefined,
+): boolean {
+  if (!activeChallenge?.weeklyEvolution) return false;
+  if (!lastEvolutionLog) return true;
+  return daysSince(lastEvolutionLog.eventTime) > 7;
+}
