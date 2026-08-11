@@ -435,7 +435,7 @@ export function PhotoStickerShareDrawer({
                     />
                   )}
                   {/* Sticker — fixed bottom-left */}
-                  <div className="absolute bottom-0 left-0">
+                  <div className="absolute bottom-3 left-3">
                     <ShareableSticker
                       type={stickerType}
                       score={stickerScore}
