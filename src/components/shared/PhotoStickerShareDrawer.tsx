@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import {
   Camera,
   ImageIcon,
+  Shuffle,
   Download,
   Share2,
   Save,
@@ -45,6 +46,20 @@ interface PhotoStickerShareDrawerProps {
   onOpenInfographic?: () => void;
   /** Pre-fills the weight input for EVOLUTION context */
   initialWeight?: number;
+}
+
+// ─── Constants ──────────────────────────────────────────────────────────────────
+
+const PILLAR_BACKGROUNDS = [
+  '/share/share-water.webp',
+  '/share/share-food.webp',
+  '/share/share-training.webp',
+  '/share/share-sleep.webp',
+  '/share/share-gut.webp',
+];
+
+function pickRandomBackground(): string {
+  return PILLAR_BACKGROUNDS[Math.floor(Math.random() * PILLAR_BACKGROUNDS.length)];
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -100,6 +115,7 @@ export function PhotoStickerShareDrawer({
 }: PhotoStickerShareDrawerProps) {
   const [step, setStep] = useState<'source' | 'compose'>('source');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<StickerTheme>('dark');
   const [weight, setWeight] = useState(initialWeight);
   const [caption, setCaption] = useState('');
@@ -116,6 +132,14 @@ export function PhotoStickerShareDrawer({
   const blobRef = useRef<Blob | null>(null);
   // Prevents duplicate onComposed calls when user taps multiple actions
   const composedRef = useRef(false);
+
+  // ── Background picker ────────────────────────────────────────────────────────
+
+  const handleUseBackground = () => {
+    setBackgroundUrl(pickRandomBackground());
+    blobRef.current = null;
+    setStep('compose');
+  };
 
   // ── File selection ───────────────────────────────────────────────────────────
 
@@ -303,6 +327,7 @@ export function PhotoStickerShareDrawer({
         setStep('source');
         if (photoUrl) URL.revokeObjectURL(photoUrl);
         setPhotoUrl(null);
+        setBackgroundUrl(null);
         blobRef.current = null;
         setCaption('');
       }, 300);
@@ -357,14 +382,24 @@ export function PhotoStickerShareDrawer({
                   <span className="text-body-2 font-semibold text-brand-600">Tirar Foto</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => galleryInputRef.current?.click()}
-                  className="w-full h-28 rounded-2xl border-2 border-dashed border-neutral-300 bg-neutral-50/50 hover:bg-neutral-50 flex flex-col items-center justify-center gap-2 transition-colors active:scale-[0.98]"
-                >
-                  <ImageIcon className="h-8 w-8 text-neutral-500" />
-                  <span className="text-body-2 font-semibold text-neutral-600">Escolher da Galeria</span>
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => galleryInputRef.current?.click()}
+                    className="flex-1 h-20 rounded-2xl border-2 border-dashed border-neutral-300 bg-neutral-50/50 hover:bg-neutral-50 flex flex-col items-center justify-center gap-1.5 transition-colors active:scale-[0.98]"
+                  >
+                    <ImageIcon className="h-7 w-7 text-neutral-500" />
+                    <span className="text-caption-1 font-semibold text-neutral-600">Da Galeria</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleUseBackground}
+                    className="flex-1 h-20 rounded-2xl border-2 border-dashed border-purple-300 bg-purple-50/50 hover:bg-purple-50 flex flex-col items-center justify-center gap-1.5 transition-colors active:scale-[0.98]"
+                  >
+                    <Shuffle className="h-7 w-7 text-purple-500" />
+                    <span className="text-caption-1 font-semibold text-purple-600">Sem Foto</span>
+                  </button>
+                </div>
 
                 {onOpenInfographic && (
                   <button
@@ -391,11 +426,11 @@ export function PhotoStickerShareDrawer({
                   className="relative w-full rounded-3xl overflow-hidden bg-neutral-900"
                   style={{ aspectRatio: '3/4', maxHeight: '420px' }}
                 >
-                  {photoUrl && (
+                  {(photoUrl || backgroundUrl) && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={photoUrl}
-                      alt="Prévia da foto"
+                      src={photoUrl ?? backgroundUrl!}
+                      alt="Fundo"
                       className="absolute inset-0 w-full h-full object-cover"
                     />
                   )}
@@ -551,11 +586,12 @@ export function PhotoStickerShareDrawer({
                     setStep('source');
                     if (photoUrl) URL.revokeObjectURL(photoUrl);
                     setPhotoUrl(null);
+                    setBackgroundUrl(null);
                     blobRef.current = null;
                   }}
                   className="w-full text-center text-caption-1 font-medium text-neutral-400 hover:text-neutral-500 transition-colors py-1"
                 >
-                  Trocar Foto
+                  {photoUrl ? 'Trocar Foto' : 'Trocar Fundo'}
                 </button>
               </div>
             )}
