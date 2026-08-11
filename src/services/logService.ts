@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { userService } from './userService';
 import { calculateFoodScore } from '@/utils/scoreUtils';
+import { getActiveForUser } from './challengeService';
+import { generateForUser } from './dailySummaryService';
 
 export function getLocalDayInterval(eventTimeStr: string): { start: Date; end: Date } {
   const tIndex = eventTimeStr.indexOf('T');
@@ -48,23 +50,77 @@ function toSafeEventTime(dateInput: string | undefined): Date {
 }
 
 
+const CHALLENGE_FLAG_MAP: Record<string, 'shareWorkouts' | 'shareMeals' | 'shareWater'> = {
+  workout: 'shareWorkouts',
+  food: 'shareMeals',
+  water: 'shareWater',
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildChallengePostContent(logData: any): string {
+  const labels: Record<string, string> = {
+    workout: 'registrou um treino',
+    food: 'registrou uma refeição',
+    water: 'registrou ingestão de água',
+  };
+  return labels[logData.category] ?? 'registrou uma atividade no desafio';
+}
+
 export const logService = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async saveLog(userId: string, logData: any) {
     // 1. Checa as permissões e limites (lançará PermissionError se bloqueado)
     await userService.checkUserPermissions(userId);
 
-    // 2. Salva o registro
-    const newLog = await prisma.dailyLog.create({
-      data: {
-        userId,
-        category: logData.category,
-        primaryValue: logData.primary_value,
-        details: logData.details,
-        eventTime: toSafeEventTime(logData.event_time),
-        source: logData.source || 'UNKNOWN',
-      }
+    // 2. Check active challenges (read outside tx — acceptable; stale reads are harmless)
+    const activeChallenges = await getActiveForUser(userId);
+
+    // 3. Check if this is the first log of today (to trigger yesterday's summary)
+    const eventTimeStr: string = logData.event_time || new Date().toISOString();
+    const { start: todayStart } = getLocalDayInterval(eventTimeStr);
+    const priorLogToday = await prisma.dailyLog.findFirst({
+      where: { userId, eventTime: { gte: todayStart } },
+      select: { id: true },
     });
+    const isFirstLogToday = !priorLogToday;
+
+    // 4. Save the log and create challenge team posts atomically
+    const newLog = await prisma.$transaction(async (tx) => {
+      const log = await tx.dailyLog.create({
+        data: {
+          userId,
+          category: logData.category,
+          primaryValue: logData.primary_value,
+          details: logData.details,
+          eventTime: toSafeEventTime(logData.event_time),
+          source: logData.source || 'UNKNOWN',
+        },
+      });
+
+      const flag = CHALLENGE_FLAG_MAP[logData.category];
+      if (flag) {
+        for (const challenge of activeChallenges) {
+          if (challenge[flag]) {
+            await tx.post.create({
+              data: {
+                teamId: challenge.teamId,
+                authorId: userId,
+                content: buildChallengePostContent(logData),
+                type: 'SYSTEM_MILESTONE',
+              },
+            });
+          }
+        }
+      }
+
+      return log;
+    });
+
+    // 5. Fire-and-forget: generate yesterday's daily summary on first log of the day
+    if (isFirstLogToday) {
+      const yesterday = new Date(Date.now() - 86_400_000);
+      generateForUser(userId, yesterday).catch(() => {});
+    }
 
     return newLog;
   },
