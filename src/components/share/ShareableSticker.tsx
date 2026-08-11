@@ -87,7 +87,6 @@ export const ShareableSticker = forwardRef<HTMLDivElement, ShareableStickerProps
         ref={ref}
         style={{
           width: '220px',
-          padding: '16px',
           background: 'transparent',
           fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
