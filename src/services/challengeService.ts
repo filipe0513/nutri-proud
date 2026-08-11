@@ -13,10 +13,25 @@ export async function createChallenge(
   nutriId: string,
   data: ChallengeInput,
 ): Promise<{ team: Team; challenge: Challenge }> {
+  // Uniqueness check before the transaction to give a clear error (P2002 would also
+  // catch race conditions, but this gives the user a readable message first).
+  let customCode: string | undefined;
+  if (data.inviteCode) {
+    customCode = data.inviteCode.toUpperCase();
+    const existing = await prisma.team.findFirst({
+      where: { inviteCode: { equals: customCode, mode: 'insensitive' } },
+      select: { id: true },
+    });
+    if (existing) {
+      throw new Error('Código já em uso. Escolha outro.');
+    }
+  }
+
   return prisma.$transaction(async (tx) => {
     const team = await tx.team.create({
       data: {
         name: data.goalDescription,
+        ...(customCode !== undefined ? { inviteCode: customCode } : {}),
         members: {
           create: { userId: nutriId, role: 'ADMIN' },
         },

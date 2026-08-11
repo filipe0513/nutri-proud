@@ -19,6 +19,7 @@ export default function TeamsHubPage() {
   const [joinDrawerOpen, setJoinDrawerOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const [createInviteError, setCreateInviteError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -39,18 +40,29 @@ export default function TeamsHubPage() {
     const form = e.currentTarget;
     const name = (form.elements.namedItem('name') as HTMLInputElement).value.trim();
     const description = (form.elements.namedItem('description') as HTMLInputElement).value.trim();
+    const inviteCode = (form.elements.namedItem('inviteCode') as HTMLInputElement).value.trim();
     if (!name) return;
 
+    setCreateInviteError(null);
     setIsCreating(true);
     try {
-      const newTeam = await createTeam({ name, description: description || undefined });
+      const newTeam = await createTeam({
+        name,
+        description: description || undefined,
+        inviteCode: inviteCode || undefined,
+      });
       setTeams((prev) => [newTeam, ...prev]);
       setCreateDrawerOpen(false);
       toast.success(`Time "${newTeam.name}" criado! 🎉`, {
         className: 'bg-notify-success-glass backdrop-blur-md border border-notify-success text-notify-success',
       });
-    } catch {
-      toast.error('Não foi possível criar o Time. Tente novamente.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Não foi possível criar o Time.';
+      if (msg === 'Código já em uso. Escolha outro.') {
+        setCreateInviteError(msg);
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setIsCreating(false);
     }
@@ -191,7 +203,7 @@ export default function TeamsHubPage() {
       </Drawer>
 
       {/* Create Drawer */}
-      <Drawer open={createDrawerOpen} onOpenChange={setCreateDrawerOpen}>
+      <Drawer open={createDrawerOpen} onOpenChange={(o) => { setCreateDrawerOpen(o); if (!o) setCreateInviteError(null); }}>
         <DrawerContent className="!bg-white/95 backdrop-blur-2xl px-6 pb-10">
           <DrawerHeader className="px-0 pb-4">
             <DrawerTitle className="text-title-3 text-neutral-500">Criar Novo Time</DrawerTitle>
@@ -208,6 +220,25 @@ export default function TeamsHubPage() {
                 Descrição (Opcional)
               </label>
               <Input name="description" placeholder="Qual o foco do time?" className="h-12 bg-white/50" />
+            </div>
+            <div>
+              <label className="text-caption-1 text-neutral-500 font-medium mb-1.5 block">
+                Código de Convite (Opcional)
+              </label>
+              <Input
+                name="inviteCode"
+                placeholder="Ex: MEUTIME1"
+                className={`h-12 bg-white/50 font-mono uppercase ${createInviteError ? 'border-notify-error focus-visible:ring-notify-error' : ''}`}
+                maxLength={20}
+                onChange={() => setCreateInviteError(null)}
+              />
+              {createInviteError ? (
+                <p className="text-caption-2 text-notify-error mt-1">{createInviteError}</p>
+              ) : (
+                <p className="text-caption-2 text-neutral-400 mt-1">
+                  4–20 caracteres alfanuméricos. Se deixar em branco, o app gera automaticamente.
+                </p>
+              )}
             </div>
             <Button
               type="submit"

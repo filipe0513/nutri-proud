@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { inviteCodeSchema } from '@/schemas/teamSchema';
 import { CldUploadWidget } from 'next-cloudinary';
 import { toast } from 'sonner';
 import { Trophy, ImagePlus, Loader2, X } from 'lucide-react';
@@ -25,6 +26,7 @@ const formSchema = z.object({
   shareWater: z.boolean(),
   weeklyEvolution: z.boolean(),
   dailySummary: z.boolean(),
+  inviteCode: inviteCodeSchema.optional().or(z.literal('')),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -67,10 +69,11 @@ export function CreateChallengeDrawer({
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: DEFAULT_FLAGS,
+    defaultValues: { ...DEFAULT_FLAGS, inviteCode: '' },
   });
 
   const toggleFlag = (field: keyof typeof flags) => {
@@ -93,6 +96,7 @@ export function CreateChallengeDrawer({
         startDate: new Date(data.startDate + 'T00:00:00.000Z').toISOString(),
         endDate: new Date(data.endDate + 'T23:59:59.999Z').toISOString(),
         ...flags,
+        inviteCode: data.inviteCode || undefined,
       };
 
       const res = await fetch('/api/challenges', {
@@ -103,7 +107,12 @@ export function CreateChallengeDrawer({
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error((body as { error?: string }).error ?? 'Erro ao criar desafio.');
+        const msg = (body as { error?: string }).error ?? 'Erro ao criar desafio.';
+        if (res.status === 409) {
+          setError('inviteCode', { message: msg });
+          return;
+        }
+        throw new Error(msg);
       }
 
       handleClose();
@@ -242,6 +251,30 @@ export function CreateChallengeDrawer({
                 </p>
               )}
             </div>
+          </div>
+
+          {/* Invite code */}
+          <div>
+            <label className="text-caption-1 text-neutral-500 font-medium mb-1.5 block">
+              Código de Convite (Opcional)
+            </label>
+            <input
+              {...register('inviteCode')}
+              placeholder="Ex: NUTRI2026"
+              maxLength={20}
+              className={`w-full h-12 rounded-2xl border bg-neutral-50 px-4 text-input-1 text-neutral-500 font-mono uppercase placeholder:normal-case placeholder:text-neutral-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                errors.inviteCode ? 'border-notify-error' : 'border-neutral-200/60'
+              }`}
+            />
+            {errors.inviteCode ? (
+              <p className="text-caption-2 text-notify-error mt-1">
+                {errors.inviteCode.message}
+              </p>
+            ) : (
+              <p className="text-caption-2 text-neutral-400 mt-1">
+                4–20 caracteres alfanuméricos. Se deixar em branco, o app gera automaticamente.
+              </p>
+            )}
           </div>
 
           {/* Toggles */}

@@ -19,7 +19,9 @@ export async function POST(request: Request) {
     const result = await createChallenge(session.user.id, parsed.data);
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    const isUserError = message === 'Código já em uso. Escolha outro.';
     console.error('[POST /api/challenges]', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json({ error: message }, { status: isUserError ? 409 : 500 });
   }
 }

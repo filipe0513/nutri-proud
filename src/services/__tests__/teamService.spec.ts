@@ -117,7 +117,7 @@ describe('teamService', () => {
   describe('joinTeamByCode', () => {
     test('lança erro se o código for inválido', async () => {
       // Arrange
-      prismaMock.team.findUnique.mockResolvedValue(null);
+      prismaMock.team.findFirst.mockResolvedValue(null);
 
       // Act & Assert
       await expect(
@@ -127,7 +127,7 @@ describe('teamService', () => {
 
     test('lança erro se o usuário já for membro', async () => {
       // Arrange
-      prismaMock.team.findUnique.mockResolvedValue({ id: 'team-1', _count: { members: 1 } } as never);
+      prismaMock.team.findFirst.mockResolvedValue({ id: 'team-1', _count: { members: 1 } } as never);
       prismaMock.teamMember.findUnique.mockResolvedValue({ id: 'member-1' } as never);
 
       // Act & Assert
@@ -138,7 +138,7 @@ describe('teamService', () => {
 
     test('adiciona o usuário como MEMBER no team', async () => {
       // Arrange
-      prismaMock.team.findUnique.mockResolvedValue({
+      prismaMock.team.findFirst.mockResolvedValue({
         id: 'team-1',
         name: 'Time Valid',
         description: null,

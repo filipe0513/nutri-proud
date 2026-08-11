@@ -128,7 +128,7 @@ export const fetchMyTeams = async (): Promise<TeamSummary[]> => {
   return data.teams || [];
 };
 
-export const createTeam = async (data: { name: string; description?: string }): Promise<TeamSummary> => {
+export const createTeam = async (data: { name: string; description?: string; inviteCode?: string }): Promise<TeamSummary> => {
   const res = await fetchApiOrThrow('/api/teams', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

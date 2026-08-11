@@ -88,12 +88,26 @@ export async function getDashboardTeams(
  */
 export async function createTeam(
   userId: string,
-  data: { name: string; description?: string },
+  data: { name: string; description?: string; inviteCode?: string },
 ): Promise<TeamSummary> {
+  let customCode: string | undefined;
+
+  if (data.inviteCode) {
+    customCode = data.inviteCode.toUpperCase();
+    const existing = await prisma.team.findFirst({
+      where: { inviteCode: { equals: customCode, mode: 'insensitive' } },
+      select: { id: true },
+    });
+    if (existing) {
+      throw new Error('Código já em uso. Escolha outro.');
+    }
+  }
+
   const team = await prisma.team.create({
     data: {
       name: data.name,
       description: data.description ?? null,
+      ...(customCode !== undefined ? { inviteCode: customCode } : {}),
       members: {
         create: { userId, role: 'ADMIN' },
       },
@@ -120,8 +134,9 @@ export async function joinTeamByCode(
   userId: string,
   inviteCode: string,
 ): Promise<TeamSummary> {
-  const team = await prisma.team.findUnique({
-    where: { inviteCode },
+  // Case-insensitive lookup: handles both legacy UUID codes and custom alphanumeric codes.
+  const team = await prisma.team.findFirst({
+    where: { inviteCode: { equals: inviteCode, mode: 'insensitive' } },
     include: { _count: { select: { members: true } } },
   });
 
