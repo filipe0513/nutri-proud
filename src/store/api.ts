@@ -180,7 +180,7 @@ export const fetchTeamFeed = async (teamId: string): Promise<PostWithAuthor[]> =
   return data.posts || [];
 };
 
-export const createPost = async (teamId: string, data: { content?: string; imageUrl?: string }): Promise<PostWithAuthor> => {
+export const createPost = async (teamId: string, data: { content?: string; imageUrl?: string; metadata?: Record<string, number> }): Promise<PostWithAuthor> => {
   const res = await fetchApiOrThrow(`/api/teams/${teamId}/posts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

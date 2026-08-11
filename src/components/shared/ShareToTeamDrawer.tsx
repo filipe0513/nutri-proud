@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/drawer';
 import { useAppStore } from '@/store/store';
 import { historyService } from '@/services/historyService';
+import { calculateWaterScore, calculateFoodScore } from '@/utils/scoreUtils';
 import type { ActivityLog } from '@/store/types';
 
 const SHAREABLE_CATEGORIES = ['water', 'food', 'workout', 'sleep', 'poop'] as const;
@@ -52,7 +53,7 @@ function formatTime(isoString: string): string {
 interface ShareToTeamDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onShareScore: (score: number) => void;
+  onShareScore: (score: number, pillarScores: Record<string, number>) => void;
   onShareLog: (content: string) => void;
 }
 
@@ -77,7 +78,29 @@ export function ShareToTeamDrawer({
       (log) => new Date(log.event_time) >= startOfDay
     );
     const score = historyService.calculateDayScore(todayLogs, user_profile);
-    onShareScore(score);
+
+    const targets = user_profile?.targets;
+
+    const waterLogs = todayLogs.filter((l) => l.category === 'water');
+    const totalMl = waterLogs.reduce((acc, l) => acc + (l.details?.quantity_ml || 0), 0);
+    const waterTarget = targets?.water_ml_per_day || 2000;
+
+    const avgPrimaryScore = (cat: string) => {
+      const catLogs = todayLogs.filter((l) => l.category === cat);
+      if (catLogs.length === 0) return 0;
+      const avg = catLogs.reduce((acc, l) => acc + (l.primary_value ?? 0), 0) / catLogs.length;
+      return Math.max(0, Math.min(100, Math.round(avg)));
+    };
+
+    const pillarScores: Record<string, number> = {
+      water: calculateWaterScore(totalMl, waterTarget),
+      food: calculateFoodScore(todayLogs, targets?.planned_meals ?? 3),
+      workout: avgPrimaryScore('workout'),
+      sleep: avgPrimaryScore('sleep'),
+      poop: avgPrimaryScore('poop'),
+    };
+
+    onShareScore(score, pillarScores);
     handleOpenChange(false);
   };
 

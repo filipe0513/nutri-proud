@@ -391,6 +391,7 @@ export async function getTeamPosts(
       reactions,
       commentCount: post._count.comments,
       createdAt: post.createdAt.toISOString(),
+      metadata: post.metadata as { pillarScores?: Record<string, number> } | null,
     };
   });
 }
@@ -401,7 +402,7 @@ export async function getTeamPosts(
 export async function createTeamPost(
   teamId: string,
   authorId: string,
-  data: { content?: string; imageUrl?: string; type?: 'USER_GENERATED' | 'SYSTEM_MILESTONE' },
+  data: { content?: string; imageUrl?: string; type?: 'USER_GENERATED' | 'SYSTEM_MILESTONE'; metadata?: Record<string, number> },
 ): Promise<PostWithAuthor> {
   const membership = await prisma.teamMember.findUnique({
     where: { teamId_userId: { teamId, userId: authorId } },
@@ -415,6 +416,7 @@ export async function createTeamPost(
       content: data.content ?? null,
       imageUrl: data.imageUrl ?? null,
       type: data.type ?? 'USER_GENERATED',
+      metadata: data.metadata ? { pillarScores: data.metadata } : undefined,
     },
     include: {
       author: { select: { id: true, name: true, image: true } },
@@ -447,6 +449,7 @@ export async function createTeamPost(
     reactions: [],
     commentCount: 0,
     createdAt: post.createdAt.toISOString(),
+    metadata: post.metadata as { pillarScores?: Record<string, number> } | null,
   };
 }
 
@@ -495,6 +498,7 @@ export async function getPostById(
     reactions,
     commentCount: post._count.comments,
     createdAt: post.createdAt.toISOString(),
+    metadata: post.metadata as { pillarScores?: Record<string, number> } | null,
   };
 }
 

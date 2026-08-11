@@ -37,6 +37,7 @@ export interface PostWithAuthor {
   reactions: ReactionCount[];
   commentCount: number;
   createdAt: string; // ISO
+  metadata?: { pillarScores?: Record<string, number> } | null;
 }
 
 // ── Comment types ──────────────────────────────────────────
