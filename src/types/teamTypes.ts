@@ -62,7 +62,7 @@ export interface MilestoneMetadata {
 
 export interface TeamFeedPostWithPatient {
   id: string;
-  type: 'MILESTONE' | 'ALERT' | 'EVOLUTION' | 'SYSTEM';
+  type: 'MILESTONE' | 'ALERT' | 'EVOLUTION' | 'SYSTEM' | 'CHALLENGE_SUMMARY';
   content: string;
   createdAt: string; // ISO
   patient: PostAuthor;
