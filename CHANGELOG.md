@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.5.1] — 2026-08-11
+
+### Fixed
+- Reduced excessive blur overlay height on share sticker — blur now covers only the card area instead of ~45% of the background image
+
 ## [2.5.0] — 2026-08-11
 
 ### Added

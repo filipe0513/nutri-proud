@@ -1,5 +1,12 @@
 [
   {
+    "version": "2.5.1",
+    "date": "2026-08-11",
+    "highlights": [
+      "🖼️ Sticker de compartilhamento corrigido: o efeito de desfoque agora cobre apenas a área do card, sem esconder sua foto de fundo."
+    ]
+  },
+  {
     "version": "2.5.0",
     "date": "2026-08-11",
     "highlights": [
