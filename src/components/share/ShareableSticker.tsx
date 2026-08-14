@@ -46,8 +46,8 @@ const THEME_STYLES: Record<StickerTheme, ThemeStyle> = {
     containerStyle: {
       background: 'rgba(0,0,0,0.6)',
       border: '1px solid rgba(255,255,255,0.2)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
+      backdropFilter: 'blur(6px)',
+      WebkitBackdropFilter: 'blur(6px)',
     },
     textColor: '#ffffff',
     subTextColor: 'rgba(255,255,255,0.9)',
@@ -58,8 +58,8 @@ const THEME_STYLES: Record<StickerTheme, ThemeStyle> = {
     containerStyle: {
       background: 'rgba(255,255,255,0.85)',
       border: '1px solid rgba(0,0,0,0.1)',
-      backdropFilter: 'blur(8px)',
-      WebkitBackdropFilter: 'blur(8px)',
+      backdropFilter: 'blur(6px)',
+      WebkitBackdropFilter: 'blur(6px)',
     },
     textColor: '#404040',
     subTextColor: '#525252',
@@ -86,13 +86,13 @@ export const ShareableSticker = forwardRef<HTMLDivElement, ShareableStickerProps
       <div
         ref={ref}
         style={{
-          width: '220px',
+          width: '180px',
           background: 'transparent',
           fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
       >
         <div
-          className="rounded-[24px] p-5 shadow-2xl drop-shadow-2xl flex flex-col items-center"
+          className="rounded-[20px] p-3.5 shadow-2xl drop-shadow-2xl flex flex-col items-center"
           style={t.containerStyle}
         >
           <div className="flex items-center gap-2 mb-3 drop-shadow-md" style={{ color: t.textColor }}>
@@ -101,7 +101,7 @@ export const ShareableSticker = forwardRef<HTMLDivElement, ShareableStickerProps
           </div>
 
           <div
-            className="text-5xl font-black tracking-tighter drop-shadow-md mb-2"
+            className="text-4xl font-black tracking-tighter drop-shadow-md mb-1.5"
             style={{ color: t.textColor }}
           >
             {type === 'WEIGHT' ? (

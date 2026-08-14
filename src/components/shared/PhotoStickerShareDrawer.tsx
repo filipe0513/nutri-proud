@@ -444,8 +444,17 @@ export function PhotoStickerShareDrawer({
                       className="absolute inset-0 w-full h-full object-cover"
                     />
                   )}
+                  {/* Gradient fade — gives sticker a visual base (max 22% height) */}
+                  <div
+                    className="absolute bottom-0 left-0 right-0 pointer-events-none"
+                    style={{
+                      height: '22%',
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 100%)',
+                      zIndex: 1,
+                    }}
+                  />
                   {/* Sticker — fixed bottom-left */}
-                  <div className="absolute bottom-3 left-3">
+                  <div className="absolute bottom-3 left-3" style={{ zIndex: 2 }}>
                     <ShareableSticker
                       type={stickerType}
                       score={stickerScore}
