@@ -36,21 +36,36 @@ export default async function RootHomePage() {
 
   // Compute evolution reminder — server-side, pure function, no client state needed
   let showEvolutionReminder = false;
+  let hasNutri = false;
   const userId = session?.user?.id;
   if (userId && !isAnon) {
-    const [activeChallenges, lastEvolutionLog] = await Promise.all([
+    const [activeChallenges, lastEvolutionLog, nutriMembership] = await Promise.all([
       getActiveForUser(userId),
       prisma.dailyLog.findFirst({
         where: { userId, category: 'evolution' },
         orderBy: { eventTime: 'desc' },
         select: { eventTime: true },
       }),
+      // Paciente tem nutri se for MEMBER num time que tem ao menos um ADMIN com role NUTRITIONIST
+      prisma.teamMember.findFirst({
+        where: {
+          userId,
+          role: 'MEMBER',
+          team: {
+            members: {
+              some: { role: 'ADMIN', user: { role: UserRole.NUTRITIONIST } },
+            },
+          },
+        },
+        select: { id: true },
+      }),
     ]);
     const weeklyChallenge = activeChallenges.find((c) => c.weeklyEvolution);
     showEvolutionReminder = shouldShowEvolutionReminder(weeklyChallenge, lastEvolutionLog);
+    hasNutri = !!nutriMembership;
   }
 
   // Pacientes, ADMINs e usuários anônimos vêem o painel gamificado
   // ADMINs recebem a role para exibir o View Switcher no header
-  return <PatientHome userRole={role} showEvolutionReminder={showEvolutionReminder} />;
+  return <PatientHome userRole={role} showEvolutionReminder={showEvolutionReminder} hasNutri={hasNutri} />;
 }

@@ -20,7 +20,8 @@ import { NutriMessageCard } from '@/components/shared/NutriMessageCard';
 import { toLocalISOString } from '@/lib/utils';
 import { calculateWaterScore, calculateFoodScore } from '@/utils/scoreUtils';
 import { getLocalStartOfDay } from '@/utils/dateUtils';
-import { LifeBuoy, TrendingUp } from 'lucide-react';
+import { LifeBuoy, TrendingUp, Stethoscope } from 'lucide-react';
+import Link from 'next/link';
 
 // ─── Lazy drawers — não fazem parte do bundle inicial ─────────────────────────
 const InsightsDrawer = dynamic(() => import('@/components/shared/InsightsDrawer').then(m => ({ default: m.InsightsDrawer })), { ssr: false });
@@ -68,7 +69,7 @@ const ACTION_LIST = [
   { id: 'note', label: 'Adicionar nota', icon: StickyNote, color: 'var(--color-highlight-300)', bg: 'bg-yellow-50' },
 ];
 
-function PatientHomeContent({ userRole, showEvolutionReminder }: { userRole?: string; showEvolutionReminder?: boolean }) {
+function PatientHomeContent({ userRole, showEvolutionReminder, hasNutri }: { userRole?: string; showEvolutionReminder?: boolean; hasNutri?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addLog, user_profile, activity_logs, initializeData } = useAppStore();
@@ -304,6 +305,27 @@ function PatientHomeContent({ userRole, showEvolutionReminder }: { userRole?: st
         </div>
       )}
 
+      {/* 0c. Nutri Directory Card (role USER sem nutri atrelada) */}
+      {userRole === 'USER' && !hasNutri && (
+        <Link
+          href="/nutricionistas"
+          className="flex items-center gap-3 bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-2xl p-4 hover:bg-glass-light-2 transition-colors active:scale-[0.98]"
+        >
+          <div className="h-9 w-9 rounded-full bg-brand-500/10 flex items-center justify-center shrink-0">
+            <Stethoscope className="h-4 w-4 text-brand-500" />
+          </div>
+          <div className="flex-1">
+            <p className="text-body-2 font-semibold text-neutral-500">
+              Ainda não tem acompanhamento?
+            </p>
+            <p className="text-caption-1 text-neutral-400 mt-0.5">
+              Encontre uma nutricionista e evolua com suporte profissional.
+            </p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-neutral-300 shrink-0" />
+        </Link>
+      )}
+
       {/* 1. Greeting + Streak Badge */}
       <StoryHeader />
 
@@ -471,10 +493,10 @@ function PatientHomeContent({ userRole, showEvolutionReminder }: { userRole?: st
   );
 }
 
-export function PatientHome({ userRole, showEvolutionReminder }: { userRole?: string; showEvolutionReminder?: boolean }) {
+export function PatientHome({ userRole, showEvolutionReminder, hasNutri }: { userRole?: string; showEvolutionReminder?: boolean; hasNutri?: boolean }) {
   return (
     <Suspense fallback={<div className="pb-24 pt-8 px-6" />}>
-      <PatientHomeContent userRole={userRole} showEvolutionReminder={showEvolutionReminder} />
+      <PatientHomeContent userRole={userRole} showEvolutionReminder={showEvolutionReminder} hasNutri={hasNutri} />
     </Suspense>
   );
 }

@@ -207,7 +207,7 @@ interface User {
   name: string | null;
   image: string | null;
   is_anonymous: boolean;
-  role: string;                     // "USER" | "ADMIN"
+  role: string;                     // "USER" | "NUTRITIONIST" | "ADMIN"
   plan: "FREE" | "START" | "PRO";
   oneSignalId: string | null;
   pushEnabled: boolean;

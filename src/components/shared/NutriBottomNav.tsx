@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, Rss, Users } from 'lucide-react';
+import { Activity, Rss, Users, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function NutriBottomNav() {
@@ -15,6 +15,7 @@ export function NutriBottomNav() {
     { label: 'Insights', icon: Activity, href: '/dashboard/insights' },
     { label: 'Feed', icon: Rss, href: '/dashboard' },
     { label: 'Consultório', icon: Users, href: '/dashboard/teams' },
+    { label: 'Meu perfil', icon: UserCircle, href: '/dashboard/perfil-publico' },
   ];
 
   return (
