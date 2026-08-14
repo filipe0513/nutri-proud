@@ -67,5 +67,5 @@ export default async function RootHomePage() {
 
   // Pacientes, ADMINs e usuários anônimos vêem o painel gamificado
   // ADMINs recebem a role para exibir o View Switcher no header
-  return <PatientHome userRole={role} showEvolutionReminder={showEvolutionReminder} hasNutri={hasNutri} />;
+  return <PatientHome userRole={role} showEvolutionReminder={showEvolutionReminder} hasNutri={hasNutri} isAnon={isAnon} />;
 }

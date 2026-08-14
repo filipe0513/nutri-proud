@@ -69,7 +69,7 @@ const ACTION_LIST = [
   { id: 'note', label: 'Adicionar nota', icon: StickyNote, color: 'var(--color-highlight-300)', bg: 'bg-yellow-50' },
 ];
 
-function PatientHomeContent({ userRole, showEvolutionReminder, hasNutri }: { userRole?: string; showEvolutionReminder?: boolean; hasNutri?: boolean }) {
+function PatientHomeContent({ userRole, showEvolutionReminder, hasNutri, isAnon }: { userRole?: string; showEvolutionReminder?: boolean; hasNutri?: boolean; isAnon?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addLog, user_profile, activity_logs, initializeData } = useAppStore();
@@ -305,10 +305,10 @@ function PatientHomeContent({ userRole, showEvolutionReminder, hasNutri }: { use
         </div>
       )}
 
-      {/* 0c. Nutri Directory Card (role USER sem nutri atrelada) */}
-      {userRole === 'USER' && !hasNutri && (
+      {/* 0c. Nutri Directory Card (role USER sem nutri atrelada, ou usuário anônimo) */}
+      {(userRole === 'USER' || isAnon) && !hasNutri && (
         <Link
-          href="/nutricionistas"
+          href={isAnon ? '/welcome' : '/nutricionistas'}
           className="flex items-center gap-3 bg-glass-light-1 backdrop-blur-sm border border-white/40 rounded-2xl p-4 hover:bg-glass-light-2 transition-colors active:scale-[0.98]"
         >
           <div className="h-9 w-9 rounded-full bg-brand-500/10 flex items-center justify-center shrink-0">
@@ -316,10 +316,12 @@ function PatientHomeContent({ userRole, showEvolutionReminder, hasNutri }: { use
           </div>
           <div className="flex-1">
             <p className="text-body-2 font-semibold text-neutral-500">
-              Ainda não tem acompanhamento?
+              {isAnon ? 'Crie sua conta para ter acompanhamento' : 'Ainda não tem acompanhamento?'}
             </p>
             <p className="text-caption-1 text-neutral-400 mt-0.5">
-              Encontre uma nutricionista e evolua com suporte profissional.
+              {isAnon
+                ? 'Cadastre-se e encontre uma nutricionista para evoluir com suporte profissional.'
+                : 'Encontre uma nutricionista e evolua com suporte profissional.'}
             </p>
           </div>
           <ChevronRight className="h-4 w-4 text-neutral-300 shrink-0" />
@@ -493,10 +495,10 @@ function PatientHomeContent({ userRole, showEvolutionReminder, hasNutri }: { use
   );
 }
 
-export function PatientHome({ userRole, showEvolutionReminder, hasNutri }: { userRole?: string; showEvolutionReminder?: boolean; hasNutri?: boolean }) {
+export function PatientHome({ userRole, showEvolutionReminder, hasNutri, isAnon }: { userRole?: string; showEvolutionReminder?: boolean; hasNutri?: boolean; isAnon?: boolean }) {
   return (
     <Suspense fallback={<div className="pb-24 pt-8 px-6" />}>
-      <PatientHomeContent userRole={userRole} showEvolutionReminder={showEvolutionReminder} hasNutri={hasNutri} />
+      <PatientHomeContent userRole={userRole} showEvolutionReminder={showEvolutionReminder} hasNutri={hasNutri} isAnon={isAnon} />
     </Suspense>
   );
 }
