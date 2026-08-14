@@ -431,17 +431,18 @@ Derive a short kebab-case slug from the task (e.g. `fix-water-log`, `feat-team-f
 
 ```bash
 # From the main repo root:
-git worktree add ../nutri-proud-<slug> dev
+git worktree add -b <slug> ../nutri-proud-<slug> dev
 cd ../nutri-proud-<slug>
+ln -s /Users/filipemagalhaes/Workspace/personal/nutri-proud/node_modules ./node_modules
 ```
 
-> The worktree is checked out from `dev` and lives at `../nutri-proud-<slug>` (sibling of the main repo).
+> The worktree creates a dedicated branch `<slug>` from `dev` and lives at `../nutri-proud-<slug>` (sibling of the main repo). The `node_modules` symlink avoids reinstalling dependencies.
 
 ### Step 3 — Do all work inside the worktree
 
 All file edits, installs, and commands run from `../nutri-proud-<slug>`. Never touch the main repo directory during the task.
 
-### Step 4 — Validate, commit, and remove the worktree
+### Step 4 — Validate, commit, and clean up
 
 After all changes are made and green (see Definition of Done below):
 
@@ -450,12 +451,23 @@ After all changes are made and green (see Definition of Done below):
 git add .
 git commit -m '<type>(<scope>): <description>'
 
-# Back in the main repo to clean up:
+# Back in the main repo:
 cd /Users/filipemagalhaes/Workspace/personal/nutri-proud
+
+# Merge feature branch into dev (fast-forward when possible)
+git merge <slug>
+
+# Remove the worktree directory (also removes the node_modules symlink, not its target)
 git worktree remove ../nutri-proud-<slug>
+
+# Delete the feature branch
+git branch -d <slug>
 ```
 
 > `git worktree remove` fails if there are uncommitted changes — this is intentional. Commit first.
+> `git branch -d` (not `-D`) refuses to delete if the branch hasn't been merged — also intentional.
+
+> **NEVER push** to any branch (`dev`, `main`, or the feature branch). Pushing is the user's responsibility.
 
 ---
 
@@ -485,10 +497,15 @@ npm run validate
 - 🟢 **All pass** → Commit, then remove the worktree. Task is done.
 - 🔴 **Any step fails** → Do NOT report completion. Read the error, fix autonomously, re-run both commands. Repeat until green.
 
-When the validation is successful, you MUST execute the versioning commands in the worktree terminal:
+When the validation is successful, you MUST execute the versioning and cleanup commands:
 1. `git add .`
 2. `git commit -m '<type>(<scope>): <description of task and changes>'`
-3. `cd /Users/filipemagalhaes/Workspace/personal/nutri-proud && git worktree remove ../nutri-proud-<slug>`
+3. `cd /Users/filipemagalhaes/Workspace/personal/nutri-proud`
+4. `git merge <slug>`
+5. `git worktree remove ../nutri-proud-<slug>`
+6. `git branch -d <slug>`
+
+> **NEVER run `git push`** — not to `dev`, `main`, or any other branch. Pushing is always the user's responsibility.
 
 **Valid commit types:**
 - **feat:** New feature or page.
