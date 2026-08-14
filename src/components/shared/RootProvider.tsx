@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { SessionProvider } from 'next-auth/react';
 import { useAppStore } from '@/store/store';
 import { Toaster } from '@/components/ui/sonner';
 import { SuccessOverlay } from './SuccessOverlay';
@@ -29,12 +30,12 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
   }, [initializeData]);
 
   return (
-    <>
+    <SessionProvider>
       <OneSignalInit />
       <PushPermissionModal />
       {children}
       <Toaster position="top-center" richColors />
       <SuccessOverlay />
-    </>
+    </SessionProvider>
   );
 }
