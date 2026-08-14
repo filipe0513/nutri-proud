@@ -7,6 +7,7 @@ import { WeeklyVolumeChart, SourceDistributionChart, LoginAttemptsChart } from "
 import { HeavyUsersTable } from "./heavy-users-table";
 import { UsersManagementTable } from "./users-management-table";
 import { AdminViewSwitcher } from "@/components/shared/AdminViewSwitcher";
+import { AdminPatientsPanel } from "@/components/shared/AdminPatientsPanel";
 export default async function AdminPage() {
   const session = await auth();
 
@@ -224,6 +225,9 @@ export default async function AdminPage() {
           </CardHeader>
           <HeavyUsersTable initialData={topUsers} />
         </Card>
+
+        {/* Painel de Saúde da Base de Pacientes (Frente 2) */}
+        <AdminPatientsPanel />
 
       </div>
     </div>
