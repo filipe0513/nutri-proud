@@ -1,7 +1,6 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useAppStore } from '@/store/store';
 import { Toaster } from '@/components/ui/sonner';
 import { SuccessOverlay } from './SuccessOverlay';
@@ -16,17 +15,18 @@ import { PushPermissionModal } from './PushPermissionModal';
  * guarda de rotas. Isso é responsabilidade exclusiva do Server Component
  * (main)/layout.tsx, que verifica sessão e onboarding via Prisma no servidor.
  * Manter redirect aqui causaria conflito com o server layout e loops infinitos.
+ *
+ * Nota: o gate `if (!mounted) return null` foi removido intencionalmente.
+ * Ele bloqueava o render de todos os children até a hidratação completar,
+ * aumentando o Speed Index. Como `RootProvider` é 'use client', não há
+ * risco de hydration mismatch nos filhos.
  */
 export function RootProvider({ children }: { children: React.ReactNode }) {
   const initializeData = useAppStore((state) => state.initializeData);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     initializeData();
   }, [initializeData]);
-
-  if (!mounted) return null;
 
   return (
     <>
