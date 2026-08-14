@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { UserRole } from '@/types/roles';
 import Image from 'next/image';
 import Link from 'next/link';
+import { SessionProvider } from 'next-auth/react';
 import { AdminViewSwitcher } from '@/components/shared/AdminViewSwitcher';
 import { NutriBottomNav } from '@/components/shared/NutriBottomNav';
 
@@ -110,7 +111,7 @@ export default async function NutriLayout({
 
       {/* ── Conteúdo Principal ───────────────────────────────────── */}
       <main className="flex-1 w-full pb-28 md:pb-0 overflow-y-auto">
-        {children}
+        <SessionProvider>{children}</SessionProvider>
       </main>
 
       <NutriBottomNav />
