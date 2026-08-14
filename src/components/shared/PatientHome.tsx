@@ -1,27 +1,19 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, Suspense, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/store/store';
 import { StoryHeader } from '@/components/shared/StoryHeader';
 import { StoryCircle } from '@/components/shared/StoryCircle';
 import { ScoreCard } from '@/components/shared/ScoreCard';
 import { InsightsBanner } from '@/components/shared/InsightsBanner';
-import { InsightsDrawer } from '@/components/shared/InsightsDrawer';
 import { WeeklyStreak } from '@/components/shared/WeeklyStreak';
 import { ChevronRight } from 'lucide-react';
 import { Droplets, Utensils, Dumbbell, Moon, Smile, StickyNote } from 'lucide-react';
-import { JacadaDrawer } from '@/components/shared/JacadaDrawer';
-import { BottomSheet_Water } from '@/components/shared/BottomSheet_Water';
-import { MealEqualizerDrawer } from '@/components/shared/MealEqualizerDrawer';
-import { WorkoutEqualizerDrawer } from '@/components/shared/WorkoutEqualizerDrawer';
-import { BottomSheet_Sleep } from '@/components/shared/BottomSheet_Sleep';
-import { BottomSheet_Poop } from '@/components/shared/BottomSheet_Poop';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { LimitWarningDrawer } from '@/components/shared/LimitWarningDrawer';
-import { LifesaverDrawer } from '@/components/shared/LifesaverDrawer';
 import { TopHeader } from '@/components/shared/TopHeader';
 import { AdminViewSwitcher } from '@/components/shared/AdminViewSwitcher';
 import { NutriMessageCard } from '@/components/shared/NutriMessageCard';
@@ -29,6 +21,17 @@ import { toLocalISOString } from '@/lib/utils';
 import { calculateWaterScore, calculateFoodScore } from '@/utils/scoreUtils';
 import { getLocalStartOfDay } from '@/utils/dateUtils';
 import { LifeBuoy, TrendingUp } from 'lucide-react';
+
+// ─── Lazy drawers — não fazem parte do bundle inicial ─────────────────────────
+const InsightsDrawer = dynamic(() => import('@/components/shared/InsightsDrawer').then(m => ({ default: m.InsightsDrawer })), { ssr: false });
+const JacadaDrawer = dynamic(() => import('@/components/shared/JacadaDrawer').then(m => ({ default: m.JacadaDrawer })), { ssr: false });
+const BottomSheet_Water = dynamic(() => import('@/components/shared/BottomSheet_Water').then(m => ({ default: m.BottomSheet_Water })), { ssr: false });
+const MealEqualizerDrawer = dynamic(() => import('@/components/shared/MealEqualizerDrawer').then(m => ({ default: m.MealEqualizerDrawer })), { ssr: false });
+const WorkoutEqualizerDrawer = dynamic(() => import('@/components/shared/WorkoutEqualizerDrawer').then(m => ({ default: m.WorkoutEqualizerDrawer })), { ssr: false });
+const BottomSheet_Sleep = dynamic(() => import('@/components/shared/BottomSheet_Sleep').then(m => ({ default: m.BottomSheet_Sleep })), { ssr: false });
+const BottomSheet_Poop = dynamic(() => import('@/components/shared/BottomSheet_Poop').then(m => ({ default: m.BottomSheet_Poop })), { ssr: false });
+const LimitWarningDrawer = dynamic(() => import('@/components/shared/LimitWarningDrawer').then(m => ({ default: m.LimitWarningDrawer })), { ssr: false });
+const LifesaverDrawer = dynamic(() => import('@/components/shared/LifesaverDrawer').then(m => ({ default: m.LifesaverDrawer })), { ssr: false });
 
 /** Modelo local do AiInsight retornado pela API */
 interface AiInsight {

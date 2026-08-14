@@ -1,13 +1,16 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useAppStore } from '@/store/store';
 import { motion } from 'framer-motion';
 import { historyService } from '@/services/historyService';
 import { Share2 } from 'lucide-react';
-import { ShareReportDrawer } from '@/components/shared/ShareReportDrawer';
-import { PhotoStickerShareDrawer } from '@/components/shared/PhotoStickerShareDrawer';
 import type { InfographicPillar } from '@/components/share/ShareableInfographic';
+
+// Lazy: carrega html-to-image e ShareableSticker só quando o drawer abre
+const PhotoStickerShareDrawer = dynamic(() => import('@/components/shared/PhotoStickerShareDrawer').then(m => ({ default: m.PhotoStickerShareDrawer })), { ssr: false });
+const ShareReportDrawer = dynamic(() => import('@/components/shared/ShareReportDrawer').then(m => ({ default: m.ShareReportDrawer })), { ssr: false });
 
 function getScoreMessage(score: number): string {
   if (score === 0) return 'Bora começar o dia!';
