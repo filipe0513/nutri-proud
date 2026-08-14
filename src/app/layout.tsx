@@ -5,6 +5,7 @@ import { RootProvider } from "@/components/shared/RootProvider";
 import { SplashScreen } from "@/components/shared/SplashScreen";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { PostHogProvider } from "@/providers/PostHogProvider";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -80,6 +81,13 @@ export default function RootLayout({
           <RootProvider>{children}</RootProvider>
           <SpeedInsights />
         </PostHogProvider>
+        <Script
+          id="sw-register"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }`,
+          }}
+        />
       </body>
     </html>
   );
