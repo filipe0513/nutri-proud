@@ -8,6 +8,7 @@ import { HeavyUsersTable } from "./heavy-users-table";
 import { UsersManagementTable } from "./users-management-table";
 import { AdminViewSwitcher } from "@/components/shared/AdminViewSwitcher";
 import { AdminPatientsPanel } from "@/components/shared/AdminPatientsPanel";
+import { AdminNutriPanel } from "@/components/shared/AdminNutriPanel";
 export default async function AdminPage() {
   const session = await auth();
 
@@ -228,6 +229,9 @@ export default async function AdminPage() {
 
         {/* Painel de Saúde da Base de Pacientes (Frente 2) */}
         <AdminPatientsPanel />
+
+        {/* Painel de Saúde do Negócio por Nutricionista (Frente 3) */}
+        <AdminNutriPanel />
 
       </div>
     </div>
