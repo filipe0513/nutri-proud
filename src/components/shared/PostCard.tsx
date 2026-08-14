@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageCircle, Trash2 } from 'lucide-react';
 import { getRelativeTime } from '@/utils/timeUtils';
@@ -27,8 +26,6 @@ interface PostCardProps {
   onCommentClick: (postId: string) => void;
   /** Called after a successful delete so the parent can remove the post from the list */
   onDeletePost?: (postId: string) => void;
-  /** When provided, renders a "Ver completo" link in the footer pointing to this URL */
-  postHref?: string;
 }
 
 function getInitials(name: string | null): string {
@@ -40,7 +37,7 @@ function getInitials(name: string | null): string {
   return name.slice(0, 2).toUpperCase();
 }
 
-export function PostCard({ post, currentUserId, onToggleReaction, onCommentClick, onDeletePost, postHref }: PostCardProps) {
+export function PostCard({ post, currentUserId, onToggleReaction, onCommentClick, onDeletePost }: PostCardProps) {
   // Temporary state for optimistic UI (if needed, though real app uses react-query or similar)
   const [reactions, setReactions] = useState(post.reactions);
   const [isImageExpanded, setIsImageExpanded] = useState(false);
@@ -220,14 +217,6 @@ export function PostCard({ post, currentUserId, onToggleReaction, onCommentClick
           <span className="text-caption-1 font-semibold">{post.commentCount}</span>
         </button>
 
-        {postHref && (
-          <Link
-            href={postHref}
-            className="flex items-center gap-0.5 px-2 py-1.5 text-caption-1 text-neutral-400 hover:text-brand-500 transition-colors ml-auto"
-          >
-            Ver completo <ChevronRight className="w-3 h-3" />
-          </Link>
-        )}
       </footer>
     </article>
   );

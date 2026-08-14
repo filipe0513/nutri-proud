@@ -12,13 +12,8 @@ interface BottomNavProps {
 export function BottomNav({ onAddLogClick }: BottomNavProps) {
   const pathname = usePathname();
 
-  // Hide nav when inside a Story/Pillar screen or a specific Team feed
-  if (
-    pathname.startsWith('/pillar') ||
-    pathname.startsWith('/profile') ||
-    (pathname.startsWith('/teams/') && pathname !== '/teams')
-  )
-    return null;
+  // Hide nav when inside a Story/Pillar screen or a public profile
+  if (pathname.startsWith('/pillar') || pathname.startsWith('/profile')) return null;
 
   const leftItems = [
     { label: 'Início', icon: Home, href: '/' },

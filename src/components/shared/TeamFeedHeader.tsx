@@ -1,15 +1,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Settings } from 'lucide-react';
+import { ArrowLeft, Settings, SquarePen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface TeamFeedHeaderProps {
   title: string;
   onSettingsClick?: () => void;
+  onComposeClick?: () => void;
 }
 
-export function TeamFeedHeader({ title, onSettingsClick }: TeamFeedHeaderProps) {
+export function TeamFeedHeader({ title, onSettingsClick, onComposeClick }: TeamFeedHeaderProps) {
   const router = useRouter();
 
   return (
@@ -29,20 +30,34 @@ export function TeamFeedHeader({ title, onSettingsClick }: TeamFeedHeaderProps) 
           {title}
         </h1>
 
-        {onSettingsClick ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onSettingsClick}
-            className="text-neutral-500 hover:bg-black/5 rounded-full"
-            aria-label="Configurações do Time"
-            data-testid="btn-team-settings"
-          >
-            <Settings className="h-6 w-6" />
-          </Button>
-        ) : (
-          <div className="w-10 h-10" />
-        )}
+        <div className="flex items-center gap-1">
+          {onSettingsClick && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onSettingsClick}
+              className="text-neutral-500 hover:bg-black/5 rounded-full"
+              aria-label="Configurações do Time"
+              data-testid="btn-team-settings"
+            >
+              <Settings className="h-6 w-6" />
+            </Button>
+          )}
+          {onComposeClick ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onComposeClick}
+              className="text-neutral-500 hover:bg-black/5 rounded-full"
+              aria-label="Nova publicação"
+              data-testid="btn-team-compose"
+            >
+              <SquarePen className="h-6 w-6" />
+            </Button>
+          ) : (
+            !onSettingsClick && <div className="w-10 h-10" />
+          )}
+        </div>
       </div>
     </header>
   );

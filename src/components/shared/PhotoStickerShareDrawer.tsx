@@ -44,6 +44,8 @@ interface PhotoStickerShareDrawerProps {
   onComposed?: (blob: Blob, weight?: number, publishToTeamId?: string | null, caption?: string) => Promise<void>;
   /** Opens the legacy infographic drawer as a secondary option */
   onOpenInfographic?: () => void;
+  /** When provided, the "Sem Foto" button calls this instead of using a random background */
+  onNoPhoto?: () => void;
   /** Pre-fills the weight input for EVOLUTION context */
   initialWeight?: number;
 }
@@ -111,6 +113,7 @@ export function PhotoStickerShareDrawer({
   context,
   onComposed,
   onOpenInfographic,
+  onNoPhoto,
   initialWeight = 70,
 }: PhotoStickerShareDrawerProps) {
   const [step, setStep] = useState<'source' | 'compose'>('source');
@@ -393,7 +396,14 @@ export function PhotoStickerShareDrawer({
                   </button>
                   <button
                     type="button"
-                    onClick={handleUseBackground}
+                    onClick={() => {
+                      if (onNoPhoto) {
+                        handleOpenChange(false);
+                        setTimeout(onNoPhoto, 300);
+                      } else {
+                        handleUseBackground();
+                      }
+                    }}
                     className="flex-1 h-20 rounded-2xl border-2 border-dashed border-purple-300 bg-purple-50/50 hover:bg-purple-50 flex flex-col items-center justify-center gap-1.5 transition-colors active:scale-[0.98]"
                   >
                     <Shuffle className="h-7 w-7 text-purple-500" />

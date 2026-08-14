@@ -13,6 +13,7 @@ import { ChevronDown, ChevronUp, Share2 } from "lucide-react";
 import { TopHeader } from "@/components/shared/TopHeader";
 import { ShareReportDrawer } from "@/components/shared/ShareReportDrawer";
 import { PhotoStickerShareDrawer } from "@/components/shared/PhotoStickerShareDrawer";
+import { ShareToTeamDrawer } from "@/components/shared/ShareToTeamDrawer";
 import { BottomSheet_Water } from "@/components/shared/BottomSheet_Water";
 import { BottomSheet_Sleep } from "@/components/shared/BottomSheet_Sleep";
 import { BottomSheet_Poop } from "@/components/shared/BottomSheet_Poop";
@@ -87,6 +88,7 @@ export default function HistoryPage() {
   const [shareDate, setShareDate] = useState<string>('');
   const [shareScore, setShareScore] = useState(0);
   const [infographicOpen, setInfographicOpen] = useState(false);
+  const [teamShareOpen, setTeamShareOpen] = useState(false);
 
   const toggleDay = (date: string) => {
     setExpandedDays(prev => ({ ...prev, [date]: prev[date] === false ? true : false }));
@@ -288,6 +290,13 @@ export default function HistoryPage() {
         onOpenChange={setShareOpen}
         context={{ type: 'DAILY_SCORE', score: shareScore }}
         onOpenInfographic={() => { setShareOpen(false); setInfographicOpen(true); }}
+        onNoPhoto={() => setTeamShareOpen(true)}
+      />
+      <ShareToTeamDrawer
+        open={teamShareOpen}
+        onOpenChange={setTeamShareOpen}
+        date={shareDate || undefined}
+        dayLogs={shareDate ? groupedLogs[shareDate] : undefined}
       />
       <ShareReportDrawer
         open={infographicOpen}

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Plus } from 'lucide-react';
 import { TeamFeedHeader } from '@/components/shared/TeamFeedHeader';
 import { PostCard } from '@/components/shared/PostCard';
 import { ShareToTeamDrawer } from '@/components/shared/ShareToTeamDrawer';
@@ -123,9 +122,10 @@ export default function TeamFeedPage() {
 
   return (
     <div className="min-h-screen bg-mesh-sunset flex flex-col relative pb-32">
-      <TeamFeedHeader 
-        title={isLoading ? 'Carregando...' : (team?.name ?? 'Time')} 
+      <TeamFeedHeader
+        title={isLoading ? 'Carregando...' : (team?.name ?? 'Time')}
         onSettingsClick={isAdmin ? () => setSettingsDrawerOpen(true) : undefined}
+        onComposeClick={() => setShareDrawerOpen(true)}
       />
       
       <main className="flex-1 px-4 pt-6">
@@ -155,21 +155,11 @@ export default function TeamFeedPage() {
                 onToggleReaction={handleToggleReaction}
                 onCommentClick={handleCommentClick}
                 onDeletePost={handleDeletePost}
-                postHref={`/teams/${teamId}/posts/${post.id}`}
               />
             ))}
           </div>
         )}
       </main>
-
-      {/* FAB - Floating Action Button */}
-      <button
-        onClick={() => setShareDrawerOpen(true)}
-        className="fixed bottom-8 right-6 z-40 w-14 h-14 bg-gradient-fab shadow-lg shadow-brand-500/30 rounded-full flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all"
-        aria-label="Nova publicação"
-      >
-        <Plus className="w-7 h-7" />
-      </button>
 
       <ShareToTeamDrawer
         open={shareDrawerOpen}
