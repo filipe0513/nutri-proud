@@ -117,9 +117,10 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
         // 1. Chama a API
         await api.saveUserProfile(profile);
-        
-        // 2. Atualiza estado global
-        set({ user_profile: profile });
+
+        // 2. Sync from server so fields like is_anonymous, id, role are populated
+        const freshProfile = await api.fetchUserProfile();
+        set({ user_profile: freshProfile });
       },
 
       updateProfile: async (profile: UserProfile) => {

@@ -15,10 +15,6 @@ export function StoryHeader() {
 
   // Fetch streak data for the header badge
   useEffect(() => {
-    const match = document.cookie.match(/anon_user_id=([^;]+)/);
-    const userId = match ? decodeURIComponent(match[1]) : null;
-    if (!userId) return;
-
     fetch('/api/streaks')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
