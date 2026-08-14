@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.6.0] — 2026-08-14
+
+### Added
+- Perfil público de nutricionista com layout estilo X/Instagram — banner de onboarding e modo preview/edição
+- Diretório público de nutricionistas em `/nutricionistas`
+- Painel de saúde de negócio por nutricionista no admin — métricas agregadas via banco + PostHog
+- Insights de pacientes para o nutricionista no dashboard — visão consolidada por banco e analytics
+- Card de nutricionista exibido para usuários anônimos na home
+- Navegação de Evolução e Times bloqueada para usuários anônimos com CTA de login
+
+### Changed
+- 5 refinamentos de UX: fluxo de compartilhamento, navegação de times e PostCard
+
+### Fixed
+- Sincronização do perfil do servidor após onboarding — guard de cookie httpOnly removido
+- SessionProvider adicionado ao layout da área nutri e ao RootProvider para corrigir `useSession` em client components
+- Overlay de blur no sticker de compartilhamento reduzido para cobrir apenas a área do card
+
 ## [2.5.1] — 2026-08-11
 
 ### Fixed

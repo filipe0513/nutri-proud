@@ -1,5 +1,16 @@
 [
   {
+    "version": "2.6.0",
+    "date": "2026-08-14",
+    "highlights": [
+      "👩‍⚕️ Perfil público da nutricionista: agora cada nutri tem uma página pública estilo Instagram, com foto, bio e modo de edição/preview.",
+      "📋 Diretório de nutricionistas disponível — encontre e conecte-se com profissionais de saúde pelo app.",
+      "📊 Dashboard da nutri mais completo: insights de pacientes e painel de saúde do negócio com dados reais do banco e analytics.",
+      "🔒 Evolução e Times agora exigem login — usuários visitantes são convidados a criar conta para acessar esses recursos.",
+      "⚡ Carregamento mais rápido: drawers carregam sob demanda e o Service Worker faz cache inteligente dos recursos."
+    ]
+  },
+  {
     "version": "2.5.1",
     "date": "2026-08-11",
     "highlights": [
