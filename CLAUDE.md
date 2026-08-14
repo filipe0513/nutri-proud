@@ -296,7 +296,12 @@ npx prisma migrate reset    # FORBIDDEN
 **Safe alternatives:**
 - Create a new migration: `npx prisma migrate dev --name <name>` (reads `.env.local` → local DB)
 - Apply migrations in prod: `npx prisma migrate deploy` (only applies pending, never destroys)
-- Reset ONLY the local DB: `psql postgresql://postgres:pg123456@localhost:5432/nutriproud -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"` followed by `npx prisma migrate deploy`
+- Reset ONLY the local DB: **REQUIRES EXPLICIT USER CONFIRMATION before running.** You MUST stop, explain what will be destroyed, and wait for the user to type "confirmo reset local" before executing:
+  ```bash
+  psql postgresql://postgres:pg123456@localhost:5432/nutriproud -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+  npx prisma migrate deploy
+  ```
+  > ⚠️ This destroys all local data including sessions, users, and logs. Never run autonomously.
 
 ---
 
