@@ -14,6 +14,12 @@ enum TeamRole {
   MEMBER
 }
 
+enum DirectoryVisibility {
+  HIDDEN    // não aparece no diretório (padrão)
+  APP_ONLY  // visível só para usuários logados
+  PUBLIC    // visível para qualquer um, incluindo Google
+}
+
 enum PostType {
   USER_GENERATED
   SYSTEM_MILESTONE
@@ -51,16 +57,17 @@ model User {
   notification_preferences Json     @default("{}")
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  logs          DailyLog[]
-  accounts      Account[]
-  sessions      Session[]
-  notifications Notification[]
-  aiInsights    AiInsight[]
-  teamMembers   TeamMember[]
-  posts         Post[]
-  reactions     Reaction[]
-  comments      Comment[]
-  teamFeedPosts TeamFeedPost[]
+  logs                  DailyLog[]
+  accounts              Account[]
+  sessions              Session[]
+  notifications         Notification[]
+  aiInsights            AiInsight[]
+  teamMembers           TeamMember[]
+  posts                 Post[]
+  reactions             Reaction[]
+  comments              Comment[]
+  teamFeedPosts         TeamFeedPost[]
+  nutritionistProfile   NutritionistProfile?
 }
 
 model Account {
@@ -236,6 +243,29 @@ model TeamFeedPost {
   patient   User @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
   @@unique([challengeId, patientId, summaryDate])
+}
+
+// ── Nutritionist Directory ────────────────────────────────
+
+model NutritionistProfile {
+  id             String              @id @default(uuid())
+  userId         String              @unique @map("user_id")
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  displayName    String?             @map("display_name")
+  crn            String?
+  bio            String?
+  city           String?
+  uf             String?
+  whatsapp       String?
+  publicEmail    String?             @map("public_email")
+  schedulingUrl  String?             @map("scheduling_url")
+  plansInfo      String?             @map("plans_info")
+
+  visibility     DirectoryVisibility @default(HIDDEN)
+
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
 }
 
 // ── Challenges ────────────────────────────────────────────

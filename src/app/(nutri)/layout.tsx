@@ -66,6 +66,12 @@ export default async function NutriLayout({
             >
               Consultório
             </Link>
+            <Link
+              href="/dashboard/perfil-publico"
+              className="px-4 py-2 text-body-2 font-medium text-neutral-500 rounded-xl hover:bg-slate-100 transition-colors"
+            >
+              Meu perfil
+            </Link>
           </nav>
 
           {/* User menu */}
